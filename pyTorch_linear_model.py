@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from pathlib import Path
 
+torch.manual_seed(42)
 # create data set
 SAMPLE_SIZE = 100
 FEATURE_NUM = 4
@@ -49,7 +50,7 @@ if load:
 # Build training loop
 loss_fn = nn.MSELoss()
 optimizer = torch.optim.SGD(params = model.parameters(), lr = 0.001)
-epochs = 1000
+epochs = 10000
 for epoch in range(epochs):
     model.train()
     #forward pass
@@ -70,3 +71,8 @@ for epoch in range(epochs):
             eval_y = model(test_x)
             eval_loss = loss_fn(eval_y, test_y)
             print(f"Epoch {epoch} | training_loss: | {loss} | testing loss: {eval_loss}")
+print(f"original weights: {weight} | orriginal bias: {bias}")
+print(f"trained model: {model.state_dict()}")
+if save:
+    torch.save(obj = model.state_dict(),f = MODEL_SAVE_PATH)
+    print(f"Linear model is saved")

@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 print(torch.__version__)
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 #basics
 ts_np = torch.tensor(
     np.array([[1, 1], [2, 2]]),
@@ -167,3 +168,13 @@ numpy_tensor = tensor.numpy() # default dtype is float32
 print(f"torch tensor: {tensor}, type: {type(tensor)}")
 print(f"numpy tensor: {numpy_tensor}, type: {type(numpy_tensor)}")
 print(f"numpy tensor data type: {numpy_tensor.dtype}")
+
+# reproducbility
+RANDOM_SEED = 42
+torch.manual_seed(RANDOM_SEED)
+rand_tensor_a = torch.rand(size = (3,4),
+                          dtype = torch.float32)
+torch.manual_seed(RANDOM_SEED)
+rand_tensor_b = torch.rand(size = (3,4),
+                          dtype = torch.float32)
+print(f"Are the tensors equal? {rand_tensor_a == rand_tensor_b}")

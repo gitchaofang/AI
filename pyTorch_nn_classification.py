@@ -49,7 +49,7 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(),lr = 0.001)
 print(f"y_blob_train type: {y_blob_test.shape}")
 # training loop:
-epochs = 10000
+epochs = 50000
 for epoch in range(epochs):
     model.train()
     # logits

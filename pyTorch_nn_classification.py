@@ -4,12 +4,12 @@ from sklearn.datasets import make_blobs
 from sklearn.model_selection import train_test_split
 
 # Hyperparameters 
-NUM_CLASSES = 8
-NUM_FEATURES = 4
+NUM_CLASSES = 4
+NUM_FEATURES = 8
 RANRDOM_SEED = 42
 
 # Create multi-class data
-X_blob, y_blob = make_blobs(n_samples=1000,
+X_blob, y_blob = make_blobs(n_samples=10000,
                             n_features=NUM_FEATURES,
                             centers = NUM_CLASSES,
                             cluster_std=1.5,
@@ -49,7 +49,7 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(),lr = 0.001)
 print(f"y_blob_train type: {y_blob_test.shape}")
 # training loop:
-epochs = 50000
+epochs = 10000
 for epoch in range(epochs):
     model.train()
     # logits

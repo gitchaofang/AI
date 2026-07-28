@@ -82,14 +82,13 @@ for epoch in range(epochs):
         # update
         optimizer.step()
     train_loss /= len(train_dataloader)
-    print(f"epoch {epoch} train loss: {train_loss}")
 
     # test 
     loss_test_acc = 0.0
     model.eval()
     with torch.inference_mode():
         for X,y in(test_dataloader):
-            # test logits
+            # test logitsß
             logits_test = model(X)
             # test loss
             loss_test = loss_fn(logits_test, y)

@@ -57,14 +57,14 @@ X_train,X_test,y_train,y_test = train_test_split(X,y, test_size=0.2,random_state
 train_dataset = TensorDataset(X_train,y_train)
 train_loader = DataLoader(
     train_dataset,
-    batch_size = 1024,
+    batch_size = 512,
     shuffle = True,
 )
 
 test_dataset = TensorDataset(X_test,y_test)
 test_loader = DataLoader(
     test_dataset,
-    batch_size = 1024,
+    batch_size = 512,
     shuffle = False,
 )
 
@@ -77,7 +77,7 @@ class LinearRegModel(nn.Module):
             nn.ReLU(),
             nn.Linear(in_features = hidden_dim, out_features = hidden_dim),
             nn.ReLU(),
-             nn.Linear(in_features = hidden_dim, out_features = hidden_dim),
+            nn.Linear(in_features = hidden_dim, out_features = hidden_dim),
             nn.ReLU(),
             nn.Linear(in_features = hidden_dim, out_features = 1),
         )
@@ -91,7 +91,7 @@ loss_fn = nn.MSELoss()
 optimizer = torch.optim.Adam(params = model.parameters(), lr = 0.0005)
 
 # taining loop
-epochs = 100
+epochs = 50
 for epoch in range(epochs):
     train_loss_acc = 0.0
     test_loss_acc = 0.0

@@ -24,7 +24,7 @@ print(f"X_train shape: {X_train.shape}")
 
 #build model
 class MultiClassificationModel(nn.Module):
-    def __init__(self, in_features, n_classes, hidden_unites = 10) -> torch.Tensor:
+    def __init__(self, in_features, n_classes, hidden_unites = 10):
         super().__init__()
         self.nn_layer = nn.Sequential(
             nn.Linear(in_features = in_features, out_features = hidden_unites),

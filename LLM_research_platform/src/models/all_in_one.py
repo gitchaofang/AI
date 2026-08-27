@@ -35,10 +35,10 @@ class SelfAttention(nn.Module):
 
         # scores
         scores = q @ k.transpose(-1,-2)
-        scores = scores / math.sqrt(self.haed_dim)
+        scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(
-            combined_mask,
-            float("-inf")
+            combined_mask == 0,
+            float("-inf"),
         )
         # attention
         attention = torch.softmax(scores, dim = -1)
@@ -46,7 +46,7 @@ class SelfAttention(nn.Module):
         # value: [B,H,T,T] @ [B,H,T,Dh] -> [B,T,T,Dh]
         out = attention @ v
         # [B,H,T,Dh] ->  [B,T,D]
-        out = out.transpose(1,2).contigous()
+        out = out.transpose(1, 2).contigous()
         out = out.view(B,T,D)
 
         return self.out_proj(out)
@@ -89,8 +89,8 @@ class GPT(nn.Module):
             max_seq_len: int,
         ):
         super().__init__()
-        self.token_embedding = nn.embedding(vocab_size, d_model)
-        self.position_embedding = nn.embedding(max_seq_len, d_model)
+        self.token_embedding = nn.Embedding(vocab_size, d_model)
+        self.position_embedding = nn.Embedding(max_seq_len, d_model)
         self.max_seq_len = max_seq_len
         self.blocks = nn.ModuleList([
             TransformerBlock(
@@ -116,7 +116,7 @@ class GPT(nn.Module):
             mask.view(1,1,max_seq_len,max_seq_len)
         )
 
-    def forwrd(self,x: torch.Tensor, pad_mask: torch.Tensor):
+    def forward(self,x: torch.Tensor, pad_mask: torch.Tensor):
         B,T = x.shape
         assert T <= self.max_seq_len
 
@@ -128,7 +128,8 @@ class GPT(nn.Module):
         # embedding
         pos_seq = torch.arange(
             T,
-            dtype = torch.int
+            dtype = torch.int64,
+            device = x.device
         )
         x = self.token_embedding(x) + self.position_embedding(pos_seq)
 

@@ -9,11 +9,11 @@ class TextDataset(Dataset):
         chars = sorted(set(self.text))
 
         self.stoi = {
-            ch: i for i,chi in enumerate(chars)
+            ch: i + 1 for i,chi in enumerate(chars)
         }
 
         self.itos = {
-            i: ch for i,ch in enumerate(chars)
+            i + 1: ch for i,ch in enumerate(chars)
         }
 
         self.tokens = torch.tensor(

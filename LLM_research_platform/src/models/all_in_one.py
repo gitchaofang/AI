@@ -1,6 +1,12 @@
+import random
 import torch
 import torch.nn as nn
 import math
+import torch,nn.functional as F
+from torch.utils.data import DataLoader
+from src.data.all_in_one import VariableLengthDataset
+from src.data.all_in_one import TokenBatchSampler
+from src.data.all_in_one import PaddingCollator
 
 # self attention
 class SelfAttention(nn.Module):
@@ -144,4 +150,119 @@ class GPT(nn.Module):
         return logits
 
 
+class Trainer:
+    def __init__(self, model, optimizer, device):
+        self.model = model
+        self.optimizer = optimizer
+        self.device = device
+    def train_step(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
+        x = x.to(self.device)
+        y = y.to(self.device)
 
+        self.optimizer.zero_grad()
+
+        logits = self.model(x, mask)
+
+        B, T, V = logits.shape
+        loss = F.cross_entropy(
+            logits.reshape(B * T, V),
+            y.reshape(B * T),
+            ignore_index = -100,
+        )
+
+        loss.backwards()
+        self.optimizer.step()
+
+        return loss.item()
+
+
+# Training scripts
+
+# generate senteces
+subject_pool = [
+    "The researcher", "A student", "This model", "Every engineer",
+    "Our lab", "The system", "A scientist", "The team"
+]
+
+verb_pool = [
+    "tests", "improves", "trains", "evaluates", "refines", "compares",
+    "optimizes", "studies", "scales", "debugs"
+]
+
+object_pool = [
+    "a new transformer", "the experiment", "the dataset", "the baseline",
+    "the optimizer", "the attention layer", "the language model",
+    "the training loop"
+]
+
+adverb_pool = [
+    "carefully", "quickly", "consistently", "efficiently", "robustly",
+    "reproducibly", "smoothly", "accurately"
+]
+
+sentence_templates = [
+    "{subject} {verb} {object}.",
+    "{subject} {verb} {object} {adverb}.",
+    "{subject} {verb} {object} during training.",
+    "{subject} {verb} {object} with confidence.",
+]
+
+def make_sentence():
+    subject = random.choice(subject_pool)
+    verb = random.choice(verb_pool)
+    obj = random.choice(object_pool)
+    adverb = random.choice(adverb_pool)
+    template = random.choice(sentence_templates)
+    return template.format(subject=subject, verb=verb, object=obj, adverb=adverb)
+
+sentences = [make_sentence() for _ in range(10000)]
+chars = sorted(set(" ".join(sentences)))
+vocab_size = len(chars) + 1   # +1 because your mapping often reserves 0 for padding
+print(f"vocab_size is {vocab_size}")
+
+dataset = VariableLengthDataset(sentences)
+collator = PaddingCollator()
+sampler = TokenBatchSampler(sentences,512)
+
+loader = DataLoader(
+    dataset,
+    batch_size = 32,
+    collate_fn = collator,
+    sampler = sampler,
+    shuffle = True,
+    pin_memory = True,
+)
+
+model = GPT(
+    vocab_size = vocab_size,
+    d_model = 128,
+    max_seq_len = 512
+    n_layers = 4,
+    n_heads = 4,
+)
+
+optimizer = torch.optim_AdamW(
+    model.parameters(),
+    lr = 3e-4,
+)
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+trainer = Trainer(
+    model,
+    optimizer,
+    device,
+)
+
+epoches = 10
+
+for epoch in range(epoches):
+    loss_accu = 0.0
+    for batch in loader:
+        x = batch["input_ids"]
+        y = ["labels"]
+        pad_mask = batch["mask"]
+
+        loss = trainer.train_step(x,y,pad_mask)
+        loss_accu += loss
+    print(f"epoch {epoch} | ave_loss: {loss / len(batch.shape[0])}")

@@ -6,7 +6,7 @@ from src.data.variable_length_dataset import VariableLengthDataset
 from src.data.collator import PaddingCollator
 from src.data.sampler import BucketBatchSampler
 from src.data.token_batch_sampler import TokenBatchSampler
-from src.models.gpt import GPT
+from src.models.GPT import GPT
 from src.training.trainer import Trainer
 
 text = """
@@ -24,12 +24,15 @@ sequences = [
 ]
 dataset = VariableLengthDataset(sequences)
 collator = PaddingCollator(pad_token_id=0)
+sampler = BucketBatchSampler(dataset= dataset,
+                             batch_size=32,
+                             shuffle = True,)
 
 #dataset = TextDataset(text * 1000, seq_len = 64)
 
 loader = DataLoader(
     dataset,
-    batch_size = 32,
+    batch_sampler = sampler,
     collate_fn=collator,
     shuffle = True,
 )
@@ -56,9 +59,7 @@ trainer = Trainer(
 
 for epoch in range(5):
     for batch in loader:
-        input_ids = batch["input_ids"]
-        attention_mask = batch["attention_mask"]
-        loss = trainer.train_step(x,y)
+        loss = trainer.train_step(batch["input_ids"],batch["attention_mask"],batch["mask"])
 
     print(f"epoch={epoch}, loss = {loss: .4f}")
     

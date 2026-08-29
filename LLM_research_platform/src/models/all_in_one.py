@@ -230,7 +230,7 @@ loader = DataLoader(
     batch_size = 32,
     collate_fn = collator,
     sampler = sampler,
-    shuffle = True,
+    shuffle = False,
     pin_memory = True,
 )
 

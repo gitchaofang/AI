@@ -40,7 +40,6 @@ class PaddingCollator:
 
             input_ids[i, :length] = input_ids_i
             labels[i, :length] = labels_i 
-
             attention_mask[i, :length] = 1
 
         return {

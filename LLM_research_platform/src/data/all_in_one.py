@@ -1,8 +1,7 @@
 import torch
 import random
-from totch.utils.data import Dataset
+from torch.utils.data import Dataset
 from torch.utils.data import Sampler
-
 class VariableLengthDataset(Dataset):
     def __init__(self,sentences):
         self.sentences = sentences
@@ -25,7 +24,6 @@ class VariableLengthDataset(Dataset):
                 for char in sentence
             ]
             self.tokens.append(current_sentence)   
-        self.tokens = torch.tensor(self.tokens)    
 
     def __len__(self):
         return len(self.tokens)

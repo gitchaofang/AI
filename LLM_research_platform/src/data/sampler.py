@@ -24,7 +24,7 @@ class BucketBatchSampler(Sampler):
         # Divide into batches
         batches = []
 
-        for i in range(0,len(indices), self.batch_size,):
+        for i in range(0,len(indices), self.batch_size):
             batch = indices[i: i + self.batch_size]
             batches.append(batch)
 

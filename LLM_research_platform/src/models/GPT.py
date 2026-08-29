@@ -20,7 +20,6 @@ class GPT(nn.Module):
                 d_model,
                 n_heads,
                 max_seq_len,
-                self.mask,
             )
             for _ in range(n_layers)
         ])
@@ -33,8 +32,21 @@ class GPT(nn.Module):
             bias=False,
         )
 
-    def forward(self, input_ids):
-        B, T = input_ids.shape
+        # causal mask
+        mask = torch.
+        self.register_buffer(
+
+        )
+
+    def forward(self, x, mask: torch.Tensor):
+        B, T = x.shape
+
+         # build combined mask
+        mask = mask.unsqueeze(-1)
+        pad_mask = mask @ mask.transpose(-1,-2)
+        pad_mask = pad_mask.unsqueeze(1)
+        combined_mask = pad_mask * self.causal_mask
+
         assert T <= self.max_seq_len
 
         positions = torch.arange(

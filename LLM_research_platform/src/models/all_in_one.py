@@ -2,7 +2,7 @@ import random
 import torch
 import torch.nn as nn
 import math
-import torch,nn.functional as F
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from src.data.all_in_one import VariableLengthDataset
 from src.data.all_in_one import TokenBatchSampler
@@ -28,7 +28,7 @@ class SelfAttention(nn.Module):
     def forward(self, x, combined_mask: torch.Tensor):
         B,T,D = x.shape
 
-        assert combined_mask.shape[-1] == self.max_seq_len
+        assert combined_mask.shape[-1] <= self.max_seq_len
         # build attentions [B,T,D]
         q = self.q_proj(x)
         k = self.k_proj(x)
@@ -52,7 +52,7 @@ class SelfAttention(nn.Module):
         # value: [B,H,T,T] @ [B,H,T,Dh] -> [B,T,T,Dh]
         out = attention @ v
         # [B,H,T,Dh] ->  [B,T,D]
-        out = out.transpose(1, 2).contigous()
+        out = out.transpose(1, 2).contiguous()
         out = out.view(B,T,D)
 
         return self.out_proj(out)
@@ -95,7 +95,7 @@ class GPT(nn.Module):
             max_seq_len: int,
         ):
         super().__init__()
-        self.token_embedding = nn.Embedding(vocab_size, d_model)
+        self.token_embedding = nn.Embedding(vocab_size + 1, d_model)
         self.position_embedding = nn.Embedding(max_seq_len, d_model)
         self.max_seq_len = max_seq_len
         self.blocks = nn.ModuleList([
@@ -158,6 +158,7 @@ class Trainer:
     def train_step(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
         x = x.to(self.device)
         y = y.to(self.device)
+        mask = mask.to(self.device)
 
         self.optimizer.zero_grad()
 
@@ -170,7 +171,7 @@ class Trainer:
             ignore_index = -100,
         )
 
-        loss.backwards()
+        loss.backward()
         self.optimizer.step()
 
         return loss.item()
@@ -236,12 +237,12 @@ loader = DataLoader(
 model = GPT(
     vocab_size = vocab_size,
     d_model = 128,
-    max_seq_len = 512
+    max_seq_len = 512,
     n_layers = 4,
     n_heads = 4,
 )
 
-optimizer = torch.optim_AdamW(
+optimizer = torch.optim.AdamW(
     model.parameters(),
     lr = 3e-4,
 )
@@ -260,9 +261,9 @@ for epoch in range(epoches):
     loss_accu = 0.0
     for batch in loader:
         x = batch["input_ids"]
-        y = ["labels"]
+        y = batch["labels"]
         pad_mask = batch["mask"]
 
         loss = trainer.train_step(x,y,pad_mask)
         loss_accu += loss
-    print(f"epoch {epoch} | ave_loss: {loss / len(batch.shape[0])}")
+    print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")

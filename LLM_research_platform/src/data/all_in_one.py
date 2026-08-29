@@ -6,16 +6,37 @@ from torch.utils.data import Sampler
 class VariableLengthDataset(Dataset):
     def __init__(self,sentences):
         self.sentences = sentences
-    def __len__(self)
-        return len(self.dataset)
+        chars = set()
+        for sentence in sentences:
+            chars.update(sentence)
+        self.char_set = sorted(chars)
+        self.stoi = {
+            char: i + 1 for i, char in enumerate(self.char_set)
+        }
+        self.itos = {
+            i + 1: char for i, char in enumerate(self.char_set)
+        }
+
+        self.tokens = []
+
+        for sentence in sentences:
+            current_sentence = [
+                self.stoi[char]
+                for char in sentence
+            ]
+            self.tokens.append(current_sentence)   
+        self.tokens = torch.tensor(self.tokens)    
+
+    def __len__(self):
+        return len(self.tokens)
     def __getitem__(self,idx):
-        sentence = self.sentences[idx]
+        sentence = self.tokens[idx]
         return{
             "input_ids": sentence[:-1],
             "labels": sentence[1:]
         }
     def get_length(self,idx):
-        return len(self.sentences[idx])
+        return len(self.tokens[idx])
 
 class BucketSampler(Sampler):
     def __init__(self,
@@ -106,7 +127,7 @@ class PaddingCollator:
             dtype = torch.int64,
         )
 
-        attention_mask = torch.zeros(
+        pad_mask = torch.zeros(
             batch_size,
             max_len,
             dtype = torch.int64,
@@ -116,13 +137,13 @@ class PaddingCollator:
             length = len(item["input_ids"])
             input_ids[i, :length] = item["input_ids"]
             label_ids[i, :length] = item["labelss"]
-            attention_mask[i, : length] = 1
+            pad_mask[i, : length] = 1
 
 
         return {
             "input_ids": input_ids,
             "labels": label_ids,
-            "attention_mask": attention_mask,
+            "pad_mask": pad_mask,
         }
 
 

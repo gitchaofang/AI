@@ -223,7 +223,7 @@ print(f"vocab_size is {vocab_size}")
 
 dataset = VariableLengthDataset(sentences)
 collator = PaddingCollator()
-sampler = TokenBatchSampler(sentences,512)
+sampler = TokenBatchSampler(dataset,512)
 
 loader = DataLoader(
     dataset,

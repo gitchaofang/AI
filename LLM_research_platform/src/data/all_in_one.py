@@ -74,9 +74,7 @@ class TokenBatchSampler(Sampler):
         self.max_token = max_token
         self.shuffle = shuffle
         self.indices = list(range(len(dataset)))
-    def __len__(self):
-        return len(self.dataset)
-
+    
     def __iter__(self):
         indices = sorted(self.indices,
                          key = lambda i:
@@ -103,6 +101,25 @@ class TokenBatchSampler(Sampler):
 
         for batch in batches:
             yield batch
+            
+    def __len__(self):
+        indices = sorted(self.indices,
+                     key = lambda i: self.dataset.get_length(i))
+    
+        num_batches = 0
+        current_token = 0
+    
+        for idx in indices:
+            length = self.dataset.get_length(idx)
+            if length + current_token > self.max_token and current_token > 0:
+                num_batches += 1
+                current_token = 0
+            current_token += length
+    
+        if current_token > 0:
+            num_batches += 1
+    
+        return num_batches
 
 class PaddingCollator:
     def __init__(self,

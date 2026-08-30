@@ -1,36 +1,32 @@
 import random
 from torch.utils.data import Sampler
 
-class BucketBatchSampler(Sampler):
-    def __init__(
-            self,
-            dataset,
-            batch_size,
-            shuffle=True,
-    ):
+class BucketSampler(Sampler):
+    def __init__(self,
+                 dataset,
+                 max_len,
+                 shuffle = True,
+                 ):
         self.dataset = dataset
-        self.batch_size = batch_size
+        self.max_len = max_len
         self.shuffle = shuffle
 
-        self.indicex = list(range(len(dataset)))
+        self.indices = list(range(len(dataset)))
 
     def __iter__(self):
-        indices = sorted(
-            self.indices,
-            key=lambda i:
-                self.dataset.get_length(i)
-        )
+        indices = sorted(self.indices,
+                         key = lambda i:
+                            self.dataset.get_length(i))
 
-        # Divide into batches
         batches = []
 
-        for i in range(0,len(indices), self.batch_size):
-            batch = indices[i: i + self.batch_size]
+        for i in range(0,len(indices),self.max_len):
+            batch = indices[i: i + self.max_len]
             batches.append(batch)
 
         if self.shuffle:
             random.shuffle(batches)
-    
+
         for batch in batches:
             yield batch
 

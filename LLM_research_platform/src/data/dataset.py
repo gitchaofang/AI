@@ -1,34 +1,36 @@
 import torch
 from torch.utils.data import Dataset
 
-class TextDataset(Dataset):
-    def __init__(self, text: str, seq_len: int):
-        self.text = text
-        self.seq_len = seq_len
-
-        chars = sorted(set(self.text))
-
+class VariableLengthDataset(Dataset):
+    def __init__(self,sentences):
+        self.sentences = sentences
+        chars = set()
+        for sentence in sentences:
+            chars.update(sentence)
+        self.char_set = sorted(chars)
         self.stoi = {
-            ch: i + 1 for i,chi in enumerate(chars)
+            char: i + 1 for i, char in enumerate(self.char_set)
         }
-
         self.itos = {
-            i + 1: ch for i,ch in enumerate(chars)
+            i + 1: char for i, char in enumerate(self.char_set)
         }
 
-        self.tokens = torch.tensor(
-            [self.stoi[ch] for ch in text],
-            dtype = torch.long
-        )
+        self.tokens = []
 
-    @property
-    def verb_size(self):
-        return len(self.stoi)
+        for sentence in sentences:
+            current_sentence = [
+                self.stoi[char]
+                for char in sentence
+            ]
+            self.tokens.append(current_sentence)   
 
     def __len__(self):
-        return len(self.tokens) - self.seq_len
-
-    def __getitem__(self, idx):
-        x = self.tokens[idx: idx + self.seq_len]
-        y = self.tokens[idx + 1: idx + self.seq_len + 1]
-        return x, y
+        return len(self.tokens)
+    def __getitem__(self,idx):
+        sentence = torch.tensor(self.tokens[idx])  # Convert to tensor here
+        return {
+            "input_ids": sentence[:-1],
+            "labels": sentence[1:]
+        }
+    def get_length(self,idx):
+        return len(self.tokens[idx])

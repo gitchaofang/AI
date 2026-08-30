@@ -41,19 +41,24 @@ class SelfAttention(nn.Module):
 
         # scores
         scores = q @ k.transpose(-1,-2)
+    #    print(f"mask: {combined_mask}")
         scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(
             combined_mask == 0,
-            float("-inf"),
+            -1e10
+            #float("-inf"),
         )
+        
         # attention
         attention = torch.softmax(scores, dim = -1)
+#        print(f"attention: {attention}")
 
         # value: [B,H,T,T] @ [B,H,T,Dh] -> [B,T,T,Dh]
         out = attention @ v
         # [B,H,T,Dh] ->  [B,T,D]
         out = out.transpose(1, 2).contiguous()
         out = out.view(B,T,D)
+#        print(f"attention block output: {torch.nonzero(torch.isnan(out))}")
 
         return self.out_proj(out)
 
@@ -63,7 +68,7 @@ class FeedForward(nn.Module):
         super().__init__()
         hidden = d_model * mlp_ratio
         self.net = nn.Sequential(
-             nn.Linear(d_model, hidden),
+            nn.Linear(d_model, hidden),
             nn.GELU(),
             nn.Linear(hidden, d_model)
         )
@@ -125,7 +130,7 @@ class GPT(nn.Module):
     def forward(self,x: torch.Tensor, pad_mask: torch.Tensor):
         B,T = x.shape
         assert T <= self.max_seq_len
-
+#        print(f"pad mask {torch.nonzero(pad_mask)}")
         # build combined mask: causal mask [1,1,max_seq_len, max_seq_len] + pad_mask[B,T] -> [B,1,T,T]
         pad_mask = pad_mask.unsqueeze(-1)
         pad_mask = pad_mask @ pad_mask.transpose(-1,-2)
@@ -139,10 +144,14 @@ class GPT(nn.Module):
         )
         x = self.token_embedding(x) + self.position_embedding(pos_seq)
 
-        # transformer blocks
-        for block in self.blocks:
-            x = block(x, combined_mask)
+#        print(f"x after embedding: {torch.nonzero(torch.isnan(x))}")
 
+        # transformer blocks
+        for i, block in enumerate(self.blocks):
+            x = block(x, combined_mask)
+#            print(f"{i}th block: {torch.nonzero(torch.isnan(x))}")
+
+#        print(f"x: {x}")
         # forward
         x = self.norm(x)
         logits = self.lm_linear(x)
@@ -158,11 +167,15 @@ class Trainer:
     def train_step(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
         x = x.to(self.device)
         y = y.to(self.device)
+
+#        print(f"x: {x}")
+#        print(f"y: {y}")
         mask = mask.to(self.device)
 
         self.optimizer.zero_grad()
 
         logits = self.model(x, mask)
+#        print(f"logits: {logits}")
 
         B, T, V = logits.shape
         loss = F.cross_entropy(
@@ -266,3 +279,4 @@ for epoch in range(epoches):
         loss = trainer.train_step(x,y,pad_mask)
         loss_accu += loss
     print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")
+#        print(f"epoch {epoch} | ave_loss: {loss_accu}")

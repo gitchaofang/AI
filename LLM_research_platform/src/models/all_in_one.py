@@ -9,7 +9,8 @@ from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 
 #device = "cuda" if torch.cuda.is_available() else "cpu"
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+
 # self attention
 class SelfAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, max_seq_len: int):
@@ -43,7 +44,6 @@ class SelfAttention(nn.Module):
 
         # scores
         scores = q @ k.transpose(-1,-2)
-    #    print(f"mask: {combined_mask}")
         scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(
             combined_mask == 0,
@@ -53,14 +53,12 @@ class SelfAttention(nn.Module):
         
         # attention
         attention = torch.softmax(scores, dim = -1)
-#        print(f"attention: {attention}")
 
         # value: [B,H,T,T] @ [B,H,T,Dh] -> [B,T,T,Dh]
         out = attention @ v
         # [B,H,T,Dh] ->  [B,T,D]
         out = out.transpose(1, 2).contiguous()
         out = out.view(B,T,D)
-#        print(f"attention block output: {torch.nonzero(torch.isnan(out))}")
 
         return self.out_proj(out)
 
@@ -134,7 +132,7 @@ class GPT(nn.Module):
     def forward(self,x: torch.Tensor, pad_mask: torch.Tensor):
         B,T = x.shape
         assert T <= self.max_seq_len
-#        print(f"pad mask {torch.nonzero(pad_mask)}")
+
         # build combined mask: causal mask [1,1,max_seq_len, max_seq_len] + pad_mask[B,T] -> [B,1,T,T]
         pad_mask = pad_mask.unsqueeze(-1)
         pad_mask = pad_mask @ pad_mask.transpose(-1,-2)
@@ -148,14 +146,10 @@ class GPT(nn.Module):
         )
         x = self.token_embedding(x) + self.position_embedding(pos_seq)
 
-#        print(f"x after embedding: {torch.nonzero(torch.isnan(x))}")
-
         # transformer blocks
         for i, block in enumerate(self.blocks):
             x = block(x, combined_mask)
-#            print(f"{i}th block: {torch.nonzero(torch.isnan(x))}")
 
-#        print(f"x: {x}")
         # forward
         x = self.norm(x)
         logits = self.lm_linear(x)
@@ -171,9 +165,7 @@ class Trainer:
     def train_step(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
         x = x.to(self.device)
         y = y.to(self.device)
-
-#        print(f"x: {x}")
-#        print(f"y: {y}")
+        
         mask = mask.to(self.device)
 
         self.optimizer.zero_grad()
@@ -250,6 +242,10 @@ loader = DataLoader(
     pin_memory = True,
 )
 
+#device = "cuda" if torch.cuda.is_available() else "cpu"
+device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+print("Device:", device)
+
 model = GPT(
     vocab_size = vocab_size,
     d_model = 128,
@@ -263,9 +259,6 @@ optimizer = torch.optim.AdamW(
     lr = 3e-4,
 )
 
-#device = "cuda" if torch.cuda.is_available() else "cpu"
-#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-print("Device:", device)
 
 trainer = Trainer(
     model,
@@ -278,13 +271,11 @@ epoches = 10
 for epoch in range(epoches):
     loss_accu = 0.0
     for i, batch in enumerate (loader):
-        print(f"epoch {epoch}, batch {i}")
         x = batch["input_ids"].to(device)
         y = batch["labels"].to(device)
         pad_mask = batch["pad_mask"].to(device)
 
         loss = trainer.train_step(x,y,pad_mask)
+        print(f"epoch {epoch} | batch {i} | loss: {loss}")
         loss_accu += loss
-    print(f"size of loader: {len(loader)}")
-#    print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")
-    print(f"epoch {epoch} | ave_loss: {loss_accu}")
+    print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")

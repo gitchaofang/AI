@@ -271,12 +271,13 @@ epoches = 10
 
 for epoch in range(epoches):
     loss_accu = 0.0
-    for batch in loader:
+    for i, batch in enumerate (loader):
         x = batch["input_ids"]
         y = batch["labels"]
         pad_mask = batch["pad_mask"]
 
         loss = trainer.train_step(x,y,pad_mask)
+        print(f"epoch {epoch} | sample {i} | loss: {loss}")
         loss_accu += loss
     print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")
 #        print(f"epoch {epoch} | ave_loss: {loss_accu}")

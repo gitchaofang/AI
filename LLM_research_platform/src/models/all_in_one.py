@@ -259,7 +259,9 @@ optimizer = torch.optim.AdamW(
     lr = 3e-4,
 )
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = "cuda" if torch.cuda.is_available() else "cpu"
+device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+print("Device:", device)
 
 trainer = Trainer(
     model,

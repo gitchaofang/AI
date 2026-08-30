@@ -8,6 +8,8 @@ from src.data.all_in_one import VariableLengthDataset
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 
+#device = "cuda" if torch.cuda.is_available() else "cpu"
+device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 # self attention
 class SelfAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, max_seq_len: int):
@@ -119,7 +121,8 @@ class GPT(nn.Module):
         mask = torch.tril(
             torch.ones(
                 size = (max_seq_len,max_seq_len),
-                dtype = torch.int)
+                dtype = torch.int),
+                device = device
         )
 
         self.register_buffer(
@@ -134,7 +137,7 @@ class GPT(nn.Module):
         # build combined mask: causal mask [1,1,max_seq_len, max_seq_len] + pad_mask[B,T] -> [B,1,T,T]
         pad_mask = pad_mask.unsqueeze(-1)
         pad_mask = pad_mask @ pad_mask.transpose(-1,-2)
-        combined_mask = self.causal_mask[:,:,:T,:T] * pad_mask.unsqueeze(1)
+        combined_mask = self.causal_mask[:,:,:T,:T] * pad_mask.unsqueeze(1).to(x.device)
 
         # embedding
         pos_seq = torch.arange(
@@ -252,7 +255,7 @@ model = GPT(
     max_seq_len = 512,
     n_layers = 4,
     n_heads = 4,
-)
+).to(device)
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
@@ -260,7 +263,7 @@ optimizer = torch.optim.AdamW(
 )
 
 #device = "cuda" if torch.cuda.is_available() else "cpu"
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Device:", device)
 
 trainer = Trainer(

@@ -120,9 +120,10 @@ class GPT(nn.Module):
         #build causal mask
         mask = torch.tril(
             torch.ones(
-                size = (max_seq_len,max_seq_len),
-                dtype = torch.int),
-                device = device
+                (max_seq_len, max_seq_len),
+                dtype=torch.int64,
+                device=device
+            )
         )
 
         self.register_buffer(

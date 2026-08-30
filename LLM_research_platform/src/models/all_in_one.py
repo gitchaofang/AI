@@ -278,7 +278,7 @@ for epoch in range(epoches):
         pad_mask = batch["pad_mask"]
 
         loss = trainer.train_step(x,y,pad_mask)
-        print(f"epoch {epoch} | sample {i} | loss: {loss}")
         loss_accu += loss
+    print(f"size of loader: {len(loader)}")
 #    print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")
     print(f"epoch {epoch} | ave_loss: {loss_accu}")

@@ -275,9 +275,9 @@ for epoch in range(epoches):
     loss_accu = 0.0
     for i, batch in enumerate (loader):
         print(f"epoch {epoch}, batch {i}")
-        x = batch["input_ids"]
-        y = batch["labels"]
-        pad_mask = batch["pad_mask"]
+        x = batch["input_ids"].to(device)
+        y = batch["labels"].to(device)
+        pad_mask = batch["pad_mask"].to(device)
 
         loss = trainer.train_step(x,y,pad_mask)
         loss_accu += loss

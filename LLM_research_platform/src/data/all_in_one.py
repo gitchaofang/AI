@@ -28,8 +28,8 @@ class VariableLengthDataset(Dataset):
     def __len__(self):
         return len(self.tokens)
     def __getitem__(self,idx):
-        sentence = self.tokens[idx]
-        return{
+        sentence = torch.tensor(self.tokens[idx])  # Convert to tensor here
+        return {
             "input_ids": sentence[:-1],
             "labels": sentence[1:]
         }
@@ -74,6 +74,8 @@ class TokenBatchSampler(Sampler):
         self.max_token = max_token
         self.shuffle = shuffle
         self.indices = list(range(len(dataset)))
+    def __len__(self):
+        return len(self.dataset)
 
     def __iter__(self):
         indices = sorted(self.indices,
@@ -89,8 +91,8 @@ class TokenBatchSampler(Sampler):
             if(length + current_token > self.max_token):
                 batches.append(current_batch)
                 batches = []
-                current_toke = 0
-            current_batch.append(i)
+                current_token = 0
+            current_batch.append(idx)
             current_token += length
 
         if len(current_batch) > 0:
@@ -113,13 +115,13 @@ class PaddingCollator:
         batch_size = len(batch)
         max_len = max(len(item["input_ids"]) for item in batch)
 
-        input_ids = torch.fill(
+        input_ids = torch.full(
             (batch_size, max_len),
             self.token_pad_ids,
             dtype = torch.int64,
         )
 
-        label_ids = torch.fill(
+        label_ids = torch.full(
             (batch_size, max_len),
             self.label_pad_ids,
             dtype = torch.int64,
@@ -134,7 +136,7 @@ class PaddingCollator:
         for i, item in enumerate(batch):
             length = len(item["input_ids"])
             input_ids[i, :length] = item["input_ids"]
-            label_ids[i, :length] = item["labelss"]
+            label_ids[i, :length] = item["labels"]
             pad_mask[i, : length] = 1
 
 
@@ -148,6 +150,6 @@ class PaddingCollator:
 
 
 
-    
+
 
 

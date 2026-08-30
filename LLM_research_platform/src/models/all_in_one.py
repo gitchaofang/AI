@@ -227,9 +227,8 @@ sampler = TokenBatchSampler(dataset,512)
 
 loader = DataLoader(
     dataset,
-    batch_size = 32,
     collate_fn = collator,
-    sampler = sampler,
+    batch_sampler = sampler,
     shuffle = False,
     pin_memory = True,
 )
@@ -262,7 +261,7 @@ for epoch in range(epoches):
     for batch in loader:
         x = batch["input_ids"]
         y = batch["labels"]
-        pad_mask = batch["mask"]
+        pad_mask = batch["pad_mask"]
 
         loss = trainer.train_step(x,y,pad_mask)
         loss_accu += loss

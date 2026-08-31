@@ -69,10 +69,12 @@ class TokenBatchSampler(Sampler):
     def __init__(self,
                  dataset,
                  max_token,
+                 batch_size = 32,
                  shuffle = True):
         self.dataset = dataset
         self.max_token = max_token
         self.shuffle = shuffle
+        self.batch_size = batch_size
         self.indices = list(range(len(dataset)))
     
     def __iter__(self):
@@ -86,7 +88,7 @@ class TokenBatchSampler(Sampler):
 
         for idx in indices:
             length = self.dataset.get_length(idx)
-            if(length + current_token > self.max_token):
+            if(length + current_token > self.max_token or len(current_batch) >= self.batch_size):
                 batches.append(current_batch)
                 current_batche = []
                 current_token = 0

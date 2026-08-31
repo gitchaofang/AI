@@ -9,6 +9,19 @@ from src.models.GPT import GPT
 from src.training.trainer import Trainer
 
 # Training scripts
+def move_batch_to_device(device, batch):
+    result  = {}
+    for key, value in batch.item():
+        if torch.is_tensor(value):
+            result[key] = value.to(
+                device,
+                non_blocking = True
+            )
+        else:
+            result[key] = value
+
+    return result
+
 
 # generate senteces
 subject_pool = [
@@ -97,9 +110,12 @@ for epoch in range(epoches):
     step_count = 0
 
     for i, batch in enumerate(loader):
-        x = batch["input_ids"].to(device)
-        y = batch["labels"].to(device)
-        pad_mask = batch["pad_mask"].to(device)
+        # move batch to device
+        batch = move_batch_to_device(device,batch)
+
+        x = batch["input_ids"]
+        y = batch["labels"]
+        pad_mask = batch["pad_mask"]
 
         loss = trainer.train_step(x, y, pad_mask) / accumulation_steps
         loss.backward()

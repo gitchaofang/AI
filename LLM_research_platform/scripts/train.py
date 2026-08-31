@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader
 import random
 from src.data.dataset import VariableLengthDataset
 from src.data.collator import PaddingCollator
-from src.data.sampler import BucketBatchSampler
 from src.data.token_batch_sampler import TokenBatchSampler
 from src.models.GPT import GPT
 from src.training.trainer import Trainer

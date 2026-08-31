@@ -280,6 +280,8 @@ for epoch in range(epoches):
         loss_accu += loss.item() * accumulation_steps
         step_count += 1
 
+        print(f"epoch {epoch} | batch {i} | loss: {loss.item() * accumulation_steps}")
+
         if step_count % accumulation_steps == 0 or i == len(loader) - 1:
             optimizer.step()
             optimizer.zero_grad()

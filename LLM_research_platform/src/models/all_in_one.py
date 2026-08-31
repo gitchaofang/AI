@@ -236,8 +236,8 @@ loader = DataLoader(
     pin_memory = True,
 )
 
-#device = "cuda" if torch.cuda.is_available() else "cpu"
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Device:", device)
 
 model = GPT(

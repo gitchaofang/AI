@@ -8,6 +8,7 @@ import numpy as np
 #H head number
 #Dh header dimension (multi header)
 
+# self attention
 class SelfAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, max_seq_len: int):
         super().__init__()
@@ -27,7 +28,7 @@ class SelfAttention(nn.Module):
     def forward(self, x, combined_mask: torch.Tensor):
         B,T,D = x.shape
 
-        assert combined_mask.shape[-1] == self.max_seq_len
+        assert combined_mask.shape[-1] <= self.max_seq_len
         # build attentions [B,T,D]
         q = self.q_proj(x)
         k = self.k_proj(x)
@@ -43,15 +44,17 @@ class SelfAttention(nn.Module):
         scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(
             combined_mask == 0,
-            float("-inf"),
+            -1e10
+            #float("-inf"),
         )
+        
         # attention
         attention = torch.softmax(scores, dim = -1)
 
         # value: [B,H,T,T] @ [B,H,T,Dh] -> [B,T,T,Dh]
         out = attention @ v
         # [B,H,T,Dh] ->  [B,T,D]
-        out = out.transpose(1, 2).contigous()
+        out = out.transpose(1, 2).contiguous()
         out = out.view(B,T,D)
 
         return self.out_proj(out)

@@ -4,16 +4,15 @@ from .transformer import TransformerBlock
 
 class GPT(nn.Module):
     def __init__(self,
-                 verb_size: int,
-                 d_model: int,
-                 n_layers: int,
-                 n_heads: int,
-                 max_seq_len: int,
-                 ):
+            vocab_size :int,
+            d_model: int,
+            n_layers: int,
+            n_heads: int,
+            max_seq_len: int,
+        ):
         super().__init__()
-        self.token_embedding = nn.embedding(verb_size,d_model)
-        self.position_embedding = nn.embedding(max_seq_len, d_model)
-        self.mask = torch.tril(torch.ones(size = (max_seq_len, max_seq_len)))
+        self.token_embedding = nn.Embedding(vocab_size + 1, d_model)
+        self.position_embedding = nn.Embedding(max_seq_len, d_model)
         self.max_seq_len = max_seq_len
         self.blocks = nn.ModuleList([
             TransformerBlock(
@@ -25,41 +24,46 @@ class GPT(nn.Module):
         ])
 
         self.norm = nn.LayerNorm(d_model)
+        self.lm_linear = nn.Linear(d_model, vocab_size)
 
-        self.lm_head = nn.Linear(
-            d_model,
-            verb_size,
-            bias=False,
+        #build causal mask
+        mask = torch.tril(
+            torch.ones(
+                (max_seq_len, max_seq_len),
+                dtype=torch.int64,
+                device=device
+            )
         )
 
-        # causal mask
-        mask = torch.
         self.register_buffer(
-
+            "causal_mask",
+            mask.view(1,1,max_seq_len,max_seq_len)
         )
 
-    def forward(self, x, mask: torch.Tensor):
-        B, T = x.shape
-
-         # build combined mask
-        mask = mask.unsqueeze(-1)
-        pad_mask = mask @ mask.transpose(-1,-2)
-        pad_mask = pad_mask.unsqueeze(1)
-        combined_mask = pad_mask * self.causal_mask
-
+    def forward(self,x: torch.Tensor, pad_mask: torch.Tensor):
+        B,T = x.shape
         assert T <= self.max_seq_len
 
-        positions = torch.arange(
+        # build combined mask: causal mask [1,1,max_seq_len, max_seq_len] + pad_mask[B,T] -> [B,1,T,T]
+        pad_mask = pad_mask.to(dtype=torch.float32, device=x.device)
+        pad_mask = pad_mask.unsqueeze(-1)
+        pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
+        combined_mask = self.causal_mask[:,:,:T,:T].to(x.device).float() * pad_mask.unsqueeze(1)
+
+        # embedding
+        pos_seq = torch.arange(
             T,
-            device = input_ids.device,
+            dtype = torch.int64,
+            device = x.device
         )
+        x = self.token_embedding(x) + self.position_embedding(pos_seq)
 
-        x = self.token_embedding(input_ids) + self.position_embedding(self.positions)
+        # transformer blocks
+        for i, block in enumerate(self.blocks):
+            x = block(x, combined_mask)
 
-        for block in self.blocks:
-            x = block(x)
-
+        # forward
         x = self.norm(x)
-        logits = self.lm_hea(x)
+        logits = self.lm_linear(x)
 
         return logits

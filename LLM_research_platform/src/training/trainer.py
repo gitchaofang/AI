@@ -6,11 +6,11 @@ class Trainer:
         self.model = model
         self.optimizer = optimizer
         self.device = device
-    def train_step(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
+
+    def train_step(self, x, y, mask):
         x = x.to(self.device)
         y = y.to(self.device)
-
-        self.optimizer.zero_grad()
+        mask = mask.to(self.device)
 
         logits = self.model(x, mask)
 
@@ -18,10 +18,7 @@ class Trainer:
         loss = F.cross_entropy(
             logits.reshape(B * T, V),
             y.reshape(B * T),
-            ignore_index = -100,
+            ignore_index=-100,
         )
 
-        loss.backwards()
-        self.optimizer.step()
-
-        return loss.item()
+        return loss

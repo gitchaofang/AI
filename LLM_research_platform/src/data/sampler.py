@@ -29,6 +29,3 @@ class BucketSampler(Sampler):
 
         for batch in batches:
             yield batch
-
-    def __len__(self):
-        return(len(self.indices) + self.batch_size - 1) // self.batch_size

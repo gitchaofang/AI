@@ -17,11 +17,11 @@ class Trainer:
         ):
             logits = self.model(x, mask)
 
-        B, T, V = logits.shape
-        loss = F.cross_entropy(
-            logits.reshape(B * T, V),
-            y.reshape(B * T),
-            ignore_index=-100,
-        )
+            B, T, V = logits.shape
+            loss = F.cross_entropy(
+                logits.reshape(B * T, V),
+                y.reshape(B * T),
+                ignore_index=-100,
+            )
 
         return loss

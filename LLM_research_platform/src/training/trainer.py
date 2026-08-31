@@ -11,8 +11,11 @@ class Trainer:
         x = x.to(self.device)
         y = y.to(self.device)
         mask = mask.to(self.device)
-
-        logits = self.model(x, mask)
+        with torch.autocast(
+            devie_type = self.device,
+            dtype = torch.bfloat16,
+        ):
+            logits = self.model(x, mask)
 
         B, T, V = logits.shape
         loss = F.cross_entropy(

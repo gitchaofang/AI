@@ -1,4 +1,5 @@
 import torch
+import random
 from torch.utils.data import Sampler
 
 class TokenBatchSampler(Sampler):

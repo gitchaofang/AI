@@ -165,9 +165,9 @@ class Trainer:
     def train_step(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
         x = x.to(self.device)
         y = y.to(self.device)
-        
-        mask = mask.to(self.device)
 
+        mask = mask.to(self.device)
+        
         self.optimizer.zero_grad()
 
         logits = self.model(x, mask)
@@ -271,6 +271,7 @@ epoches = 10
 for epoch in range(epoches):
     loss_accu = 0.0
     for i, batch in enumerate (loader):
+        print(f"batch size: {len(batch)}")
         x = batch["input_ids"].to(device)
         y = batch["labels"].to(device)
         pad_mask = batch["pad_mask"].to(device)

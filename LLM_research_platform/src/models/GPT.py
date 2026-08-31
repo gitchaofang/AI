@@ -31,7 +31,6 @@ class GPT(nn.Module):
             torch.ones(
                 (max_seq_len, max_seq_len),
                 dtype=torch.int64,
-                device=device
             )
         )
 

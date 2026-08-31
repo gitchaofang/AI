@@ -12,7 +12,7 @@ class Trainer:
         y = y.to(self.device)
         mask = mask.to(self.device)
         with torch.autocast(
-            devie_type = self.device,
+            device_type = self.device,
             dtype = torch.bfloat16,
         ):
             logits = self.model(x, mask)

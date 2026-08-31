@@ -134,9 +134,10 @@ class GPT(nn.Module):
         assert T <= self.max_seq_len
 
         # build combined mask: causal mask [1,1,max_seq_len, max_seq_len] + pad_mask[B,T] -> [B,1,T,T]
+        pad_mask = pad_mask.to(dtype=torch.float32, device=x.device)
         pad_mask = pad_mask.unsqueeze(-1)
-        pad_mask = pad_mask @ pad_mask.transpose(-1,-2)
-        combined_mask = self.causal_mask[:,:,:T,:T] * pad_mask.unsqueeze(1).to(x.device)
+        pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
+        combined_mask = self.causal_mask[:,:,:T,:T].to(x.device).float() * pad_mask.unsqueeze(1)
 
         # embedding
         pos_seq = torch.arange(

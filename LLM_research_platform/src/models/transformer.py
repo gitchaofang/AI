@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .SelfAttention import SelfAttention
+from .self_attention import SelfAttention
 
 # transformer:
 class FeedForward(nn.Module):

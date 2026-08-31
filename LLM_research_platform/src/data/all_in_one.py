@@ -69,7 +69,7 @@ class TokenBatchSampler(Sampler):
     def __init__(self,
                  dataset,
                  max_token,
-                 batch_size = 4,
+                 batch_size = 2,
                  shuffle = True):
         self.dataset = dataset
         self.max_token = max_token

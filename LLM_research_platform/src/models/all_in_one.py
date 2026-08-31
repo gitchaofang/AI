@@ -243,9 +243,9 @@ print("Device:", device)
 model = GPT(
     vocab_size = vocab_size,
     d_model = 128,
-    max_seq_len = 256,
-    n_layers = 4,
-    n_heads = 2,
+    max_seq_len = 128,
+    n_layers = 2,
+    n_heads = 4,
 ).to(device)
 
 optimizer = torch.optim.AdamW(
@@ -261,7 +261,7 @@ trainer = Trainer(
 )
 
 epoches = 10
-accumulation_steps = 1
+accumulation_steps = 16
 for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()
@@ -276,7 +276,7 @@ for epoch in range(epoches):
         loss = trainer.train_step(x, y, pad_mask) / accumulation_steps
         loss.backward()
 
-        loss_accu += loss.item() * trainer.accumulated_step
+        loss_accu += loss.item() * trainer.accumulation_steps
         step_count += 1
 
         if step_count % trainer.accumulated_step == 0 or i == len(loader) - 1:

@@ -2,8 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import random
-from src.data.dataset import TextDataset
-from src.data.variable_length_dataset import VariableLengthDataset
+from src.data.dataset import VariableLengthDataset
 from src.data.collator import PaddingCollator
 from src.data.sampler import BucketBatchSampler
 from src.data.token_batch_sampler import TokenBatchSampler

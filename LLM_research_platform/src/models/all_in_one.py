@@ -162,28 +162,22 @@ class Trainer:
         self.model = model
         self.optimizer = optimizer
         self.device = device
-    def train_step(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
+
+    def train_step(self, x, y, mask):
         x = x.to(self.device)
         y = y.to(self.device)
-
         mask = mask.to(self.device)
-        
-        self.optimizer.zero_grad()
 
         logits = self.model(x, mask)
-#        print(f"logits: {logits}")
 
         B, T, V = logits.shape
         loss = F.cross_entropy(
             logits.reshape(B * T, V),
             y.reshape(B * T),
-            ignore_index = -100,
+            ignore_index=-100,
         )
 
-        loss.backward()
-        self.optimizer.step()
-
-        return loss.item()
+        return loss
 
 
 # Training scripts
@@ -267,16 +261,27 @@ trainer = Trainer(
 )
 
 epoches = 10
-
+accumulation_steps = 1
 for epoch in range(epoches):
+    model.train()
+    optimizer.zero_grad()
     loss_accu = 0.0
-    for i, batch in enumerate (loader):
-        print(f"batch size: {len(batch)}")
+    step_count = 0
+
+    for i, batch in enumerate(loader):
         x = batch["input_ids"].to(device)
         y = batch["labels"].to(device)
         pad_mask = batch["pad_mask"].to(device)
 
-        loss = trainer.train_step(x,y,pad_mask)
-        print(f"epoch {epoch} | batch {i} | loss: {loss}")
-        loss_accu += loss
+        loss = trainer.train_step(x, y, pad_mask) / accumulation_steps
+        loss.backward()
+
+        loss_accu += loss.item() * trainer.accumulated_step
+        step_count += 1
+
+        if step_count % trainer.accumulated_step == 0 or i == len(loader) - 1:
+            optimizer.step()
+            optimizer.zero_grad()
+            step_count = 0
+
     print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")

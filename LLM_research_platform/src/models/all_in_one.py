@@ -127,7 +127,7 @@ class TransformerBlock(nn.Module):
         x = x + self.ffn(self.norm2(x))
         return x
 
-class GPT(nn.Module):
+'''class GPT(nn.Module):
     def __init__(self, vocab_size: int, d_model: int, n_layers: int, n_heads: int, max_seq_len: int):
         super().__init__()
         self.token_embedding = nn.Embedding(vocab_size + 1, d_model)
@@ -153,12 +153,7 @@ class GPT(nn.Module):
         x = self.norm(x)
         logits = self.lm_linear(x)
         return logits
-
-import torch
-import torch.nn as nn
-
-from transformer import TransformerBlock
-
+'''
 
 class GPT(nn.Module):
     def __init__(

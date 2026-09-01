@@ -11,7 +11,7 @@ from src.training.trainer import Trainer
 # Training scripts
 def move_batch_to_device(device, batch):
     result  = {}
-    for key, value in batch.item():
+    for key, value in batch.items():
         if torch.is_tensor(value):
             result[key] = value.to(
                 device,

@@ -81,19 +81,18 @@ class SelfAttention(nn.Module):
             k_full, v_full = self.kv_cache
             T_k = k_full.size(1)
 
-            # valid key mask for all cached tokens
             valid_mask = self.kv_mask.unsqueeze(-1) * self.kv_mask.unsqueeze(-2)
-            valid_mask = valid_mask.unsqueeze(1)  # [B,1,T_k,T_k]
+            valid_mask = valid_mask.unsqueeze(1)
 
-            # for incremental decode, query length is the new chunk length T_q
-            combined_mask = self.causal_mask[:, :, :T_q, :T_k].to(x.device).float() * valid_mask[:, :, -T_q:, :]
+            causal_mask = self.causal_mask[:, :, :T_q, :T_k].to(x.device).float()
+            combined_mask = causal_mask * valid_mask[:, :, -T_q:, :]
+
             return self._dot_product(q, k_full, v_full, combined_mask)
 
         if is_prefill:
             self.kv_cache = (k, v)
             self.kv_mask = pad_mask
 
-        # normal training/full-sequence attention
         pad_mask = pad_mask.unsqueeze(-1)
         pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
         combined_mask = self.causal_mask[:, :, :T_q, :T_q].to(x.device).float() * pad_mask.unsqueeze(1)
@@ -128,39 +127,23 @@ class TransformerBlock(nn.Module):
         return x
 
 class GPT(nn.Module):
-    def __init__(self,
-            vocab_size :int,
-            d_model: int,
-            n_layers: int,
-            n_heads: int,
-            max_seq_len: int,
-        ):
+    def __init__(self, vocab_size: int, d_model: int, n_layers: int, n_heads: int, max_seq_len: int):
         super().__init__()
         self.token_embedding = nn.Embedding(vocab_size + 1, d_model)
         self.position_embedding = nn.Embedding(max_seq_len, d_model)
         self.max_seq_len = max_seq_len
         self.blocks = nn.ModuleList([
-            TransformerBlock(
-                d_model,
-                n_heads,
-                max_seq_len,
-            )
+            TransformerBlock(d_model, n_heads, max_seq_len)
             for _ in range(n_layers)
         ])
-
         self.norm = nn.LayerNorm(d_model)
         self.lm_linear = nn.Linear(d_model, vocab_size)
-
 
     def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
         B, T = x.shape
         assert T <= self.max_seq_len
 
-        pos_seq = torch.arange(
-            T,
-            dtype = torch.int64,
-            device = x.device
-        )
+        pos_seq = torch.arange(T, dtype=torch.int64, device=x.device)
         x = self.token_embedding(x) + self.position_embedding(pos_seq)
 
         for block in self.blocks:
@@ -182,7 +165,7 @@ class Trainer:
         y = y.to(self.device)
         mask = mask.to(self.device)
 
-        logits = self.model(x, mask,is_prefill= False, is_generate = False)
+        logits = self.model(x, mask, is_prefill=False, is_generate=False)
 
         B, T, V = logits.shape
         loss = F.cross_entropy(

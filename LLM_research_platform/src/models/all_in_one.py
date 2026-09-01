@@ -184,7 +184,7 @@ class GPT(nn.Module):
         )
 
         self.norm = nn.LayerNorm(d_model,)
-        self.lm_linear = nn.Linear(d_model,vocab_size,)
+        self.lm_linear = nn.Linear(d_model,vocab_size + 1,)
         self.position_offset = None
 
     def forward(
@@ -241,9 +241,6 @@ class Trainer:
         self.device = device
 
     def train_step(self, x, y, mask):
-        x = x.to(self.device)
-        y = y.to(self.device)
-        mask = mask.to(self.device)
 
         logits = self.model(x, mask, is_prefill=False, is_generate=False)
 
@@ -357,7 +354,8 @@ for epoch in range(epoches):
         step_count += 1
 
         if(i % 50 == 0):
-            print(f"epoch {epoch} | batch {i} | batch_size {len(batch)} | loss: {loss.item() * accumulation_steps}")
+            batch_size = batch["input_ids"].size(0)
+            print(f"epoch {epoch} | batch {i} | batch_size {len(batch_size)} | loss: {loss.item() * accumulation_steps}")
 
         if step_count % accumulation_steps == 0 or i == len(loader) - 1:
             optimizer.step()

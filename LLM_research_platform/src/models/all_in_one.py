@@ -13,9 +13,10 @@ from src.data.all_in_one import PaddingCollator
 
 # self attention
 class SelfAttention(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, max_seq_len: int):
+    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0):
         super().__init__()
-        assert d_model % n_heads == 0 
+        assert d_model % n_heads == 0
+
         self.d_model = d_model
         self.n_heads = n_heads
         self.max_seq_len = max_seq_len
@@ -26,41 +27,79 @@ class SelfAttention(nn.Module):
         self.v_proj = nn.Linear(d_model, d_model)
         self.out_proj = nn.Linear(d_model, d_model)
 
-  
+        mask = torch.tril(
+            torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
+        )
+        self.register_buffer(
+            "causal_mask",
+            mask.view(1, 1, self.max_seq_len, self.max_seq_len),
+        )
 
-    def forward(self, x, combined_mask: torch.Tensor):
-        B,T,D = x.shape
+        self.kv_cache = None
+        self.kv_mask = None
+        self.pad_token = pad_token
 
-        assert combined_mask.shape[-1] <= self.max_seq_len
-        # build attentions [B,T,D]
+    def reset_cache(self):
+        self.kv_cache = None
+        self.kv_mask = None
+
+    def _dot_product(self, q, k, v, combined_mask):
+        B, T_q, D = q.shape
+        T_k = k.shape[1]
+
+        q = q.view(B, T_q, self.n_heads, self.head_dim).transpose(1, 2)
+        k = k.view(B, T_k, self.n_heads, self.head_dim).transpose(1, 2)
+        v = v.view(B, T_k, self.n_heads, self.head_dim).transpose(1, 2)
+
+        scores = q @ k.transpose(-1, -2)
+        scores = scores / math.sqrt(self.head_dim)
+        scores = scores.masked_fill(combined_mask == 0, -1e10)
+
+        attention = torch.softmax(scores, dim=-1)
+        out = attention @ v
+        out = out.transpose(1, 2).contiguous().view(B, T_q, D)
+        return self.out_proj(out)
+
+    def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
+        B, T_q, D = x.shape
+        pad_mask = pad_mask.to(device=x.device, dtype=torch.float32)
+
         q = self.q_proj(x)
         k = self.k_proj(x)
         v = self.v_proj(x)
 
-        # multi-heead [B,T,D] -> [B,H,T,Dh]
-        q = q.view(B,T,self.n_heads,self.head_dim).transpose(1,2)
-        k = k.view(B,T,self.n_heads,self.head_dim).transpose(1,2)
-        v = v.view(B,T,self.n_heads,self.head_dim).transpose(1,2)
+        if is_generate:
+            if self.kv_cache is None:
+                self.kv_cache = (k, v)
+                self.kv_mask = pad_mask
+            else:
+                k_full = torch.cat([self.kv_cache[0], k], dim=1)
+                v_full = torch.cat([self.kv_cache[1], v], dim=1)
+                self.kv_cache = (k_full, v_full)
+                self.kv_mask = torch.cat([self.kv_mask, pad_mask], dim=1)
 
-        # scores
-        scores = q @ k.transpose(-1,-2)
-        scores = scores / math.sqrt(self.head_dim)
-        scores = scores.masked_fill(
-            combined_mask == 0,
-            -1e10
-            #float("-inf"),
-        )
+            k_full, v_full = self.kv_cache
+            T_k = k_full.size(1)
+
+            # valid key mask for all cached tokens
+            valid_mask = self.kv_mask.unsqueeze(-1) * self.kv_mask.unsqueeze(-2)
+            valid_mask = valid_mask.unsqueeze(1)  # [B,1,T_k,T_k]
+
+            # for incremental decode, query length is the new chunk length T_q
+            combined_mask = self.causal_mask[:, :, :T_q, :T_k].to(x.device).float() * valid_mask[:, :, -T_q:, :]
+            return self._dot_product(q, k_full, v_full, combined_mask)
+
+        if is_prefill:
+            self.kv_cache = (k, v)
+            self.kv_mask = pad_mask
+
+        # normal training/full-sequence attention
+        pad_mask = pad_mask.unsqueeze(-1)
+        pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
+        combined_mask = self.causal_mask[:, :, :T_q, :T_q].to(x.device).float() * pad_mask.unsqueeze(1)
+
+        return self._dot_product(q, k, v, combined_mask)
         
-        # attention
-        attention = torch.softmax(scores, dim = -1)
-
-        # value: [B,H,T,T] @ [B,H,T,Dh] -> [B,T,T,Dh]
-        out = attention @ v
-        # [B,H,T,Dh] ->  [B,T,D]
-        out = out.transpose(1, 2).contiguous()
-        out = out.view(B,T,D)
-
-        return self.out_proj(out)
 
 # transformer:
 class FeedForward(nn.Module):
@@ -76,18 +115,15 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 class TransformerBlock(nn.Module):
-    def __init__(self, d_model: int, n_heads:int, max_seq_len: int):
+    def __init__(self, d_model, n_heads, max_seq_len):
         super().__init__()
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.max_seq_len = max_seq_len
-
         self.norm1 = nn.LayerNorm(d_model)
         self.attention = SelfAttention(d_model, n_heads, max_seq_len)
         self.norm2 = nn.LayerNorm(d_model)
         self.ffn = FeedForward(d_model)
-    def forward(self, x: torch.Tensor, mask):
-        x = x + self.attention(self.norm1(x), mask)
+
+    def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
+        x = x + self.attention(self.norm1(x), pad_mask, is_prefill, is_generate)
         x = x + self.ffn(self.norm2(x))
         return x
 
@@ -115,30 +151,11 @@ class GPT(nn.Module):
         self.norm = nn.LayerNorm(d_model)
         self.lm_linear = nn.Linear(d_model, vocab_size)
 
-        #build causal mask
-        mask = torch.tril(
-            torch.ones(
-                (max_seq_len, max_seq_len),
-                dtype=torch.int64,
-            )
-        )
 
-        self.register_buffer(
-            "causal_mask",
-            mask.view(1,1,max_seq_len,max_seq_len)
-        )
-
-    def forward(self,x: torch.Tensor, pad_mask: torch.Tensor):
-        B,T = x.shape
+    def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
+        B, T = x.shape
         assert T <= self.max_seq_len
 
-        # build combined mask: causal mask [1,1,max_seq_len, max_seq_len] + pad_mask[B,T] -> [B,1,T,T]
-        pad_mask = pad_mask.to(dtype=torch.float32, device=x.device)
-        pad_mask = pad_mask.unsqueeze(-1)
-        pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
-        combined_mask = self.causal_mask[:,:,:T,:T].to(x.device).float() * pad_mask.unsqueeze(1)
-
-        # embedding
         pos_seq = torch.arange(
             T,
             dtype = torch.int64,
@@ -146,14 +163,11 @@ class GPT(nn.Module):
         )
         x = self.token_embedding(x) + self.position_embedding(pos_seq)
 
-        # transformer blocks
-        for i, block in enumerate(self.blocks):
-            x = block(x, combined_mask)
+        for block in self.blocks:
+            x = block(x, pad_mask, is_prefill=is_prefill, is_generate=is_generate)
 
-        # forward
         x = self.norm(x)
         logits = self.lm_linear(x)
-
         return logits
 
 
@@ -168,7 +182,7 @@ class Trainer:
         y = y.to(self.device)
         mask = mask.to(self.device)
 
-        logits = self.model(x, mask)
+        logits = self.model(x, mask,is_prefill= False, is_generate = False)
 
         B, T, V = logits.shape
         loss = F.cross_entropy(

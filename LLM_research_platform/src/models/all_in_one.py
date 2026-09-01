@@ -127,34 +127,6 @@ class TransformerBlock(nn.Module):
         x = x + self.ffn(self.norm2(x))
         return x
 
-'''class GPT(nn.Module):
-    def __init__(self, vocab_size: int, d_model: int, n_layers: int, n_heads: int, max_seq_len: int):
-        super().__init__()
-        self.token_embedding = nn.Embedding(vocab_size + 1, d_model)
-        self.position_embedding = nn.Embedding(max_seq_len, d_model)
-        self.max_seq_len = max_seq_len
-        self.blocks = nn.ModuleList([
-            TransformerBlock(d_model, n_heads, max_seq_len)
-            for _ in range(n_layers)
-        ])
-        self.norm = nn.LayerNorm(d_model)
-        self.lm_linear = nn.Linear(d_model, vocab_size)
-
-    def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
-        B, T = x.shape
-        assert T <= self.max_seq_len
-
-        pos_seq = torch.arange(T, dtype=torch.int64, device=x.device)
-        x = self.token_embedding(x) + self.position_embedding(pos_seq)
-
-        for block in self.blocks:
-            x = block(x, pad_mask, is_prefill=is_prefill, is_generate=is_generate)
-
-        x = self.norm(x)
-        logits = self.lm_linear(x)
-        return logits
-'''
-
 class GPT(nn.Module):
     def __init__(
         self,

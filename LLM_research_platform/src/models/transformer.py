@@ -16,17 +16,14 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 class TransformerBlock(nn.Module):
-    def __init__(self, d_model: int, n_heads:int, max_seq_len: int):
+    def __init__(self, d_model, n_heads, max_seq_len):
         super().__init__()
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.max_seq_len = max_seq_len
-
         self.norm1 = nn.LayerNorm(d_model)
         self.attention = SelfAttention(d_model, n_heads, max_seq_len)
         self.norm2 = nn.LayerNorm(d_model)
         self.ffn = FeedForward(d_model)
-    def forward(self, x: torch.Tensor, mask):
-        x = x + self.attention(self.norm1(x), mask)
+
+    def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
+        x = x + self.attention(self.norm1(x), pad_mask, is_prefill, is_generate)
         x = x + self.ffn(self.norm2(x))
         return x

@@ -85,7 +85,8 @@ class SelfAttention(nn.Module):
             valid_mask = valid_mask.unsqueeze(1)
 
             causal_mask = self.causal_mask[:, :, :T_q, :T_k].to(x.device).float()
-            combined_mask = causal_mask * valid_mask[:, :, -T_q:, :]
+            combined_mask = causal_mask * valid_mask
+            combined_mask = combined_mask[:, :, -T_q:, :]
 
             return self._dot_product(q, k_full, v_full, combined_mask)
 

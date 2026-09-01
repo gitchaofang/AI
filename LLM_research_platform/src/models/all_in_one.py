@@ -81,10 +81,10 @@ class SelfAttention(nn.Module):
             k_full, v_full = self.kv_cache
             T_k = k_full.size(1)
 
-            valid_mask = self.kv_mask.unsqueeze(-1) * self.kv_mask.unsqueeze(-2)
+            valid_mask = self.kv_mask.unsqueeze(-1) @ self.kv_mask.unsqueeze(-2)
             valid_mask = valid_mask.unsqueeze(1)
 
-            causal_mask = self.causal_mask[:, :, :T_q, :T_k].to(x.device).float()
+            causal_mask = self.causal_mask[:, :, :T_k, :T_k].to(x.device).float()
             combined_mask = causal_mask * valid_mask
             combined_mask = combined_mask[:, :, -T_q:, :]
 

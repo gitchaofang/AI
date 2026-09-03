@@ -276,7 +276,7 @@ trainer = Trainer(
 )
 
 epoches = 50
-accumulation_steps = 16
+accumulation_steps = 4
 for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()

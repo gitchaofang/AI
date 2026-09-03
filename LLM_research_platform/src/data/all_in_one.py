@@ -180,6 +180,9 @@ class PaddingCollator:
             "pad_mask": pad_mask,
         }
 
+dataset = VariableLengthDataset("novel.txt")
+print(len(dataset))
+
 
 
 

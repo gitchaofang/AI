@@ -2,23 +2,21 @@ import torch
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import Sampler
-from tokenizer import Tokenizer
+from src.data.tokenizer import Tokenizer
 # data dir: /Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data
 
 class VariableLengthDataset(Dataset): # for txt file
     def __init__(self, file_name):
         self.file_name = file_name
-        sentences = self._data_prep
-        tokenizer = tokenizer(file_name)
+        sentences = self._data_prep()
+        tokenizer = Tokenizer(file_name)
         token_map = tokenizer.get()
         self.stoi = token_map["stoi"]
+        self.itos = token_map["itos"]
 
         self.tokens = []
         for sentence in sentences:
-            current_sentence = [
-                self.stoi[char]
-                for char in sentence
-            ]
+            current_sentence = [self.stoi[char] for char in sentence]
             self.tokens.append(current_sentence) 
         print(f"batch size = {len(self.tokens)}")
         print(f"token number = {len(self.stoi)}")

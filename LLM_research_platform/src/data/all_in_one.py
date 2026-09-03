@@ -2,25 +2,18 @@ import torch
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import Sampler
+from tokenizer import Tokenizer
 # data dir: /Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data
 
 class VariableLengthDataset(Dataset): # for txt file
-    def __init__(self,file_nanme):
-        self.file_name = self.file_name
+    def __init__(self, file_name):
+        self.file_name = file_name
         sentences = self._data_prep
-        chars = set()
-        for sentence in sentences:
-            chars.update(sentence)
-        self.char_set = sorted(chars)
-        self.stoi = {
-            char: i + 1 for i, char in enumerate(self.char_set)
-        }
-        self.itos = {
-            i + 1: char for i, char in enumerate(self.char_set)
-        }
+        tokenizer = tokenizer(file_name)
+        token_map = tokenizer.get()
+        self.stoi = token_map["stoi"]
 
         self.tokens = []
-
         for sentence in sentences:
             current_sentence = [
                 self.stoi[char]
@@ -28,7 +21,7 @@ class VariableLengthDataset(Dataset): # for txt file
             ]
             self.tokens.append(current_sentence) 
 
-    def _data_prep(self):
+    def _data_prep(self): # read data then return a list of lis (a batch of data)
         path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data" + self.file_name
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()

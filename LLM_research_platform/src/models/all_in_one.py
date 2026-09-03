@@ -159,6 +159,16 @@ class GPT(nn.Module):
         self.lm_linear = nn.Linear(d_model,vocab_size + 1,)
         self.position_offset = None
 
+    def reset_cache(self):
+        """
+        Clear all KV caches and reset logical position tracking.
+        Call this before starting a new generation session.
+        """
+        self.position_offset = None
+
+        for block in self.blocks:
+            block.attention.reset_cache()
+
     def forward(
         self,
         x,

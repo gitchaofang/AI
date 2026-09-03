@@ -47,6 +47,8 @@ class VariableLengthDataset(Dataset): # for txt file
             "input_ids": sentence[:-1],
             "labels": sentence[1:]
         }
+    def get_vocab_size(self):
+        return len(self.stoi)
     def get_length(self,idx):
         return len(self.tokens[idx])
 

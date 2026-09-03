@@ -238,6 +238,8 @@ class Trainer:
 
 # Training scripts
 dataset = VariableLengthDataset("novel.txt")
+vocab_size = dataset.get_vocab_size()
+print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()
 sampler = TokenBatchSampler(dataset,512)
 

@@ -2,9 +2,12 @@ import torch
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import Sampler
-class VariableLengthDataset(Dataset):
-    def __init__(self,sentences):
-        self.sentences = sentences
+# data dir: /Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data
+
+class VariableLengthDataset(Dataset): # for txt file
+    def __init__(self,file_nanme):
+        self.file_name = self.file_name
+        sentences = self._data_prep
         chars = set()
         for sentence in sentences:
             chars.update(sentence)
@@ -23,7 +26,23 @@ class VariableLengthDataset(Dataset):
                 self.stoi[char]
                 for char in sentence
             ]
-            self.tokens.append(current_sentence)   
+            self.tokens.append(current_sentence) 
+
+    def _data_prep(self):
+        path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data" + self.file_name
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        out = []
+        current_batch = []
+        current_len = 0
+        for word in text.split():
+            current_batch.append(word)
+            current_len == 255
+            out.append(current_batch)
+            current_len = 0
+        return out
+        
+
 
     def __len__(self):
         return len(self.tokens)

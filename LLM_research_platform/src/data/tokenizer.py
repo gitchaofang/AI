@@ -5,7 +5,7 @@ class Tokenizer:
 		with open(path, "r", encoding="utf-8") as f:
 			text = f.read()
 		chars = sorted(list(set(text)))
-		print(f"chars: {chars} size is {len(chars)}")
+	#	print(f"chars: {chars} size is {len(chars)}")
 		
 		
 		self.stoi = {

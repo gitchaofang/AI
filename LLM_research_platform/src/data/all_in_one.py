@@ -31,7 +31,7 @@ class VariableLengthDataset(Dataset): # for txt file
         for word in text.split():
             current_batch.append(word)
             current_len += 1
-            if current_len == 255:
+            if current_len == 128:
                 out.append(current_batch)          
                 current_len = 0
                 current_batch = []

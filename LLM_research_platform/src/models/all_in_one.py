@@ -296,7 +296,7 @@ for epoch in range(epoches):
 
         if(i % 50 == 0):
             batch_size = batch["input_ids"].size(0)
-            print(f"epoch {epoch} | batch {i} | batch_size {len(batch_size)} | loss: {loss.item() * accumulation_steps}")
+            print(f"epoch {epoch} | batch {i} | batch_size {batch_size} | loss: {loss.item() * accumulation_steps}")
 
         if step_count % accumulation_steps == 0 or i == len(loader) - 1:
             optimizer.step()

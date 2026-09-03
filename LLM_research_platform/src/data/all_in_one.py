@@ -29,10 +29,10 @@ class VariableLengthDataset(Dataset): # for txt file
         out = []
         current_batch = []
         current_len = 0
-        for word in text.split():
-            current_batch.append(word)
+        for char in text:
+            current_batch.append(char)
             current_len += 1
-            if current_len == 128:
+            if current_len == 256:
                 out.append(current_batch)          
                 current_len = 0
                 current_batch = []

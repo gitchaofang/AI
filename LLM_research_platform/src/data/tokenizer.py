@@ -8,11 +8,11 @@ class Tokenizer:
 			words.add(word)
 		word_set = sorted(words)
 		self.stoi = {
-			i + 1: word 
+			word: i + 1 
 			for i, word in enumerate(words)
 		}
 		self.itos = {
-			word: i + 1
+			i + 1: word
 			for i, word in enumerate(words)
 		}
 		print(f"vocab_size is: {len(self.stoi)}")

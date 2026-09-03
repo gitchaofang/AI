@@ -22,7 +22,7 @@ class VariableLengthDataset(Dataset): # for txt file
         print(f"token number = {len(self.stoi)}")
 
     def _data_prep(self): # read data then return a list of lis (a batch of data)
-        path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data" + self.file_name
+        path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/" + self.file_name
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()
         out = []

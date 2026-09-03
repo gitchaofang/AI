@@ -20,6 +20,8 @@ class VariableLengthDataset(Dataset): # for txt file
                 for char in sentence
             ]
             self.tokens.append(current_sentence) 
+        print(f"batch size = {len(self.tokens)}")
+        print(f"token number = {len(self.stoi)}")
 
     def _data_prep(self): # read data then return a list of lis (a batch of data)
         path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data" + self.file_name

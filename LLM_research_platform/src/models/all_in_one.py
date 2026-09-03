@@ -259,7 +259,7 @@ model = GPT(
     vocab_size = vocab_size,
     d_model = 128,
     max_seq_len = 128,
-    n_layers = 3,
+    n_layers = 2,
     n_heads = 4,
 ).to(device)
 

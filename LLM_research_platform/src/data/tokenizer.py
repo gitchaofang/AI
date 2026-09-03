@@ -16,7 +16,8 @@ class Tokenizer:
 			for i, word in enumerate(words)
 		}
 		print(f"vocab_size is: {len(self.stoi)}")
-	def get(self:
+	
+	def get(self):
 		return {
 			"stoi": self.stoi,
 			"itos": self.itos

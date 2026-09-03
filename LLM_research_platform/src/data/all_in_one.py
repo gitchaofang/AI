@@ -23,7 +23,7 @@ class VariableLengthDataset(Dataset): # for txt file
 
     def _data_prep(self): # read data then return a list of lis (a batch of data)
         #path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/" + self.file_name. # for local
-        path = "/content/AI/LLM_research_platform/src/data/input_data/data" + self.file_name # for codlab online
+        path = "/content/AI/LLM_research_platform/src/data/input_data/data/" + self.file_name # for codlab online
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()
         out = []

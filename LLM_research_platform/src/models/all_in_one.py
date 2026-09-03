@@ -241,7 +241,7 @@ dataset = VariableLengthDataset("novel.txt")
 vocab_size = dataset.get_vocab_size()
 print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()
-sampler = TokenBatchSampler(dataset,512)
+sampler = TokenBatchSampler(dataset,128)
 
 loader = DataLoader(
     dataset,
@@ -259,7 +259,7 @@ model = GPT(
     vocab_size = vocab_size,
     d_model = 128,
     max_seq_len = 128,
-    n_layers = 4,
+    n_layers = 3,
     n_heads = 4,
 ).to(device)
 

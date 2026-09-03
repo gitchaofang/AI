@@ -281,7 +281,7 @@ for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()
     loss_accu = 0.0
-    step_count = 0
+   
 
     for i, batch in enumerate(loader):
         x = batch["input_ids"].to(device)
@@ -291,16 +291,14 @@ for epoch in range(epoches):
         loss = trainer.train_step(x, y, pad_mask) / accumulation_steps
         loss.backward()
 
-        loss_accu += loss.item() * accumulation_steps
-        step_count += 1
+        loss_accu += (loss.item() * accumulation_steps)
 
         if(i % 50 == 0):
             batch_size = batch["input_ids"].size(0)
             print(f"epoch {epoch} | batch {i} | batch_size {batch_size} | loss: {loss.item() * accumulation_steps}")
 
-        if step_count % accumulation_steps == 0 or i == len(loader) - 1:
+        if (i + 1) % accumulation_steps == 0 or i == len(loader) - 1:
             optimizer.step()
             optimizer.zero_grad()
-            step_count = 0
 
     print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")

@@ -34,7 +34,6 @@ class VariableLengthDataset(Dataset): # for txt file
             if current_len == 255:
                 out.append(current_batch)          
                 current_len = 0
-                print(f"len(out): lentgh is {len(current_batch)}")
                 current_batch = []
         return out
         

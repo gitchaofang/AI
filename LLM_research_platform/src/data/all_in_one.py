@@ -32,7 +32,7 @@ class VariableLengthDataset(Dataset): # for txt file
         for char in text:
             current_batch.append(char)
             current_len += 1
-            if current_len == 128:
+            if current_len == 64:
                 out.append(current_batch)          
                 current_len = 0
                 current_batch = []

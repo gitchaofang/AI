@@ -117,7 +117,7 @@ class FeedForward(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(d_model, hidden),
             nn.GELU(),
-            nn.Linear(hidden, d_model)
+            nn.Linear(hidden, d_model),
             nn.Dropout(dropout)
         )
     def forward(self, x: torch.Tensor):

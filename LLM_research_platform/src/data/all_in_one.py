@@ -130,7 +130,7 @@ class TokenBatchSampler(Sampler):
     
         for idx in indices:
             length = self.dataset.get_length(idx)
-            if length + current_token > self.max_token and current_token > 0:
+            if length + current_token > self.max_batch_tokens_cnt and current_token > 0:
                 num_batches += 1
                 current_token = 0
             current_token += length

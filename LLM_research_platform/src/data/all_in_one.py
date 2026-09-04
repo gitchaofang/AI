@@ -37,6 +37,7 @@ class VariableLengthDataset(Dataset): # for txt file
                 current_len = 0
                 print(f"size of current_batch is {len(current_batch)}")
                 current_batch = []
+        print(f"size of out is {len(out)}")
         return out
         
 

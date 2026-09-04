@@ -384,8 +384,7 @@ for epoch in range(epoches):
     print(f"epoch | {epoch} | eval error: {avg_eval_loss}")
     wandb.log({
         "eval/loss": avg_eval_loss,
-         "train/epoch_loss": avg_train_loss,
-        "eval/tokens": eval_tokens,
+        "train/epoch_loss": avg_train_loss,
         "epoch": epoch,
     })
     wandb.log({

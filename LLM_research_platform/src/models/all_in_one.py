@@ -8,23 +8,6 @@ from src.data.all_in_one import VariableLengthDataset
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 
-# weight and bias setup 
-import wandb
-wandb.login()
-wandb.init(
-    project="my-gpt",
-    config={
-        "d_model": 128,
-        "n_layers": 4,
-        "n_heads": 4,
-        "max_seq_len": 256,
-        "batch_tokens": 3000,
-        "learning_rate": 3e-4,
-        "epochs": 100,
-        "accumulation_steps": 8,
-    }
-)
-
 #device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
@@ -254,7 +237,22 @@ class Trainer:
 
 
 # Training scripts
-
+# weight and bias setup 
+import wandb
+wandb.login()
+wandb.init(
+    project="my-gpt",
+    config={
+        "d_model": 128,
+        "n_layers": 4,
+        "n_heads": 4,
+        "max_seq_len": 256,
+        "batch_tokens": 3000,
+        "learning_rate": 3e-4,
+        "epochs": 100,
+        "accumulation_steps": 8,
+    }
+)
 #traiing dataset
 dataset_train = VariableLengthDataset("novel_train.txt") 
 vocab_size = dataset_train.get_vocab_size()
@@ -332,14 +330,7 @@ for epoch in range(epoches):
             batch_size = x.size(0)
             seq_len = x.size(1)
 
-            print(
-                f"epoch {epoch} | "
-                f"batch {i} | "
-                f"batch_size {batch_size} | "
-                f"seq_len {seq_len} | "
-                f"tokens {num_tokens} | "
-                f"loss {loss.item():.4f}"
-            )
+           
 
             wandb.log({
                 "train/batch_loss": loss.item(),
@@ -351,7 +342,14 @@ for epoch in range(epoches):
             })
 
         if(i % 250 == 0):
-            print(f"epoch {epoch} | batch {i} | batch_size {batch_size} | loss: {loss.item() * accumulation_steps}")
+             print(
+                            f"epoch {epoch} | "
+                            f"batch {i} | "
+                            f"batch_size {batch_size} | "
+                            f"seq_len {seq_len} | "
+                            f"tokens {num_tokens} | "
+                            f"loss {loss.item():.4f}"
+                        )
 
         if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:
             optimizer.step()

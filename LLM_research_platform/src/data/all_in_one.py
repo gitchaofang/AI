@@ -32,11 +32,10 @@ class VariableLengthDataset(Dataset): # for txt file
         for char in text:
             current_batch.append(char)
             current_len += 1
-            if current_len > 200 and (char == '.' or char == '\n'):
+            if current_len > 80 and (char == '.' or char == '\n'):
                 out.append(current_batch)          
                 current_len = 0
                 current_batch = []
-        print(f"size of out is {len(out)}")
         return out
         
 
@@ -87,7 +86,7 @@ class TokenBatchSampler(Sampler):
     def __init__(self,
                  dataset,
                  max_batch_tokens_cnt,
-                 batch_size = 8,
+                 batch_size = 4,
                  shuffle = True):
         self.dataset = dataset
         self.max_batch_tokens_cnt = max_batch_tokens_cnt

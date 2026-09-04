@@ -359,7 +359,6 @@ for epoch in range(epoches):
     current_lr = optimizer.param_groups[0]["lr"]
     print(f"epoch {epoch} | ave_loss: {avg_train_loss}")
     wandb.log({
-        "train/epoch_loss": avg_train_loss,
         "train/epoch_tokens": epoch_tokens,
         "train/learning_rate": current_lr,
         "epoch": epoch,
@@ -385,9 +384,15 @@ for epoch in range(epoches):
     print(f"epoch | {epoch} | eval error: {avg_eval_loss}")
     wandb.log({
         "eval/loss": avg_eval_loss,
+         "train/epoch_loss": avg_train_loss,
         "eval/tokens": eval_tokens,
         "epoch": epoch,
     })
+    wandb.log({
+            "eval/tokens": eval_tokens,
+            "epoch": epoch,
+        })
+
 wandb.finish()
 
 

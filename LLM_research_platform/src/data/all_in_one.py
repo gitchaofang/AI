@@ -8,6 +8,7 @@ from src.data.tokenizer import Tokenizer
 class VariableLengthDataset(Dataset): # for txt file
     def __init__(self, file_name):
         self.file_name = file_name
+        print(f"dataset is: {file_name}")
         sentences = self._data_prep()
         tokenizer = Tokenizer("novel.txt")
         token_map = tokenizer.get()
@@ -20,6 +21,7 @@ class VariableLengthDataset(Dataset): # for txt file
             self.tokens.append(current_sentence) 
         print(f"token size = {len(self.tokens)}")
         print(f"token number = {len(self.stoi)}")
+        print("\n")
 
     def _data_prep(self): # read data then return a list of lis (a batch of data)
         #path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/" + self.file_name # for local

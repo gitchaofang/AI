@@ -10,7 +10,7 @@ from src.data.all_in_one import PaddingCollator
 
 # weight and bias setup 
 import wandb
-wangb.login()
+wandb.login()
 wandb.init(
     project="my-gpt",
     config={

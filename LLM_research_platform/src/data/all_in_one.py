@@ -34,7 +34,7 @@ class VariableLengthDataset(Dataset): # for txt file
         for char in text:
             current_batch.append(char)
             current_len += 1
-            if current_len > 164 and (char == '.' or char == '\n'):
+            if current_len > 256 and (char == '.' or char == '\n'):
                 out.append(current_batch)          
                 current_len = 0
                 current_batch = []

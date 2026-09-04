@@ -289,7 +289,7 @@ trainer = Trainer(
     device,
 )
 
-epoches = 100
+epoches = 200
 accumulation_steps = 8
 for epoch in range(epoches):
     model.train()
@@ -307,7 +307,7 @@ for epoch in range(epoches):
 
         loss_accu += (loss.item() * accumulation_steps)
 
-        if(i % 100 == 0):
+        if(i % 250 == 0):
             batch_size = batch["input_ids"].size(0)
             print(f"epoch {epoch} | batch {i} | batch_size {batch_size} | loss: {loss.item() * accumulation_steps}")
 

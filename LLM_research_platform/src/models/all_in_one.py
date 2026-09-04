@@ -258,7 +258,7 @@ print("Device:", device)
 model = GPT(
     vocab_size = vocab_size,
     d_model = 64,
-    max_seq_len = 128,
+    max_seq_len = 256,
     n_layers = 2,
     n_heads = 4,
 ).to(device)
@@ -276,7 +276,7 @@ trainer = Trainer(
 )
 
 epoches = 50
-accumulation_steps = 4
+accumulation_steps = 8
 for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()

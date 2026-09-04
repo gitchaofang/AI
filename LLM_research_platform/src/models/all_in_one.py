@@ -321,15 +321,15 @@ for epoch in range(epoches):
     model.eval()
     eval_loss_accu = 0.0
     cnt = 0.0
-    for i, batch in enumerate(loader_eval):
-        x = batch["input_ids"].to(device)
-        y = batch["labels"].to(device)
-        pad_mask = batch["pad_mask"].to(device)
+    with torch.no_grrad:
+        for i, batch in enumerate(loader_eval):
+            x = batch["input_ids"].to(device)
+            y = batch["labels"].to(device)
+            pad_mask = batch["pad_mask"].to(device)
 
-        loss = trainer.train_step(x, y, pad_mask)
-        eval_loss_accu += loss
-        cnt += 1
-    print(f"epoch | {epoch} | eval error: {eval_loss_accu/cnt}")
+            eval_loss_accu += trainer.train_step(x, y, pad_mask).item()
+            cnt += 1
+        print(f"epoch | {epoch} | eval error: {eval_loss_accu/cnt}")
 
 
 

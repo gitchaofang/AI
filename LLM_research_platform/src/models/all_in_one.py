@@ -13,7 +13,7 @@ from src.data.all_in_one import PaddingCollator
 
 # self attention
 class SelfAttention(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0):
+    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0, dropout = 0.2):
         super().__init__()
         assert d_model % n_heads == 0
 
@@ -27,6 +27,8 @@ class SelfAttention(nn.Module):
         self.v_proj = nn.Linear(d_model, d_model)
         self.out_proj = nn.Linear(d_model, d_model)
 
+        self.atten_dropout = nn.Dropoout(dropout)
+        self.out_drouout = nn.Dropout(dropout)
         mask = torch.tril(
             torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
         )
@@ -56,8 +58,14 @@ class SelfAttention(nn.Module):
         scores = scores.masked_fill(combined_mask == 0, -1e10)
 
         attention = torch.softmax(scores, dim=-1)
+
+        # dropout on attention
+        self.atten_dropout(attention)
         out = attention @ v
         out = out.transpose(1, 2).contiguous().view(B, T_q, D)
+
+        # dropout on out project
+        self.out_drouout(out)
         return self.out_proj(out)
 
     def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
@@ -103,13 +111,14 @@ class SelfAttention(nn.Module):
 
 # transformer:
 class FeedForward(nn.Module):
-    def __init__(self, d_model: int, mlp_ratio = 4):
+    def __init__(self, d_model: int, mlp_ratio = 4, dropout = 0.2):
         super().__init__()
         hidden = d_model * mlp_ratio
         self.net = nn.Sequential(
             nn.Linear(d_model, hidden),
             nn.GELU(),
             nn.Linear(hidden, d_model)
+            nn.Dropout(dropout)
         )
     def forward(self, x: torch.Tensor):
         return self.net(x)

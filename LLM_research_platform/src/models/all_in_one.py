@@ -27,7 +27,7 @@ class SelfAttention(nn.Module):
         self.v_proj = nn.Linear(d_model, d_model)
         self.out_proj = nn.Linear(d_model, d_model)
 
-        self.atten_dropout = nn.Dropoout(dropout)
+        self.atten_dropout = nn.Dropout(dropout)
         self.out_drouout = nn.Dropout(dropout)
         mask = torch.tril(
             torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)

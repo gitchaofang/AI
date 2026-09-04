@@ -313,6 +313,7 @@ for epoch in range(epoches):
     optimizer.zero_grad()
     loss_accu = 0.0
     cnt = 0.0
+    epoch_tokens = 0
     #train
     for i, batch in enumerate(loader_train):
         x = batch["input_ids"].to(device)

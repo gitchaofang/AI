@@ -237,16 +237,30 @@ class Trainer:
 
 
 # Training scripts
-dataset = VariableLengthDataset("novel.txt") 
-vocab_size = dataset.get_vocab_size()
+
+#traiing dataset
+dataset_train = VariableLengthDataset("novel_train.txt") 
+vocab_size = dataset_train.get_vocab_size()
 print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()
-sampler = TokenBatchSampler(dataset,3000)
+sampler_train = TokenBatchSampler(dataset_train,3000)
 
-loader = DataLoader(
-    dataset,
+loader_train = DataLoader(
+    dataset_train,
     collate_fn = collator,
-    batch_sampler = sampler,
+    batch_sampler = sampler_train,
+    shuffle = False,
+    pin_memory = True,
+)
+
+#evaluation dataset
+dataset_eval = VariableLengthDataset("novel_eval.txt") 
+sampler_eval = TokenBatchSampler(dataset_eval,3000)
+
+loader_eval = DataLoader(
+    dataset_eval,
+    collate_fn = collator,
+    batch_sampler = sampler_eval,
     shuffle = False,
     pin_memory = True,
 )
@@ -281,8 +295,9 @@ for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()
     loss_accu = 0.0
-   
-    for i, batch in enumerate(loader):
+    cnt = 0.0
+    #train
+    for i, batch in enumerate(loader_train):
         x = batch["input_ids"].to(device)
         y = batch["labels"].to(device)
         pad_mask = batch["pad_mask"].to(device)
@@ -296,8 +311,27 @@ for epoch in range(epoches):
             batch_size = batch["input_ids"].size(0)
             print(f"epoch {epoch} | batch {i} | batch_size {batch_size} | loss: {loss.item() * accumulation_steps}")
 
-        if (i + 1) % accumulation_steps == 0 or i == len(loader) - 1:
+        if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:
             optimizer.step()
             optimizer.zero_grad()
+        cnt += 1
+    print(f"epoch {epoch} | ave_loss: {loss_accu / cnt}")
 
-    print(f"epoch {epoch} | ave_loss: {loss_accu / len(loader)}")
+    #eval:
+    model.eval()
+    eval_loss_accu = 0.0
+    cnt = 0.0
+    for i, batch in enumerate(loader_eval):
+        x = batch["input_ids"].to(device)
+        y = batch["labels"].to(device)
+        pad_mask = batch["pad_mask"].to(device)
+
+        loss = trainer.train_step(x, y, pad_mask)
+        eval_loss_accu += loss
+        cnt += 1
+    print(f"epoch | {epoch} | eval error: {eval_loss_accu/cnt}")
+
+
+
+
+    

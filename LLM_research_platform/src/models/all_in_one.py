@@ -241,7 +241,7 @@ dataset = VariableLengthDataset("novel.txt")
 vocab_size = dataset.get_vocab_size()
 print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()
-sampler = TokenBatchSampler(dataset,1024)
+sampler = TokenBatchSampler(dataset,3000)
 
 loader = DataLoader(
     dataset,
@@ -292,7 +292,7 @@ for epoch in range(epoches):
 
         loss_accu += (loss.item() * accumulation_steps)
 
-        if(i % 50 == 0):
+        if(i % 100 == 0):
             batch_size = batch["input_ids"].size(0)
             print(f"epoch {epoch} | batch {i} | batch_size {batch_size} | loss: {loss.item() * accumulation_steps}")
 

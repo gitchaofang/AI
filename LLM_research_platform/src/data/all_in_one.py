@@ -18,7 +18,7 @@ class VariableLengthDataset(Dataset): # for txt file
         for sentence in sentences:
             current_sentence = [self.stoi[char] for char in sentence]
             self.tokens.append(current_sentence) 
-        print(f"batch size = {len(self.tokens)}")
+        print(f"token size = {len(self.tokens)}")
         print(f"token number = {len(self.stoi)}")
 
     def _data_prep(self): # read data then return a list of lis (a batch of data)
@@ -32,7 +32,7 @@ class VariableLengthDataset(Dataset): # for txt file
         for char in text:
             current_batch.append(char)
             current_len += 1
-            if current_len > 80 and (char == '.' or char == '\n'):
+            if current_len > 164 and (char == '.' or char == '\n'):
                 out.append(current_batch)          
                 current_len = 0
                 current_batch = []

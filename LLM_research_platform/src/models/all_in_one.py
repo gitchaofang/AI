@@ -296,14 +296,14 @@ print("Device:", device)
 model = GPT(
     vocab_size = vocab_size,
     d_model = 384,
-    max_seq_len = 512,
+    max_seq_len = 224,
     n_layers = 6,
     n_heads = 6,
 ).to(device)
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
-    lr = 2e-4,
+    lr = 3e-4,
 )
 
 

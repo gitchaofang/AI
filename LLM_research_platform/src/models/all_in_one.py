@@ -275,7 +275,7 @@ trainer = Trainer(
     device,
 )
 
-epoches = 50
+epoches = 100
 accumulation_steps = 8
 for epoch in range(epoches):
     model.train()

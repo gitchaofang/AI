@@ -388,7 +388,7 @@ for epoch in range(epoches):
         "eval/tokens": eval_tokens,
         "epoch": epoch,
     })
-    wandb.finish()
+wandb.finish()
 
 
 

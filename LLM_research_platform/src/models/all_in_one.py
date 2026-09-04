@@ -298,7 +298,7 @@ model = GPT(
     d_model = 128,
     max_seq_len = 128,
     n_layers = 4,
-    n_heads = 6,
+    n_heads = 4,
 ).to(device)
 
 optimizer = torch.optim.AdamW(

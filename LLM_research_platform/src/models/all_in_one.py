@@ -239,7 +239,7 @@ class Trainer:
 # Training scripts
 
 #traiing dataset
-dataset_train = VariableLengthDataset("novel_train.txt") 
+dataset_train = VariableLengthDataset("novel.txt") 
 vocab_size = dataset_train.get_vocab_size()
 print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()

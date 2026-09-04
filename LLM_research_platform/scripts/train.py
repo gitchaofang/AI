@@ -22,50 +22,10 @@ def move_batch_to_device(device, batch):
 
     return result
 
-
-# generate senteces
-subject_pool = [
-    "The researcher", "A student", "This model", "Every engineer",
-    "Our lab", "The system", "A scientist", "The team"
-]
-
-verb_pool = [
-    "tests", "improves", "trains", "evaluates", "refines", "compares",
-    "optimizes", "studies", "scales", "debugs"
-]
-
-object_pool = [
-    "a new transformer", "the experiment", "the dataset", "the baseline",
-    "the optimizer", "the attention layer", "the language model",
-    "the training loop"
-]
-
-adverb_pool = [
-    "carefully", "quickly", "consistently", "efficiently", "robustly",
-    "reproducibly", "smoothly", "accurately"
-]
-
-sentence_templates = [
-    "{subject} {verb} {object}.",
-    "{subject} {verb} {object} {adverb}.",
-    "{subject} {verb} {object} during training.",
-    "{subject} {verb} {object} with confidence.",
-]
-
-def make_sentence():
-    subject = random.choice(subject_pool)
-    verb = random.choice(verb_pool)
-    obj = random.choice(object_pool)
-    adverb = random.choice(adverb_pool)
-    template = random.choice(sentence_templates)
-    return template.format(subject=subject, verb=verb, object=obj, adverb=adverb)
-
-sentences = [make_sentence() for _ in range(10000)]
-chars = sorted(set(" ".join(sentences)))
-vocab_size = len(chars) + 1   # +1 because your mapping often reserves 0 for padding
-print(f"vocab_size is {vocab_size}")
-
-dataset = VariableLengthDataset(sentences)
+# Training scripts
+dataset = VariableLengthDataset("mini_novel.txt") 
+vocab_size = dataset.get_vocab_size()
+print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()
 sampler = TokenBatchSampler(dataset,512)
 

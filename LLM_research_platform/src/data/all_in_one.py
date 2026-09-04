@@ -32,7 +32,7 @@ class VariableLengthDataset(Dataset): # for txt file
         for char in text:
             current_batch.append(char)
             current_len += 1
-            if current_len == 64:
+            if current_len > 96 and current_len <= 128 and (char == '.' or char == '\n'):
                 out.append(current_batch)          
                 current_len = 0
                 current_batch = []
@@ -85,11 +85,11 @@ class BucketSampler(Sampler):
 class TokenBatchSampler(Sampler):
     def __init__(self,
                  dataset,
-                 max_token,
-                 batch_size = 16,
+                 max_batch_tokens_cnt,
+                 batch_size = 8,
                  shuffle = True):
         self.dataset = dataset
-        self.max_token = max_token
+        self.max_batch_tokens_cnt = max_batch_tokens_cnt
         self.shuffle = shuffle
         self.batch_size = batch_size
         self.indices = list(range(len(dataset)))
@@ -105,9 +105,9 @@ class TokenBatchSampler(Sampler):
 
         for idx in indices:
             length = self.dataset.get_length(idx)
-            if(length + current_token > self.max_token or len(current_batch) >= self.batch_size):
+            if(length + current_token > self.max_batch_tokens_cnt or len(current_batch) >= self.batch_size):
                 batches.append(current_batch)
-                current_batche = []
+                current_batch = []
                 current_token = 0
             current_batch.append(idx)
             current_token += length

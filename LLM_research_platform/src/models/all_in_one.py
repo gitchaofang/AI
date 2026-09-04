@@ -241,7 +241,7 @@ dataset = VariableLengthDataset("novel.txt")
 vocab_size = dataset.get_vocab_size()
 print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()
-sampler = TokenBatchSampler(dataset,32)
+sampler = TokenBatchSampler(dataset,1024)
 
 loader = DataLoader(
     dataset,
@@ -282,7 +282,6 @@ for epoch in range(epoches):
     optimizer.zero_grad()
     loss_accu = 0.0
    
-
     for i, batch in enumerate(loader):
         x = batch["input_ids"].to(device)
         y = batch["labels"].to(device)

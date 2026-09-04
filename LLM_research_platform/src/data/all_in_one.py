@@ -35,8 +35,8 @@ class VariableLengthDataset(Dataset): # for txt file
             if current_len > 96 and current_len <= 128 and (char == '.' or char == '\n'):
                 out.append(current_batch)          
                 current_len = 0
-                current_batch = []
                 print(f"size of current_batch is {len(current_batch)}")
+                current_batch = []
         return out
         
 

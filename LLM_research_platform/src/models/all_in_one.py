@@ -321,7 +321,7 @@ for epoch in range(epoches):
     model.eval()
     eval_loss_accu = 0.0
     cnt = 0.0
-    with torch.no_grrad:
+    with torch.no_grad():
         for i, batch in enumerate(loader_eval):
             x = batch["input_ids"].to(device)
             y = batch["labels"].to(device)

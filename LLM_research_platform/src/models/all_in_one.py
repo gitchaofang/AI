@@ -64,9 +64,11 @@ class SelfAttention(nn.Module):
         out = attention @ v
         out = out.transpose(1, 2).contiguous().view(B, T_q, D)
 
+        out = self.out_proj(out)
         # dropout on out project
-        self.out_drouout(out)
-        return self.out_proj(out)
+        out  = self.out_drouout(out)
+        return out
+
 
     def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
         B, T_q, D = x.shape

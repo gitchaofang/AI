@@ -9,7 +9,7 @@ class VariableLengthDataset(Dataset): # for txt file
     def __init__(self, file_name):
         self.file_name = file_name
         sentences = self._data_prep()
-        tokenizer = Tokenizer(file_name)
+        tokenizer = Tokenizer("novel.txt")
         token_map = tokenizer.get()
         self.stoi = token_map["stoi"]
         self.itos = token_map["itos"]

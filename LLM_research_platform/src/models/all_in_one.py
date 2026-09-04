@@ -258,7 +258,7 @@ print("Device:", device)
 model = GPT(
     vocab_size = vocab_size,
     d_model = 64,
-    max_seq_len = 128,
+    max_seq_len = 196,
     n_layers = 4,
     n_heads = 4,
 ).to(device)

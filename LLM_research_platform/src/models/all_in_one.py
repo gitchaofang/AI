@@ -348,7 +348,7 @@ for epoch in range(epoches):
                             f"batch_size {batch_size} | "
                             f"seq_len {seq_len} | "
                             f"tokens {num_tokens} | "
-                            f"loss {loss.item():.4f}"
+                            f"loss {loss.item() * accumulation_steps:.4f}"
                         )
 
         if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:

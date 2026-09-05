@@ -111,8 +111,8 @@ class TokenBatchSampler(Sampler):
 
         for idx in indices:
             length = self.dataset.get_length(idx)
-#            if(length + current_token > self.max_batch_tokens_cnt or len(current_batch) >= self.batch_size):
-            if len(current_batch) >= self.batch_size:
+            if(length + current_token > self.max_batch_tokens_cnt or len(current_batch) >= self.batch_size):
+#            if len(current_batch) >= self.batch_size:
                 batches.append(current_batch)
                 current_batch = []
                 current_token = 0

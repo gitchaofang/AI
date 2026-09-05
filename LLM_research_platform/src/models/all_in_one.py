@@ -291,7 +291,7 @@ loader_train = DataLoader(
 
 #evaluation dataset
 dataset_eval = VariableLengthDataset("novel_eval.txt") 
-sampler_eval = TokenBatchSampler(dataset_eval,3000)
+sampler_eval = TokenBatchSampler(dataset_eval,16000)
 
 loader_eval = DataLoader(
     dataset_eval,

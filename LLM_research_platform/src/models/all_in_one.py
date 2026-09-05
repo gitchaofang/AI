@@ -118,7 +118,7 @@ class FeedForward(nn.Module):
         hidden = d_model * mlp_ratio
         self.net = nn.Sequential(
             nn.Linear(d_model, hidden),
-            nn.GELU(),
+            nn.RELU(),
             nn.Linear(hidden, d_model),
             nn.Dropout(dropout)
         )
@@ -169,6 +169,14 @@ class GPT(nn.Module):
         self.norm = nn.LayerNorm(d_model,)
         self.lm_linear = nn.Linear(d_model,vocab_size + 1,)
         self.position_offset = None
+        
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def reset_cache(self):
         """

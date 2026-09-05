@@ -60,7 +60,7 @@ class SelfAttention(nn.Module):
         attention = torch.softmax(scores, dim=-1)
 
         # dropout on attention
-        self.atten_dropout(attention)
+        attention = self.atten_dropout(attention)
         out = attention @ v
         out = out.transpose(1, 2).contiguous().view(B, T_q, D)
 

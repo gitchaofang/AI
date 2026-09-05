@@ -254,13 +254,13 @@ wandb.login()
 wandb.init(
     project="my-gpt",
     config={
-        "d_model": 128,
-        "n_layers": 4,
-        "n_heads": 4,
+        "d_model": 384,
+        "n_layers": 6,
+        "n_heads": 6,
         "max_seq_len": 256,
         "batch_tokens": 3000,
         "learning_rate": 3e-4,
-        "epochs": 100,
+        "epochs": 200,
         "accumulation_steps": 8,
     }
 )

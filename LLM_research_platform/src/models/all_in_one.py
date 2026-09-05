@@ -118,7 +118,7 @@ class FeedForward(nn.Module):
         hidden = d_model * mlp_ratio
         self.net = nn.Sequential(
             nn.Linear(d_model, hidden),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(hidden, d_model),
             nn.Dropout(dropout)
         )

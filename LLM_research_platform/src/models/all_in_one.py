@@ -13,7 +13,7 @@ from src.data.all_in_one import PaddingCollator
 
 # self attention
 class SelfAttention(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0, dropout = 0.1):
+    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0, dropout = 0.2):
         super().__init__()
         assert d_model % n_heads == 0
 
@@ -113,7 +113,7 @@ class SelfAttention(nn.Module):
 
 # transformer:
 class FeedForward(nn.Module):
-    def __init__(self, d_model: int, mlp_ratio = 4, dropout = 0.1):
+    def __init__(self, d_model: int, mlp_ratio = 4, dropout = 0.2):
         super().__init__()
         hidden = d_model * mlp_ratio
         self.net = nn.Sequential(
@@ -298,7 +298,7 @@ print("Device:", device)
 model = GPT(
     vocab_size = vocab_size,
     d_model = 384,
-    max_seq_len = 224,
+    max_seq_len = 256,
     n_layers = 6,
     n_heads = 6,
 ).to(device)

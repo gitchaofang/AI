@@ -37,7 +37,7 @@ class VariableLengthDataset(Dataset): # for txt file
         for char in text:
             current_batch.append(char)
             current_len += 1
-            if current_len > 240 and char == '.':
+            if current_len > 200 and char == '.':
     #        if current_len == 256:
                 out.append(current_batch)          
                 current_len = 0
@@ -111,8 +111,8 @@ class TokenBatchSampler(Sampler):
 
         for idx in indices:
             length = self.dataset.get_length(idx)
-            if(length + current_token > self.max_batch_tokens_cnt or len(current_batch) >= self.batch_size):
-#            if len(current_batch) >= self.batch_size:
+#            if(length + current_token > self.max_batch_tokens_cnt or len(current_batch) >= self.batch_size):
+            if len(current_batch) >= self.batch_size:
                 batches.append(current_batch)
                 current_batch = []
                 current_token = 0

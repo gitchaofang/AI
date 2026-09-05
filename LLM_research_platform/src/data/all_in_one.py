@@ -16,9 +16,12 @@ class VariableLengthDataset(Dataset): # for txt file
         self.itos = token_map["itos"]
 
         self.tokens = []
+        cnt = 0
         for sentence in sentences:
+            cnt += len(sentence)
             current_sentence = [self.stoi[char] for char in sentence]
             self.tokens.append(current_sentence) 
+        print(f"sample size is: {cnt}")
         print(f"token size = {len(self.tokens)}")
         print(f"token number = {len(self.stoi)}")
         print("\n")

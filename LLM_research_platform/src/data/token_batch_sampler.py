@@ -5,11 +5,11 @@ from torch.utils.data import Sampler
 class TokenBatchSampler(Sampler):
     def __init__(self,
                  dataset,
-                 max_token,
-                 batch_size = 4,
+                 max_batch_tokens_cnt,
+                 batch_size = 8,
                  shuffle = True):
         self.dataset = dataset
-        self.max_token = max_token
+        self.max_batch_tokens_cnt = max_batch_tokens_cnt
         self.shuffle = shuffle
         self.batch_size = batch_size
         self.indices = list(range(len(dataset)))
@@ -25,9 +25,10 @@ class TokenBatchSampler(Sampler):
 
         for idx in indices:
             length = self.dataset.get_length(idx)
-            if(length + current_token > self.max_token or len(current_batch) >= self.batch_size):
+#            if(length + current_token > self.max_batch_tokens_cnt or len(current_batch) >= self.batch_size):
+            if len(current_batch) >= self.batch_size:
                 batches.append(current_batch)
-                current_batche = []
+                current_batch = []
                 current_token = 0
             current_batch.append(idx)
             current_token += length
@@ -50,7 +51,7 @@ class TokenBatchSampler(Sampler):
     
         for idx in indices:
             length = self.dataset.get_length(idx)
-            if length + current_token > self.max_token and current_token > 0:
+            if length + current_token > self.max_batch_tokens_cnt and current_token > 0:
                 num_batches += 1
                 current_token = 0
             current_token += length

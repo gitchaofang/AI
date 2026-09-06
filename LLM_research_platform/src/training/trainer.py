@@ -8,20 +8,14 @@ class Trainer:
         self.device = device
 
     def train_step(self, x, y, mask):
-        x = x.to(self.device)
-        y = y.to(self.device)
-        mask = mask.to(self.device)
-        with torch.autocast(
-            device_type = self.device,
-            dtype = torch.bfloat16,
-        ):
-            logits = self.model(x, mask)
 
-            B, T, V = logits.shape
-            loss = F.cross_entropy(
-                logits.reshape(B * T, V),
-                y.reshape(B * T),
-                ignore_index=-100,
-            )
+        logits = self.model(x, mask, is_prefill=False, is_generate=False)
+
+        B, T, V = logits.shape
+        loss = F.cross_entropy(
+            logits.reshape(B * T, V),
+            y.reshape(B * T),
+            ignore_index=-100,
+        )
 
         return loss

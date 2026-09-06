@@ -34,6 +34,16 @@ class GPT(nn.Module):
         self.lm_linear = nn.Linear(d_model,vocab_size + 1,)
         self.position_offset = None
 
+        self.apply(self._init_weights)
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
     def reset_cache(self):
         """
         Clear all KV caches and reset logical position tracking.

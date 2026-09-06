@@ -10,7 +10,7 @@ import numpy as np
 
 # self attention
 class SelfAttention(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0):
+    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0, dropout = 0.2):
         super().__init__()
         assert d_model % n_heads == 0
 
@@ -24,6 +24,8 @@ class SelfAttention(nn.Module):
         self.v_proj = nn.Linear(d_model, d_model)
         self.out_proj = nn.Linear(d_model, d_model)
 
+        self.atten_dropout = nn.Dropout(dropout)
+        self.out_drouout = nn.Dropout(dropout)
         mask = torch.tril(
             torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
         )
@@ -53,9 +55,17 @@ class SelfAttention(nn.Module):
         scores = scores.masked_fill(combined_mask == 0, -1e10)
 
         attention = torch.softmax(scores, dim=-1)
+
+        # dropout on attention
+        attention = self.atten_dropout(attention)
         out = attention @ v
         out = out.transpose(1, 2).contiguous().view(B, T_q, D)
-        return self.out_proj(out)
+
+        out = self.out_proj(out)
+        # dropout on out project
+        out  = self.out_drouout(out)
+        return out
+
 
     def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
         B, T_q, D = x.shape

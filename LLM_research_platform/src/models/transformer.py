@@ -4,13 +4,14 @@ from .self_attention import SelfAttention
 
 # transformer:
 class FeedForward(nn.Module):
-    def __init__(self, d_model: int, mlp_ratio = 4):
+    def __init__(self, d_model: int, mlp_ratio = 4, dropout = 0.2):
         super().__init__()
         hidden = d_model * mlp_ratio
         self.net = nn.Sequential(
             nn.Linear(d_model, hidden),
             nn.GELU(),
-            nn.Linear(hidden, d_model)
+            nn.Linear(hidden, d_model),
+            nn.Dropout(dropout)
         )
     def forward(self, x: torch.Tensor):
         return self.net(x)

@@ -63,18 +63,13 @@ class GPT2Tokenizer:
             encoded_ids.append(self._encode_chunk(chunk_ids))
         return encoded_ids
 
-    
-
-        
-    
-
-        
-
-                
-
-
-
-        
-
-
-
+    def decode(self, ids): #ids is a list of integers, returrn python string
+        bytes_list = []
+        for idx in ids:
+            if idx in self.vocab_dict:
+                bytes_list.append(self.vocab_dict[idx])
+            else:
+                raise ValueError(f"invalid token id: {idx}")
+        bytes_text = b"".join(bytes_list)
+        text = bytes_text.decode("utf-8", error="replace")
+        return text

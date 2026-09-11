@@ -34,7 +34,7 @@ class RegexTokenizer:
             for ids in chunk_ids:
                 get_stats(ids,counts)
             pair = max(counts, key = counts.get)
-            idx = 255 + i
+            idx = 256 + i
             chunk_ids = [merge(ids, pair, idx) for ids in chunk_ids]
 
             # save merge
@@ -58,7 +58,7 @@ class RegexTokenizer:
 
     def encode(self, text):
         chunks_text = re.findall(self.pattern, text)
-        chunks_list = [list(ch.encode("utfg-8")) for ch in chunks_text] # list of list (decimal representations of bytes)
+        chunks_list = [list(ch.encode("utf-8")) for ch in chunks_text] # list of list (decimal representations of bytes)
         encoded_ids = []
         for chunk_ids in chunks_list:
             encoded_ids.append(self._encode_chunk(chunk_ids))

@@ -45,7 +45,7 @@ class RegexTokenizer:
         self.merge_dict = merge_dict
         self.vocab_dict = vocab_dict
 
-    def _encode_chunk(self, chunk_ids): #chunk is each decimal representations (list) of bytes from the entire text after applying formate seperation
+    def _encode_chunk(self, chunk_ids): #chunk is list of decimal representations of bytes from the entire text after applying formate seperation
         while len(chunk_ids) >= 2:
             counts = get_stats(chunk_ids)
             pair = min(counts, key = lambda p: self.merge_dict.get(p, float("inf")))

@@ -27,7 +27,7 @@ class RegexTokenizer:
         chunk_ids = [list(ch.encode("utfg-8")) for ch in chunks]
 
         merge_dict = {} # for encode {int,int} -> int
-        vocab_dict = {} # for decode int -> bytes_object
+        vocab_dict = {idx: bytes([idx]) for idx in range(255)} # for decode int -> bytes_object
         merge_rounds = self.vocab_size - 255
         for i in range(merge_rounds):
             counts = {}

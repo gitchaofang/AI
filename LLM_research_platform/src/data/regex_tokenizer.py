@@ -35,7 +35,7 @@ class RegexTokenizer:
                 get_stats(ids,counts)
             pair = max(counts, key = counts.get)
             idx = 255 + i
-            ids = [merge(ids, pair, idx) for ids in chunk_ids]
+            chunk_ids = [merge(ids, pair, idx) for ids in chunk_ids]
 
             # save merge
             merge_dict[pair] = idx

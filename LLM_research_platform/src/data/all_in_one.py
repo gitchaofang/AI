@@ -2,7 +2,7 @@ import torch
 import random
 from torch.utils.data import Dataset
 from torch.utils.data import Sampler
-from src.data.tokenizer import Tokenizer
+from src.data.simple_tokenizer import SimpleTokenizer
 # data dir: /Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data
 
 class VariableLengthDataset(Dataset): # for txt file
@@ -10,7 +10,7 @@ class VariableLengthDataset(Dataset): # for txt file
         self.file_name = file_name
         print(f"dataset is: {file_name}")
         sentences = self._data_prep()
-        tokenizer = Tokenizer("novel.txt")
+        tokenizer = SimpleTokenizer("novel.txt")
         token_map = tokenizer.get()
         self.stoi = token_map["stoi"]
         self.itos = token_map["itos"]

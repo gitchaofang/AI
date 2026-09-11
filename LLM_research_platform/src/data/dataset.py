@@ -1,13 +1,13 @@
 import torch
 from torch.utils.data import Dataset
-from src.data.tokenizer import Tokenizer
+from src.data.simple_tokenizer import SimpleTokenizer
 
 class VariableLengthDataset(Dataset): # for txt file
     def __init__(self, file_name):
         self.file_name = file_name
         print(f"dataset is: {file_name}")
         sentences = self._data_prep()
-        tokenizer = Tokenizer("novel.txt")
+        tokenizer = SimpleTokenizer("novel.txt")
         token_map = tokenizer.get()
         self.stoi = token_map["stoi"]
         self.itos = token_map["itos"]

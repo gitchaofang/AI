@@ -23,11 +23,11 @@ class GPT2Tokenizer:
         
 
     def train(self, pattern = None):
-        chunks = re.findall(self.pattern, self.text)
+        chunks = re.findall(pattern, self.text)
         chunk_ids = [list(ch.encode("utfg-8")) for ch in chunks]
 
         merge_dict = {} # for encode {int,int} -> int
-        vocab_dict = {} # for decode
+        vocab_dict = {} # for decode int -> bytes_object
         merge_rounds = self.vocab_size - 255
         for i in range(merge_rounds):
             counts = {}

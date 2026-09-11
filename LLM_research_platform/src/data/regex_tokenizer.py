@@ -22,13 +22,13 @@ class RegexTokenizer:
         self.vocab_dict = {}
         
 
-    def train(self, pattern = None):
-        chunks = re.findall(pattern, self.text)
-        chunk_ids = [list(ch.encode("utfg-8")) for ch in chunks]
+    def train(self):
+        chunks = self.compiled_pattern.findall(self.text)
+        chunk_ids = [list(ch.encode("utf-8")) for ch in chunks]
 
         merge_dict = {} # for encode {int,int} -> int
-        vocab_dict = {idx: bytes([idx]) for idx in range(255)} # for decode int -> bytes_object
-        merge_rounds = self.vocab_size - 255
+        vocab_dict = {idx: bytes([idx]) for idx in range(256)} # for decode int -> bytes_object
+        merge_rounds = self.vocab_size - 256
         for i in range(merge_rounds):
             counts = {}
             for ids in chunk_ids:
@@ -46,13 +46,14 @@ class RegexTokenizer:
         self.vocab_dict = vocab_dict
 
     def _encode_chunk(self, chunk_ids): #chunk is list of decimal representations of bytes from the entire text after applying formate seperation
+        counts = {}
         while len(chunk_ids) >= 2:
             counts = get_stats(chunk_ids)
             pair = min(counts, key = lambda p: self.merge_dict.get(p, float("inf")))
             if pair not in self.merge_dict:
                 break
-            idx = self.merge_dict(pair)
-            merge(chunk_ids, pair, idx)
+            idx = self.merge_dict[pair]
+            chunk_ids = merge(chunk_ids, pair, idx)
         return chunk_ids
 
     def encode(self, text):
@@ -71,5 +72,5 @@ class RegexTokenizer:
             else:
                 raise ValueError(f"invalid token id: {idx}")
         bytes_text = b"".join(bytes_list)
-        text = bytes_text.decode("utf-8", error="replace")
+        text = bytes_text.decode("utf-8", errors="replace")
         return text

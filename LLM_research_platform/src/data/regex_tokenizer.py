@@ -7,8 +7,13 @@ from .helper import merge
 GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
 
+# for tokenization:
+# 0: for padding
+# 1: for EOS
+# tokenization starts from 2
+TOKEN_OFFSET = 2
 class RegexTokenizer:
-    def __init__(self,filename, pattern = None, vocab_size = 50257):
+    def __init__(self,filename, pattern = None, vocab_size = 50000):
         #path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/" + file_name # for local
         path = "/content/AI/LLM_research_platform/src/data/input_data/data/" + filename # for codlab online # for codelab online
         with open(path, "r", encoding="utf-8") as f:
@@ -22,19 +27,19 @@ class RegexTokenizer:
         self.vocab_dict = {}
         
 
-    def train(self):
+    def train(self): #this function should be called right after instantiating RegexTokenizer
         chunks = self.compiled_pattern.findall(self.text)
         chunk_ids = [list(ch.encode("utf-8")) for ch in chunks]
 
         merge_dict = {} # for encode {int,int} -> int
-        vocab_dict = {idx: bytes([idx]) for idx in range(256)} # for decode int -> bytes_object
+        vocab_dict = {idx: bytes([idx]) for idx in range(TOKEN_OFFSET,256 + TOKEN_OFFSET)} # for decode int -> bytes_object
         merge_rounds = self.vocab_size - 256
         for i in range(merge_rounds):
             counts = {}
             for ids in chunk_ids:
                 get_stats(ids,counts)
             pair = max(counts, key = counts.get)
-            idx = 256 + i
+            idx = 256 + TOKEN_OFFSET + i
             chunk_ids = [merge(ids, pair, idx) for ids in chunk_ids]
 
             # save merge

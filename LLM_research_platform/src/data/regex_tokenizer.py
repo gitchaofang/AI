@@ -32,14 +32,14 @@ class RegexTokenizer:
         chunk_ids = [list(ch.encode("utf-8")) for ch in chunks]
 
         merge_dict = {} # for encode {int,int} -> int
-        vocab_dict = {idx: bytes([idx]) for idx in range(TOKEN_OFFSET,256 + TOKEN_OFFSET)} # for decode int -> bytes_object
-        merge_rounds = self.vocab_size - 256
+        vocab_dict = {idx: bytes([idx]) for idx in range(TOKEN_OFFSET ,256)} # for decode int -> bytes_object
+        merge_rounds = self.vocab_size + TOKEN_OFFSET - 256
         for i in range(merge_rounds):
             counts = {}
             for ids in chunk_ids:
                 get_stats(ids,counts)
             pair = max(counts, key = counts.get)
-            idx = 256 + TOKEN_OFFSET + i
+            idx = 256 + i
             chunk_ids = [merge(ids, pair, idx) for ids in chunk_ids]
 
             # save merge

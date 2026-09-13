@@ -13,7 +13,7 @@ def merge(ids,pair,idx):
             newids.append(idx)
             i += 2
         else:
-            newids.append(idx)
+            newids.append(idx[i])
             i += 1
     return newids
         

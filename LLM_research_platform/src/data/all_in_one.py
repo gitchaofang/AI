@@ -2,12 +2,13 @@ import torch
 import random
 import numpy as np
 import os
+from pathlib import Path
 from torch.utils.data import Dataset
 from torch.utils.data import Sampler
 from src.data.regex_tokenizer import RegexTokenizer
 
-LOCAL_PATH =  "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data"
-COLAB_PATH = "/content/AI/LLM_research_platform/src/data/input_data/data/"
+LOCAL_PATH =  Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/")
+COLAB_PATH = Path("/content/AI/LLM_research_platform/src/data/input_data/data/")
 #seperation pattern
 GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
@@ -15,13 +16,22 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 
 class VariableLengthDataset(Dataset): # for txt file
     def __init__(self, tokenizer, max_len, filename):
-        read_path = LOCAL_PATH + filename
-        self.token_path = LOCAL_PATH + "tokens.bin"
-        self.index_path = LOCAL_PATH + "index.npy"
-        self.tokenizer = tokenizer
+        self.file_dir = LOCAL_PATH
+        self.filename = filename
         self.max_len = max_len
+        self.tokenizer = tokenizer
+
+        read_path = self.file_dir / filename
+
+        stem = Path(filename).stem
+
+        self.token_path = self.file_dir / f"{stem}_{max_len}_tokens.bin"
+        self.index_path = self.file_dir / f"{stem}_{max_len}_index.npy"
+
+
+
         with open(read_path, "r", encoding="utf-8") as f:
-                                self.text = f.read()
+            self.text = f.read()
         if not (os.path.exists(self.token_path) and os.path.exists(self.index_path)):
             self.data_prep()
 
@@ -61,7 +71,7 @@ class VariableLengthDataset(Dataset): # for txt file
     def __getitem__(self, key):
          offset,length = self.index[key]
          tokens = self.tokens[offset: offset + length]
-         data = torch.tensor(tokens, dthpe = torch.int64)
+         data = torch.tensor(tokens, dtype = torch.int64)
          return {
               "input_ids": data[:-1],
               "labels": data[1:]
@@ -72,33 +82,32 @@ class VariableLengthDataset(Dataset): # for txt file
         
 
 class TokenBatchSampler(Sampler):
-    def __init__(self,
-                  batch_size,
-                  shuffle = True):
-        index_path = COLAB_PATH + "index.npy"
-        self.index = np.load(
-                     index_path,
-                     mmap_mode = "r"
-                ) 
+    def __init__(self, dataset, batch_size, shuffle=True):
+        self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
-        self.indices = list(range(len(self.index)))
+
+        self.indices = list(range(len(dataset)))
         self.batches = []
+
         self._make_batches()
 
     def _make_batches(self):
-        indices = sorted(self.indices, key = lambda i: self.index[i][1])
-        
-        for idx in range(0, len(indices), self.batch_size):
-            batch = indices[idx: idx + self.batch_size]
-            self.batches.append(batch)
+        indices = sorted(
+            self.indices,
+            key=lambda i: self.dataset.get_length(i)
+        )
 
-        if self.shullfle:
+        for idx in range(0, len(indices), self.batch_size):
+            self.batches.append(
+                indices[idx:idx + self.batch_size]
+            )
+
+        if self.shuffle:
             random.shuffle(self.batches)
 
-    def __iter__(self): 
-        for batch in self.batches:
-              yield batch
+    def __iter__(self):
+        yield from self.batches
 
     def __len__(self):
         return len(self.batches)

@@ -3,8 +3,7 @@ import regex as re
 def get_stats(ids, counts=None): #update counts
     counts = {} if counts is None else counts
     for pair in zip(ids[:-1],ids[1:]):
-        counts[pair] = counts[pair] + 1
-    return counts
+        counts[pair] = counts.get(pair,0) + 1
 
 def merge(ids,pair,idx):
     newids = []

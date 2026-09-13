@@ -1,26 +1,29 @@
 import regex as re
-from .helper import get_stats
-from .helper import merge
+from .helper import get_stats,merge
+from pathlib import Path
+
 
 # the main GPT text split patterns, see
 # https://github.com/openai/tiktoken/blob/main/tiktoken_ext/openai_public.py
 GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
 
+FILE_DIR = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/token_training/")
+
 # for tokenization:
 # 0: for padding
 # 1: for EOS
 # tokenization starts from 2
 PAD_ID = 0
-EOS_ID = 1
+EOS_ID = 1 
 TOKEN_OFFSET = 2
 class RegexTokenizer:
-    def __init__(self, filename, pattern = None, vocab_size = 50000):
-        path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/" + filename # for local
+    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = 50000):
+        #path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/" + filename # for local
         #path = "/content/AI/LLM_research_platform/src/data/input_data/data/" + filename # for codlab online # for codelab online
-        with open(path, "r", encoding="utf-8") as f:
-            self.text = f.read() 
-
+        #with open(path, "r", encoding="utf-8") as f:
+        #    self.text = f.read() 
+        self.file_dir = Path(file_dir)
         # pattern
         self.pattern = GPT2_SPLIT_PATTERN if pattern is None else pattern
         self.compiled_pattern = re.compile(self.pattern)
@@ -30,7 +33,12 @@ class RegexTokenizer:
         
 
     def train(self): #this function should be called right after instantiating RegexTokenizer
-        chunks = self.compiled_pattern.findall(self.text)
+        chunks = []
+        for file_path in self.file_dir.glob("*.txt"):
+            print(f"training on {file_path}")
+            with open(file_path, "r", encoding = "utf-8") as f:
+                text = f.read()
+            chunks.extend(self.compiled_pattern.findall(text))
         chunk_ids = [[x + TOKEN_OFFSET for x in ch.encode("utf-8")]for ch in chunks]
 
         merge_dict = {} # for encode {int,int} -> int

@@ -11,6 +11,8 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 # 0: for padding
 # 1: for EOS
 # tokenization starts from 2
+PAD_ID = 0
+EOS_ID = 1
 TOKEN_OFFSET = 2
 class RegexTokenizer:
     def __init__(self, filename, pattern = None, vocab_size = 50000):
@@ -29,31 +31,39 @@ class RegexTokenizer:
 
     def train(self): #this function should be called right after instantiating RegexTokenizer
         chunks = self.compiled_pattern.findall(self.text)
-        chunk_ids = [list(ch.encode("utf-8")) for ch in chunks]
+        chunk_ids = [[x + TOKEN_OFFSET for x in ch.encode("utf-8")]for ch in chunks]
 
         merge_dict = {} # for encode {int,int} -> int
-        vocab_dict = {idx: bytes([idx]) for idx in range(TOKEN_OFFSET ,256)} # for decode int -> bytes_object
-        merge_rounds = self.vocab_size + TOKEN_OFFSET - 256
+        # 0 = PAD
+        # 1 = EOS
+        # 2-257 = 256 byte tokens
+        vocab_dict = {idx + TOKEN_OFFSET: bytes([idx]) for idx in range(256)} # for decode int -> bytes_object
+        merge_rounds = self.vocab_size - TOKEN_OFFSET - 256
         for i in range(merge_rounds):
             counts = {}
             for ids in chunk_ids:
                 get_stats(ids,counts)
+            # Small training corpus may run out of pairs
+            if not counts:
+                break
             pair = max(counts, key = counts.get)
-            idx = 256 + i
+            idx = 256 + TOKEN_OFFSET + i
             chunk_ids = [merge(ids, pair, idx) for ids in chunk_ids]
 
             # save merge
             merge_dict[pair] = idx
             vocab_dict[idx] = vocab_dict[pair[0]] + vocab_dict[pair[1]]
-            print(f"merged {pair[0]} and {pair[1]} into idx")
+            print(f"merged {pair[0]} and {pair[1]} into {idx}")
         
         self.merge_dict = merge_dict
         self.vocab_dict = vocab_dict
 
     def _encode_chunk(self, chunk_ids): #chunk_ids is list of decimal representations of bytes from the entire text after applying formate seperation
-        counts = {}
         while len(chunk_ids) >= 2:
+            counts = {}
             get_stats(chunk_ids,counts)
+            if not counts:
+                break
             pair = min(counts, key = lambda p: self.merge_dict.get(p, float("inf")))
             if pair not in self.merge_dict:
                 break
@@ -61,17 +71,29 @@ class RegexTokenizer:
             chunk_ids = merge(chunk_ids, pair, idx)
         return chunk_ids
 
-    def encode(self, text): # text is pure python string, return a list of decimal represention of bytes
-        chunks_text = re.findall(self.pattern, text)
-        chunks_list = [list(ch.encode("utf-8")) for ch in chunks_text] # list of list (decimal representations of bytes)
+    def encode(self, text):
+        chunks_text = self.compiled_pattern.findall(text)
         encoded_ids = []
-        for chunk_ids in chunks_list:
+
+        for chunk in chunks_text:
+            chunk_ids = [x + TOKEN_OFFSET for x in chunk.encode("utf-8")]
             encoded_ids.append(self._encode_chunk(chunk_ids))
+
+        # deal with EOS
+        if encoded_ids:
+            encoded_ids[-1].append(EOS_ID)
+        else:
+            encoded_ids.append([EOS_ID])
+
         return encoded_ids
 
     def decode(self, ids): #ids is a list of integers, return a python string
         bytes_list = []
         for idx in ids:
+            if idx == EOS_ID:
+                break
+            if idx == PAD_ID:
+                continue
             if idx in self.vocab_dict:
                 bytes_list.append(self.vocab_dict[idx])
             else:

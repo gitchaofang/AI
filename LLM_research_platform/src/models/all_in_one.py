@@ -4,13 +4,15 @@ import torch.nn as nn
 import math
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from src.data.all_in_one import VariableLengthDataset
+from src.data.regex_tokenizer import RegexTokenizer
+from src.data.all_in_one import TextDecodeDataset
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 
 #device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-
+TRAINING_FILENAME = "novel_train.txt"
+VALIDATION_FILENAME = "novel_eval.txt"
 # self attention
 class SelfAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0, dropout = 0.2):
@@ -275,11 +277,17 @@ wandb.init(
     }
 )
 #traiing dataset
-dataset_train = VariableLengthDataset("novel_train.txt") 
-vocab_size = dataset_train.get_vocab_size()
-print(f"vocab_size is: {vocab_size}")
+tokenizer = RegexTokenizer()
+tokenizer.train()
+dataset_train = TextDecodeDataset(tokenizer=tokenizer,
+                                max_len=512,
+                                filename=DATASET_INPUT_FILENAME)
+sampler_train = TokenBatchSampler(dataset = dataset_train,
+                                  batch_size=8)
 collator = PaddingCollator()
-sampler_train = TokenBatchSampler(dataset_train,3000)
+
+vocab_size = tokenizer.get_vocab_size()
+print(f"vocab_size is: {vocab_size}")
 
 loader_train = DataLoader(
     dataset_train,
@@ -290,8 +298,11 @@ loader_train = DataLoader(
 )
 
 #evaluation dataset
-dataset_eval = VariableLengthDataset("novel_eval.txt") 
-sampler_eval = TokenBatchSampler(dataset_eval,16000)
+dataset_eval = TextDecodeDataset(tokenizer=tokenizer,
+                                 max_len = 512,
+                                 filename = "novel_eval.txt") 
+sampler_eval = TokenBatchSampler(dataset=dataset_eval,
+                                 batch_size=1)
 
 loader_eval = DataLoader(
     dataset_eval,

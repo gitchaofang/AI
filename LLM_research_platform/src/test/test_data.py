@@ -49,8 +49,14 @@ def test_dataset(tokenizer):
                         batch_sampler = batch_sampler,
                         shuffle = False,
                         pin_memory = True)
-    for i, batch in enumerate(loader):
+
+    for batch in loader:
         x = batch["input_ids"]
         y = batch["labels"]
-        assert torch.equal(x[:, 1:], y[:, :-1])
+        mask = batch["pad_mask"]
 
+        assert torch.equal(
+            x[:, 1:][mask[:, 1:] == 1],
+            y[:, :-1][mask[:, :-1] == 1]
+        )
+    

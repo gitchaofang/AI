@@ -88,10 +88,10 @@ class RegexTokenizer:
             encoded_ids.append(self._encode_chunk(chunk_ids))
 
         # deal with EOS
-       # if encoded_ids:
-       #     encoded_ids[-1].append(EOS_ID)
-       # else:
-       #     encoded_ids.append([EOS_ID])
+        if encoded_ids:
+            encoded_ids[-1].append(EOS_ID)
+        else:
+            encoded_ids.append([EOS_ID])
 
         return encoded_ids
 

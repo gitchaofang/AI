@@ -283,6 +283,7 @@ wandb.init(
 #traiing dataset
 tokenizer = RegexTokenizer()
 tokenizer.train()
+print(f"tokenizer is trained")
 dataset_train = TextDecodeDataset(tokenizer=tokenizer,
                                 max_len=MAX_LEN,
                                 filename=TRAINING_FILENAME)

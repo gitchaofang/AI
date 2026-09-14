@@ -7,8 +7,10 @@ from torch.utils.data import Dataset
 from torch.utils.data import Sampler
 from src.data.regex_tokenizer import RegexTokenizer
 
-LOCAL_PATH =  Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/index_files")
-COLAB_PATH = Path("/content/AI/LLM_research_platform/src/data/input_data/data/index_files")
+LOCAL_FILE_PATH =  Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/")
+LOCAL_INDEX_PATH =  Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/index_files")
+COLAB_FILE_PATH = Path("/content/AI/LLM_research_platform/src/data/input_data/data/")
+COLAB_INDEX_PATH = Path("/content/AI/LLM_research_platform/src/data/input_data/data/index_files")
 #seperation pattern
 GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
@@ -16,7 +18,8 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 
 class TextDecodeDataset(Dataset): # for txt file
     def __init__(self, tokenizer, max_len, filename):
-        self.file_dir = LOCAL_PATH
+        self.file_dir = LOCAL_FILE_PATH
+        self.index_dir = LOCAL_INDEX_PATH
         self.filename = filename
         self.max_len = max_len
         self.tokenizer = tokenizer
@@ -25,8 +28,8 @@ class TextDecodeDataset(Dataset): # for txt file
 
         stem = Path(filename).stem
 
-        self.token_path = self.file_dir / f"{stem}_{max_len}_tokens.bin"
-        self.index_path = self.file_dir / f"{stem}_{max_len}_index.npy"
+        self.token_path = self.index_dir / f"{stem}_{max_len}_tokens.bin"
+        self.index_path = self.index_dir / f"{stem}_{max_len}_index.npy"
 
 
 
@@ -79,6 +82,7 @@ class TextDecodeDataset(Dataset): # for txt file
 
     def get_length(self, key):
          return self.index[key][1]
+
         
 
 class TokenBatchSampler(Sampler):

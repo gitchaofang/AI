@@ -52,5 +52,5 @@ def test_dataset(tokenizer):
     for i, batch in enumerate(loader):
         x = batch["input_ids"]
         y = batch["labels"]
-        assert x[1:] == y[:-1]
+        assert torch.equal(x[:, 1:], y[:, :-1])
 

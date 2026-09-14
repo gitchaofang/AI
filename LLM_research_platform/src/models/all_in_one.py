@@ -13,6 +13,10 @@ from src.data.all_in_one import PaddingCollator
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 TRAINING_FILENAME = "novel_train.txt"
 VALIDATION_FILENAME = "novel_eval.txt"
+MAX_LEN = 256
+HIDDEN_DIM = 384
+BATCH_SIZE = 8
+ACCUMULATION_STEPS = 8
 # self attention
 class SelfAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, max_seq_len: int, pad_token=0, dropout = 0.2):
@@ -266,21 +270,21 @@ wandb.login()
 wandb.init(
     project="my-gpt",
     config={
-        "d_model": 384,
+        "d_model": HIDDEN_DIM,
         "n_layers": 6,
         "n_heads": 6,
-        "max_seq_len": 256,
+        "max_seq_len": MAX_LEN,
         "batch_tokens": 3000,
         "learning_rate": 3e-4,
         "epochs": 200,
-        "accumulation_steps": 8,
+        "accumulation_steps": ACCUMULATION_STEPS,
     }
 )
 #traiing dataset
 tokenizer = RegexTokenizer()
 tokenizer.train()
 dataset_train = TextDecodeDataset(tokenizer=tokenizer,
-                                max_len=512,
+                                max_len=MAX_LEN,
                                 filename=TRAINING_FILENAME)
 sampler_train = TokenBatchSampler(dataset = dataset_train,
                                   batch_size=8)
@@ -299,7 +303,7 @@ loader_train = DataLoader(
 
 #evaluation dataset
 dataset_eval = TextDecodeDataset(tokenizer=tokenizer,
-                                 max_len = 512,
+                                 max_len = MAX_LEN,
                                  filename = VALIDATION_FILENAME) 
 sampler_eval = TokenBatchSampler(dataset=dataset_eval,
                                  batch_size=1)
@@ -318,8 +322,8 @@ print("Device:", device)
 
 model = GPT(
     vocab_size = vocab_size,
-    d_model = 384,
-    max_seq_len = 256,
+    d_model = HIDDEN_DIM,
+    max_seq_len = MAX_LEN,
     n_layers = 6,
     n_heads = 6,
 ).to(device)
@@ -337,7 +341,7 @@ trainer = Trainer(
 )
 
 epoches = 200
-accumulation_steps = 8
+accumulation_steps = ACCUMULATION_STEPS
 for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()

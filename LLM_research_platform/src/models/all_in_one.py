@@ -281,7 +281,7 @@ tokenizer = RegexTokenizer()
 tokenizer.train()
 dataset_train = TextDecodeDataset(tokenizer=tokenizer,
                                 max_len=512,
-                                filename=DATASET_INPUT_FILENAME)
+                                filename=TRAINING_FILENAME)
 sampler_train = TokenBatchSampler(dataset = dataset_train,
                                   batch_size=8)
 collator = PaddingCollator()
@@ -300,7 +300,7 @@ loader_train = DataLoader(
 #evaluation dataset
 dataset_eval = TextDecodeDataset(tokenizer=tokenizer,
                                  max_len = 512,
-                                 filename = "novel_eval.txt") 
+                                 filename = VALIDATION_FILENAME) 
 sampler_eval = TokenBatchSampler(dataset=dataset_eval,
                                  batch_size=1)
 

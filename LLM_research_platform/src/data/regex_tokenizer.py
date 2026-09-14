@@ -31,7 +31,9 @@ class RegexTokenizer:
         self.merge_dict = {}
         self.vocab_dict = {}
         
-
+    def get_vocab_size(self):
+        return self.vocab_size
+    
     def train(self): #this function should be called right after instantiating RegexTokenizer
         chunks = []
         for file_path in self.file_dir.glob("*.txt"):

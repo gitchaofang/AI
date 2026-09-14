@@ -37,17 +37,124 @@ def test_encode_decode(tokenizer, test_text):
     print(f"{decoded_text} \n {test_text}")
     assert decoded_text == test_text
 
+
+def test_dataset_shift(tokenizer):
+    dataset = TextDecodeDataset(
+        tokenizer=tokenizer,
+        max_len=512,
+        filename=DATASET_INPUT_FILENAME
+    )
+
+    for i in range(len(dataset)):
+        item = dataset[i]
+
+        x = item["input_ids"]
+        y = item["labels"]
+
+        assert len(x) == len(y), f"Length mismatch at {i}"
+
+        if not torch.equal(x[1:], y[:-1]):
+            print(f"FAILED at dataset index {i}")
+
+            for j in range(min(len(x[1:]), len(y[:-1]))):
+                if x[1:][j] != y[:-1][j]:
+                    print(
+                        f"Mismatch at position {j}: "
+                        f"x={x[1:][j].item()}, "
+                        f"y={y[:-1][j].item()}"
+                    )
+                    break
+
+            raise AssertionError
+
+def test_collator(tokenizer):
+    dataset = TextDecodeDataset(
+        tokenizer=tokenizer,
+        max_len=512,
+        filename=DATASET_INPUT_FILENAME
+    )
+
+    collator = PaddingCollator()
+
+    samples = [
+        dataset[0],
+        dataset[1],
+    ]
+
+    batch = collator(samples)
+
+    x = batch["input_ids"]
+    y = batch["labels"]
+    mask = batch["pad_mask"]
+
+    for i, item in enumerate(samples):
+        length = len(item["input_ids"])
+
+        assert torch.equal(
+            x[i, :length],
+            item["input_ids"]
+        )
+
+        assert torch.equal(
+            y[i, :length],
+            item["labels"]
+        )
+
+def test_dataloader(tokenizer):
+    dataset = TextDecodeDataset(
+        tokenizer=tokenizer,
+        max_len=512,
+        filename=DATASET_INPUT_FILENAME
+    )
+
+    batch_sampler = TokenBatchSampler(
+        dataset=dataset,
+        batch_size=8,
+        shuffle=False
+    )
+
+    collator = PaddingCollator()
+
+    loader = DataLoader(
+        dataset,
+        batch_sampler=batch_sampler,
+        collate_fn=collator,
+        pin_memory=True
+    )
+
+    for batch_indices, batch in zip(batch_sampler, loader):
+
+        x = batch["input_ids"]
+        y = batch["labels"]
+        mask = batch["pad_mask"]
+
+        # Check every sample against the original Dataset
+        for row, dataset_idx in enumerate(batch_indices):
+            original = dataset[dataset_idx]
+
+            length = len(original["input_ids"])
+
+            assert torch.equal(
+                x[row, :length],
+                original["input_ids"]
+            )
+
+            assert torch.equal(
+                y[row, :length],
+                original["labels"]
+            )
+
 def test_dataset(tokenizer):
     dataset = TextDecodeDataset(tokenizer=tokenizer,
                                 max_len=512,
                                 filename=DATASET_INPUT_FILENAME)
     batch_sampler = TokenBatchSampler(dataset=dataset, 
-                                batch_size=8)
+                                batch_size=8,
+                                shuffle=False)
     collator = PaddingCollator()
     loader = DataLoader(dataset,
                         collate_fn = collator,
                         batch_sampler = batch_sampler,
-                        shuffle = False,
                         pin_memory = True)
 
     for batch in loader:
@@ -55,8 +162,7 @@ def test_dataset(tokenizer):
         y = batch["labels"]
         mask = batch["pad_mask"]
 
-        assert torch.equal(
-            x[:, 1:][mask[:, 1:] == 1],
-            y[:, :-1][mask[:, :-1] == 1]
-        )
-    
+        for i in range(x.size(0)):
+            valid_len = mask[i].sum().item()
+            if valid_len > 1:
+                assert torch.equal(x[i, 1:valid_len],y[i,:valid_len - 1])

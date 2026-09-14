@@ -141,10 +141,10 @@ class PaddingCollator:
         )
 
         for i, item in enumerate(batch):
-             length = len(item["input_ids"])
-             input_ids[i][:length] = batch[i]["input_ids"]
-             label_ids[i][:length] = batch[i]["labels"]
-             pad_mask[i][:length] = 1
+            length = len(item["input_ids"])
+            input_ids[i][:length] = batch[i]["input_ids"]
+            label_ids[i][:length] = batch[i]["labels"]
+            pad_mask[i][:length] = 1
 
         return {
             "input_ids": input_ids,

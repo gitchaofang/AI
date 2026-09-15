@@ -48,18 +48,18 @@ class CrossAttention(nn.Module):
         return out
 
     # here masks are pad_masks. causal mask is not needed in cross-attention
-    def forward(self, k_x, v_x, q_x, kv_mask,q_mask):
+    def forward(self, content, q_x, kv_mask,q_mask): # usually k and va come from the same encode so we only use one input "content"
         # k_x: [B_kv, T_kv, D_kv]
         # q_x: [B_q, T_q, D_q]
         # kv_mask: [B_kv, T_kv]
         # q_mask: [B_q, T_q]
-        B_kv, T_kv, D_kv = k_x.shape
+        B_kv, T_kv, D_kv = content.shape
         B_q, T_q, D_q = q_x.shape
         assert B_kv == B_q and D_kv ==self.d_kv and D_q == self.d_q
 
         # transform to n_model
-        k_x = self.k_proj(k_x)
-        v_x = self.v_proj(v_x)
+        k_x = self.k_proj(content)
+        v_x = self.v_proj(content)
         q_x = self.q_proj(q_x)
         
         # build a combined mask

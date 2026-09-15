@@ -11,8 +11,8 @@ from src.data.all_in_one import PaddingCollator
 
 #device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-TRAINING_FILENAME = "novel_train.txt"
-VALIDATION_FILENAME = "novel_eval.txt"
+TRAINING_FILENAME = "training.txt"
+VALIDATION_FILENAME = "validation.txt"
 MAX_LEN = 256
 HIDDEN_DIM = 384
 BATCH_SIZE = 8

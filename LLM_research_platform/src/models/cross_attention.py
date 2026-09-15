@@ -3,15 +3,13 @@ from torch import nn
 import math
 
 class CrossAttention(nn.Module):
-    def __init__(self,d_kv: int, d_q: int, d_model: int, n_head: int, max_len: int, pad_token = 0, dropout = 0.2): # For cross_attention k and v have the same dimension
+    def __init__(self,d_kv: int, d_q: int, d_model: int, n_head: int, dropout = 0.2): # For cross_attention k and v have the same dimension
         super().__init__()
         assert d_model % n_head == 0
         self.d_model = d_model
         self.d_kv = d_kv
         self.d_q = d_q
         self.n_head = n_head
-        self.max_len = max_len
-        self.pad_token = pad_token
         self.head_dim = d_model // n_head
 
         # projections
@@ -36,7 +34,7 @@ class CrossAttention(nn.Module):
         # scores
         scores = q_x @ k_x.transpose(-1,-2) #[B_q,H, T_q, D_h] @ [B_q, H, D_h, T_kv] -> [B_q, H, T_q, T_k]
         scores = scores / math.sqrt(self.head_dim)
-        scores = scores.mask_fill(combined_mask == 0,-1e10)
+        scores = scores.masked_fill(combined_mask == 0,-1e10)
 
         attention = torch.softmax(scores, dim = -1)
         attention = self.attn_dropout(attention)

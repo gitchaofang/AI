@@ -44,7 +44,7 @@ class SelfAttention(nn.Module):
         self.out_proj = nn.Linear(d_model, d_model)
 
         self.atten_dropout = nn.Dropout(dropout)
-        self.out_drouout = nn.Dropout(dropout)
+        self.out_dropout = nn.Dropout(dropout)
         mask = torch.tril(
             torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
         )
@@ -139,7 +139,7 @@ class SelfAttention(nn.Module):
         return out
 
     
-    def _dot_product(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
+    def _attention(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
         B, T_q, D = q.shape
         
         scores = q @ k.transpose(-1, -2)
@@ -155,7 +155,7 @@ class SelfAttention(nn.Module):
 
         out = self.out_proj(out)
         # dropout on out project
-        out  = self.out_drouout(out)
+        out  = self.out_dropout(out)
         return out
 
 
@@ -200,7 +200,7 @@ class SelfAttention(nn.Module):
             combined_mask = causal_mask * valid_mask
             combined_mask = combined_mask[:, :, -T_q:, :]
 
-            return self._dot_product(q, k_full, v_full, combined_mask)
+            return self._attention(q, k_full, v_full, combined_mask)
 
         # ---------------------------------
         # Prefill
@@ -217,7 +217,7 @@ class SelfAttention(nn.Module):
         pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
         combined_mask = self.causal_mask[:, :, :T_q, :T_q].to(x.device).float() * pad_mask.unsqueeze(1)
 
-        return self._dot_product(q, k, v, combined_mask)
+        return self._attention(q, k, v, combined_mask)
         
 
 # transformer:
@@ -285,7 +285,7 @@ class GPT(nn.Module):
         )
 
         self.norm = nn.LayerNorm(d_model,)
-        self.lm_linear = nn.Linear(d_model,vocab_size + 1,)
+        self.lm_linear = nn.Linear(d_model, vocab_size + 2,)
         self.position_offset = None
 
         self.apply(self._init_weights)

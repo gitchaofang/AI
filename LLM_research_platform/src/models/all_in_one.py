@@ -141,11 +141,6 @@ class SelfAttention(nn.Module):
     
     def _dot_product(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
         B, T_q, D = q.shape
-        T_k = k.shape[1]
-
-        q = q.view(B, T_q, self.n_heads, self.head_dim).transpose(1, 2)
-        k = k.view(B, T_k, self.n_heads, self.head_dim).transpose(1, 2)
-        v = v.view(B, T_k, self.n_heads, self.head_dim).transpose(1, 2)
         
         scores = q @ k.transpose(-1, -2)
         scores = scores / math.sqrt(self.head_dim)
@@ -168,10 +163,11 @@ class SelfAttention(nn.Module):
         B, T_q, D = x.shape
         pad_mask = pad_mask.to(device=x.device, dtype=torch.float32)
 
-        q = self.q_proj(x)
-        k = self.k_proj(x)
-        v = self.v_proj(x)
-
+        # q,k,v: [B,H,T,D_h]
+        q = self.q_proj(x).view(B, T_q, self.n_heads, self.head_dim).transpose(1, 2)
+        k = self.k_proj(x).view(B, T_q, self.n_heads, self.head_dim).transpose(1, 2)
+        v = self.v_proj(x).view(B, T_q, self.n_heads, self.head_dim).transpose(1, 2)
+        
         # M-RoPE
         if self.RoPE:
             q = self._apply_rope(q, positions)
@@ -204,7 +200,7 @@ class SelfAttention(nn.Module):
             combined_mask = causal_mask * valid_mask
             combined_mask = combined_mask[:, :, -T_q:, :]
 
-            return self._dot_product(q, k_full, v_full, combined_mask, self.kv_positions)
+            return self._dot_product(q, k_full, v_full, combined_mask)
 
         # ---------------------------------
         # Prefill

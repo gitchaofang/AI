@@ -139,20 +139,14 @@ class SelfAttention(nn.Module):
         return out
 
     
-    def _dot_product(self, q, k, v, combined_mask, q_position, k_position):
+    def _dot_product(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
         B, T_q, D = q.shape
         T_k = k.shape[1]
 
         q = q.view(B, T_q, self.n_heads, self.head_dim).transpose(1, 2)
         k = k.view(B, T_k, self.n_heads, self.head_dim).transpose(1, 2)
         v = v.view(B, T_k, self.n_heads, self.head_dim).transpose(1, 2)
-
-        # M-RoPE
-        if self.RoPE:
-            q = self._apply_rope(q, q_position)
-            k = self._apply_rope(k, k_position)
         
-
         scores = q @ k.transpose(-1, -2)
         scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(combined_mask == 0, -1e10)
@@ -170,7 +164,7 @@ class SelfAttention(nn.Module):
         return out
 
 
-    def forward(self, x, pad_mask, positions, is_prefill=False, is_generate=False):# For normal self-attention, k_positions can default to q_positions 
+    def forward(self, x, pad_mask, positions, is_prefill=False, is_generate=False):# For normal self-attention, k_positions and v_positions are the same
         B, T_q, D = x.shape
         pad_mask = pad_mask.to(device=x.device, dtype=torch.float32)
 
@@ -178,10 +172,10 @@ class SelfAttention(nn.Module):
         k = self.k_proj(x)
         v = self.v_proj(x)
 
-        # Current Q and current/new K
-        # have the same positions.
-        q_positions = positions
-        k_positions = positions
+        # M-RoPE
+        if self.RoPE:
+            q = self._apply_rope(q, positions)
+            k = self._apply_rope(k, positions) 
 
         # ---------------------------------
         # Generation with KV cache
@@ -190,17 +184,17 @@ class SelfAttention(nn.Module):
             if self.kv_cache is None:
                 self.kv_cache = (k, v)
                 self.kv_mask = pad_mask
-                self.kv_positions = k_positions
+                self.kv_positions = positions
             else:
                 k_full = torch.cat([self.kv_cache[0], k], dim=1)
                 v_full = torch.cat([self.kv_cache[1], v], dim=1)
                 self.kv_cache = (k_full, v_full)
                 self.kv_mask = torch.cat([self.kv_mask, pad_mask], dim=1)
-                self.kv_positions = torch.cat([self.kv_positions, k_positions], dim=1,)
+                self.kv_positions = torch.cat([self.kv_positions, positions], dim=1,)
 
 
             k_full, v_full = self.kv_cache
-            T_k = k_full.size(1)
+            T_k = k_full.shape[1]
             assert T_k <= self.max_seq_len, ( "KV cache exceeds max_seq_len")
 
             valid_mask = self.kv_mask.unsqueeze(-1) @ self.kv_mask.unsqueeze(-2)
@@ -210,7 +204,7 @@ class SelfAttention(nn.Module):
             combined_mask = causal_mask * valid_mask
             combined_mask = combined_mask[:, :, -T_q:, :]
 
-            return self._dot_product(q, k_full, v_full, combined_mask, q_positions, self.kv_positions)
+            return self._dot_product(q, k_full, v_full, combined_mask, self.kv_positions)
 
         # ---------------------------------
         # Prefill
@@ -218,7 +212,7 @@ class SelfAttention(nn.Module):
         if is_prefill:
             self.kv_cache = (k, v)
             self.kv_mask = pad_mask
-            self.kv_positions = k_positions
+            self.kv_positions = positions
 
         # ---------------------------------
         # Normal training / prefill attention
@@ -227,7 +221,7 @@ class SelfAttention(nn.Module):
         pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
         combined_mask = self.causal_mask[:, :, :T_q, :T_q].to(x.device).float() * pad_mask.unsqueeze(1)
 
-        return self._dot_product(q, k, v, combined_mask, q_positions, k_positions)
+        return self._dot_product(q, k, v, combined_mask)
         
 
 # transformer:
@@ -276,7 +270,7 @@ class GPT(nn.Module):
         self.RoPE = RoPE
         self.rope_dims = rope_dims
 
-        self.token_embedding = nn.Embedding(vocab_size + 1 ,d_model,)
+        self.token_embedding = nn.Embedding(vocab_size + 2 ,d_model,) # "+2" becasue 0 is for padding and 1 is for EOS
         # if not using RoPE, we use learnable positional embedding
         if not RoPE:
             self.position_embedding = nn.Embedding(max_seq_len,d_model,)
@@ -343,13 +337,13 @@ class GPT(nn.Module):
             is_prefill and is_generate
         ), "is_prefill and is_generate cannot both be True"
 
+
         # -----------------------------------------
-        # Learned positional embeddings
-        # Only used when RoPE=False
+        # Token embedding
         # -----------------------------------------
+        x = self.token_embedding(x)
 
         if not self.RoPE:
-
             if not is_prefill and not is_generate:
                 position_ids = torch.arange(T_q,device=x.device,).unsqueeze(0).expand(B,T_q,)
             elif is_prefill:
@@ -361,22 +355,14 @@ class GPT(nn.Module):
                     "Generation requires a previous prefill"
                 )
                 relative_positions = torch.arange(T_q,device=x.device,).unsqueeze(0)
-                position_ids = (self.position_offset.unsqueeze(1)+ relative_positions)
+                position_ids = (self.position_offset.unsqueeze(1) + relative_positions)
 
             assert torch.all(position_ids >= 0)
             assert torch.all(position_ids < self.max_seq_len), ("Position ID exceeds max_seq_len")
-
-        # -----------------------------------------
-        # Token embedding
-        # -----------------------------------------
-        x = self.token_embedding(x)
-
-        # -----------------------------------------
-        # Optional learnable positional embedding
-        # -----------------------------------------
-
-        if not self.RoPE:
-            x = (x + self.position_embedding(position_ids))
+            # -----------------------------------------
+            # learnable positional embedding only when RoPE is False
+            # -----------------------------------------
+            x = (x + self.position_embedding(position_ids))          
 
         # -----------------------------------------
         # Transformer blocks

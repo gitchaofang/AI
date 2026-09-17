@@ -1,0 +1,36 @@
+seed: 42
+device: auto
+
+data:
+  file_dir: /content/AI/LLM_research_platform/src/data/input_data/data/token_training
+  training_file: training.txt
+  validation_file: validation.txt
+  max_len: 256
+  batch_size: 8
+  validation_batch_size: 1
+  shuffle: true
+
+tokenizer:
+  vocab_size: 5000
+  pattern: gpt2
+
+model:
+  d_model: 384
+  n_layers: 6
+  n_heads: 6
+  rope: true
+  rope_dims: [64]
+  dropout: 0.2
+
+training:
+  epochs: 200
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  accumulation_steps: 8
+  max_grad_norm: 1.0
+
+logging:
+  enabled: true
+  project: my-gpt
+  log_every_batches: 100
+  print_every_batches: 250

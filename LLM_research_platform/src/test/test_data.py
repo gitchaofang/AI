@@ -7,12 +7,18 @@ from src.data.regex_tokenizer import RegexTokenizer
 from src.data.all_in_one import TextDecodeDataset
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
+from src.models.all_in_one import SelfAttention
+from src.models.all_in_one import Trainer
+from src.models.all_in_one import GPT
 
 DATA_DIR =  "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/"
 GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
 ENCODE_DECODE_FILENAME = "swift.txt"
 DATASET_INPUT_FILENAME = "swift.txt"
+B = 10
+T = 26
+D = 32
 
 @pytest.fixture
 # create tokenizer and train it
@@ -28,7 +34,38 @@ def test_text():
     with open(read_path, "r", encoding="utf-8") as f:
         text = f.read()
     return text
-     
+
+@pytest.fixture
+# model input package:
+# x: input_tensor
+# positions: tentor for RoPE
+# pad_mask: padding mask
+# rope_dims: dims for RoPE
+def model_pram():
+    # x [B,T,D]
+    # pad_mask [B,T]
+    x = torch.randint(2,255,(B,T,D), dtype = torch.int64)
+    pad_mask = torch.ones((B,T), dtype = torch.int)
+    # add padding
+    x[:,-10:,:] = 0
+    pad_mask[:,-10:] = 0
+
+    # positions: [B,T,M] M = 3
+    positions = torch.full((B,T,3), -1, dtype = torch.int64)
+    
+    for j in range(B):
+        coord = torch.randint(0,224,(3,), dtype = torch.int)
+        positions[j,:-10,:] = coord
+
+    # rope_dims
+    rope_dims = [4,6,6]
+
+    return {"ids": x,
+            "pos": positions,
+            "mask": pad_mask,
+            "rdim": rope_dims}
+
+# ------dataset---------
 def test_encode_decode(tokenizer, test_text):
     print(f"start testing")
     encoded_ids = tokenizer.encode(test_text)
@@ -166,3 +203,21 @@ def test_dataset(tokenizer):
             valid_len = mask[i].sum().item()
             if valid_len > 1:
                 assert torch.equal(x[i, 1:valid_len],y[i,:valid_len - 1])
+
+
+# ----------model--------------
+def test_Selfattention(model_pram):
+    x = model_pram["ids"]
+    positions = model_pram["pos"]
+    pad_mask = model_pram["mask"]
+    rope_dims = model_pram["rdim"]
+
+    self_attention = SelfAttention(d_model = D,
+                                   n_heads = 2,
+                                   max_seq_len=T,
+                                   rope_dims= rope_dims,
+                                   RoPE = True)
+
+    result_attention = self_attention(x, pad_mask, positions)
+    assert result_attention.shape == x.shape
+    assert torch.isfinite(result_attention).all()

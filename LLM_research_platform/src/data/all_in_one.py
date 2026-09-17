@@ -18,8 +18,8 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 
 class TextDecodeDataset(Dataset): # for txt file
     def __init__(self, tokenizer, max_len, filename):
-        self.file_dir = COLAB_FILE_PATH
-        self.index_dir = COLAB_INDEX_PATH
+        self.file_dir = LOCAL_FILE_PATH
+        self.index_dir = LOCAL_INDEX_PATH
         self.filename = filename
         self.max_len = max_len
         self.tokenizer = tokenizer
@@ -144,6 +144,10 @@ class PaddingCollator:
             dtype = torch.int64,
         )
 
+        # create 1d positions for text
+        positions = torch.arange(max_len,dtype=torch.int64)[None,:, None].expand(batch_size, max_len, 1)
+
+
         for i, item in enumerate(batch):
             length = len(item["input_ids"])
             input_ids[i][:length] = batch[i]["input_ids"]
@@ -154,5 +158,6 @@ class PaddingCollator:
             "input_ids": input_ids,
             "labels": label_ids,
             "pad_mask": pad_mask,
+            "positions": positions,
         }
     

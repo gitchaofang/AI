@@ -15,7 +15,7 @@ from src.training.trainer import Trainer
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
 COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
 # load yaml config
-with open("LOCAL_YAML_PATH","r") as f:
+with open("COLAB_YAML_PATH","r") as f:
     config = yaml.safe_load(f)
 
 # Training scripts

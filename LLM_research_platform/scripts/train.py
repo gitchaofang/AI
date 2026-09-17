@@ -1,4 +1,7 @@
 import torch
+import os
+from pathlib import Path
+import yaml
 from torch.utils.data import DataLoader
 
 import random
@@ -8,20 +11,26 @@ from src.data.token_batch_sampler import TokenBatchSampler
 from src.models.GPT import GPT
 from src.training.trainer import Trainer
 
+
+LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
+COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
+# load yaml config
+with open("LOCAL_YAML_PATH","r") as f:
+    config = yaml.safe_load(f)
+
 # Training scripts
 import wandb
 wandb.login()
 wandb.init(
     project="my-gpt",
     config={
-        "d_model": 384,
-        "n_layers": 6,
-        "n_heads": 6,
-        "max_seq_len": 256,
-        "batch_tokens": 3000,
-        "learning_rate": 3e-4,
-        "epochs": 200,
-        "accumulation_steps": 8,
+        "d_model": config["model"]["d_model"],
+        "n_layers": config["model"]["n_layers"],
+        "n_heads": config["model"]["n_heads"],
+        "max_seq_len": config["data"]["max_len"],
+        "learning_rate": config["taining"]["learning_rate"],
+        "epochs": config["training"]["epochs"],
+        "accumulation_steps": config["training"]["accumulation_steps"],
     }
 )
 #traiing dataset
@@ -29,7 +38,9 @@ dataset_train = VariableLengthDataset("novel_train.txt")
 vocab_size = dataset_train.get_vocab_size()
 print(f"vocab_size is: {vocab_size}")
 collator = PaddingCollator()
-sampler_train = TokenBatchSampler(dataset_train,3000)
+sampler_train = TokenBatchSampler(dataset=dataset_train, 
+                                  batch_size = config["data"]["batch_size"],
+                                  shuffle=config["batch"]["shuffle"])
 
 loader_train = DataLoader(
     dataset_train,
@@ -56,16 +67,16 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device:", device)
 
 model = GPT(
-    vocab_size = vocab_size,
-    d_model = 384,
-    max_seq_len = 256,
-    n_layers = 6,
-    n_heads = 6,
+    vocab_size = config["tokenizer"]["vocab_size"],
+    d_model = config["model"]["d_model"],
+    max_seq_len = config["data"]["max_len"],
+    n_layers = config["model"]["n_layers"],
+    n_heads = config["model"]["n_heads"],
 ).to(device)
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
-    lr = 3e-4,
+    lr = config["training"]["learning_rate"],
 )
 
 
@@ -75,8 +86,8 @@ trainer = Trainer(
     device,
 )
 
-epoches = 200
-accumulation_steps = 8
+epoches = config["training"]["epochs"]
+accumulation_steps = config["training"]["accumulation_steps"]
 for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()

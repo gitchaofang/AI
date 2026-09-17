@@ -19,11 +19,7 @@ PAD_ID = 0
 EOS_ID = 1 
 TOKEN_OFFSET = 2
 class RegexTokenizer:
-    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = 50000):
-        #path = "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/" + filename # for local
-        #path = "/content/AI/LLM_research_platform/src/data/input_data/data/" + filename # for codlab online # for codelab online
-        #with open(path, "r", encoding="utf-8") as f:
-        #    self.text = f.read() 
+    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = 50000): 
         self.file_dir = Path(file_dir)
         # pattern
         self.pattern = GPT2_SPLIT_PATTERN if pattern is None else pattern

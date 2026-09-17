@@ -19,7 +19,7 @@ PAD_ID = 0
 EOS_ID = 1 
 TOKEN_OFFSET = 2
 class RegexTokenizer:
-    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = 50000): 
+    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = 5000): 
         self.file_dir = Path(file_dir)
         # pattern
         self.pattern = GPT2_SPLIT_PATTERN if pattern is None else pattern

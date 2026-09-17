@@ -221,3 +221,4 @@ def test_Selfattention(model_pram):
     result_attention = self_attention(x, pad_mask, positions)
     assert result_attention.shape == x.shape
     assert torch.isfinite(result_attention).all()
+

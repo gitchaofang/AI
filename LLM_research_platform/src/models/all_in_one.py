@@ -140,7 +140,7 @@ class SelfAttention(nn.Module):
 
     
     def _attention(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
-        B, H, T_q, D = q.shape
+        B, H, T_q, D_h = q.shape
         
         scores = q @ k.transpose(-1, -2)
         scores = scores / math.sqrt(self.head_dim)
@@ -151,7 +151,7 @@ class SelfAttention(nn.Module):
         # dropout on attention
         attention = self.atten_dropout(attention)
         out = attention @ v
-        out = out.transpose(1, 2).contiguous().view(B, T_q, D)
+        out = out.transpose(1, 2).contiguous().view(B, T_q, self.d_model)
 
         out = self.out_proj(out)
         # dropout on out project

@@ -140,7 +140,7 @@ class SelfAttention(nn.Module):
 
     
     def _attention(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
-        B, T_q, D = q.shape
+        B, H, T_q, D = q.shape
         
         scores = q @ k.transpose(-1, -2)
         scores = scores / math.sqrt(self.head_dim)

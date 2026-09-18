@@ -2,7 +2,9 @@ import random
 import torch
 import torch.nn as nn
 import math
+import yaml
 import numpy as np
+from pathlib import Path
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from src.data.regex_tokenizer import RegexTokenizer
@@ -10,15 +12,18 @@ from src.data.all_in_one import TextDecodeDataset
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 
+
+# load config file
+LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
+COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
+# load yaml config
+with open(LOCAL_YAML_PATH,"r") as f:
+    config = yaml.safe_load(f)
+
 #device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 TRAINING_FILENAME = "training.txt"
 VALIDATION_FILENAME = "validation.txt"
-MAX_LEN = 256
-HIDDEN_DIM = 384
-BATCH_SIZE = 8
-ACCUMULATION_STEPS = 8
-VOCAB_SIZE = 50000
 # self attention
 class SelfAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, max_seq_len: int, rope_dims, RoPE=True, pad_token=0, dropout = 0.2):
@@ -250,12 +255,12 @@ class TransformerBlock(nn.Module):
 class GPT(nn.Module):
     def __init__(
         self,
-        vocab_size=VOCAB_SIZE,
-        d_model=HIDDEN_DIM,
-        max_seq_len=MAX_LEN,
-        n_layers=6,
-        n_heads=6,
-        rope_dims=[64],
+        vocab_size=config["tokenizer"]["vocab_size"],
+        d_model=config["model"]["d_model"],
+        max_seq_len=config["data"]["max_len"],
+        n_layers=config["model"]["n_layers"],
+        n_heads=config["model"]["n_heads"],
+        rope_dims=config["model"]["rope_dims"],
         RoPE=True,
     ):
         super().__init__()
@@ -410,14 +415,13 @@ wandb.login()
 wandb.init(
     project="my-gpt",
     config={
-        "d_model": HIDDEN_DIM,
-        "n_layers": 6,
-        "n_heads": 6,
-        "max_seq_len": MAX_LEN,
-        "batch_tokens": 3000,
-        "learning_rate": 3e-4,
-        "epochs": 200,
-        "accumulation_steps": ACCUMULATION_STEPS,
+        "d_model": config["model"]["d_model"],
+        "n_layers": config["model"]["n_layers"],
+        "n_heads": config["model"]["n_heads"],
+        "max_seq_len": config["data"]["max_len"],
+        "learning_rate": config["training"]["learrning_rate"],
+        "epochs": config["training"]["epochs"],
+        "accumulation_steps": config["training"]["accumulation_steps"],
     }
 )
 #traiing dataset
@@ -425,10 +429,10 @@ tokenizer = RegexTokenizer()
 tokenizer.train()
 print(f"tokenizer is trained")
 dataset_train = TextDecodeDataset(tokenizer=tokenizer,
-                                max_len=MAX_LEN,
+                                max_len=config["data"]["max_len"],
                                 filename=TRAINING_FILENAME)
 sampler_train = TokenBatchSampler(dataset = dataset_train,
-                                  batch_size=8)
+                                  batch_size=config["data"]["batch_size"])
 collator = PaddingCollator()
 
 vocab_size = tokenizer.get_vocab_size()
@@ -444,7 +448,7 @@ loader_train = DataLoader(
 
 #evaluation dataset
 dataset_eval = TextDecodeDataset(tokenizer=tokenizer,
-                                 max_len = MAX_LEN,
+                                 max_len = config["data"]["max_len"],
                                  filename = VALIDATION_FILENAME) 
 sampler_eval = TokenBatchSampler(dataset=dataset_eval,
                                  batch_size=1)
@@ -463,7 +467,7 @@ print("Device:", device)
 
 model = GPT(
     vocab_size = vocab_size,
-    d_model = HIDDEN_DIM,
+    d_model = config[""][""],
     max_seq_len = MAX_LEN,
     n_layers = 6,
     n_heads = 6,
@@ -484,7 +488,7 @@ trainer = Trainer(
 )
 
 epoches = 200
-accumulation_steps = ACCUMULATION_STEPS
+accumulation_steps = config["training"]["accumulation_steps"]
 for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()

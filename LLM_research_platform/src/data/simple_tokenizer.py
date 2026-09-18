@@ -33,6 +33,7 @@ class SimpleTokenizer:
 			print(f"training on {file_path}")
 			with open(file_path, "r", encoding = "utf-8") as f:
 				text = f.read()
+				print(f"text is: {text}")
 				chars.update(text)
 
 		chars = sorted(list(chars))
@@ -49,7 +50,7 @@ class SimpleTokenizer:
 		return ids
 	
 	def encode(self, text):
-		print(f"text is: {text}")
+		print(f"encode\n")
 		chunks_text = self.compiled_pattern.findall(text)
 		encoded_ids = []
 

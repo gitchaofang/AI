@@ -64,3 +64,6 @@ class SimpleTokenizer:
 	
 	def decode(self, ids):
 		return "".join(self.itos[id] for id in ids)		
+	
+	def get_vocab_size(self):
+		return len(self.stoi)

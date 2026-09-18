@@ -17,14 +17,14 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 class TransformerBlock(nn.Module):
-    def __init__(self, d_model, n_heads, max_seq_len):
+    def __init__(self, d_model, n_heads, max_seq_len, rope_dims, RoPE=True):
         super().__init__()
         self.norm1 = nn.LayerNorm(d_model)
-        self.attention = SelfAttention(d_model, n_heads, max_seq_len)
+        self.attention = SelfAttention(d_model, n_heads, max_seq_len, rope_dims, RoPE=RoPE)
         self.norm2 = nn.LayerNorm(d_model)
         self.ffn = FeedForward(d_model)
 
-    def forward(self, x, pad_mask, is_prefill=False, is_generate=False):
-        x = x + self.attention(self.norm1(x), pad_mask, is_prefill, is_generate)
+    def forward(self, x, pad_mask, positions, is_prefill=False, is_generate=False):
+        x = x + self.attention(self.norm1(x), pad_mask, positions ,is_prefill=is_prefill, is_generate=is_generate)
         x = x + self.ffn(self.norm2(x))
         return x

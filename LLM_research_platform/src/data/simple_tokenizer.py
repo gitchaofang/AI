@@ -7,8 +7,8 @@ import regex as re
 GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
 
-FILE_DIR = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/token_training/")
-#FILE_DIR = Path("/content/AI/LLM_research_platform/src/data/input_data/data/token_training/")
+#FILE_DIR = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/token_training/")
+FILE_DIR = Path("/content/AI/LLM_research_platform/src/data/input_data/data/token_training/")
 
 
 # for tokenization:

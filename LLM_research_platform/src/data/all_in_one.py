@@ -106,7 +106,7 @@ class TokenBatchSampler(Sampler):
             self.batches.append(
                 indices[idx:idx + self.batch_size]
             )
-
+        print(f"batches size is: {len(self.batches)}")
         if self.shuffle:
             random.shuffle(self.batches)
 

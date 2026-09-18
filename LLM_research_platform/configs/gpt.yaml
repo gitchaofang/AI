@@ -11,7 +11,7 @@ data:
   shuffle: true
 
 tokenizer:
-  vocab_size: 2000
+  vocab_size: 50000
   pattern: gpt2
 
 model:

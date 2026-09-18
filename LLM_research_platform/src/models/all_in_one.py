@@ -11,6 +11,7 @@ from src.data.regex_tokenizer import RegexTokenizer
 from src.data.all_in_one import TextDecodeDataset
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
+from src.data.simple_tokenizer import SimpleTokenizer
 
 
 # load config file
@@ -425,9 +426,11 @@ wandb.init(
     }
 )
 #traiing dataset
-tokenizer = RegexTokenizer()
+#tokenizer = RegexTokenizer()
+tokenizer = SimpleTokenizer()
 tokenizer.train()
 print(f"tokenizer is trained")
+
 dataset_train = TextDecodeDataset(tokenizer=tokenizer,
                                 max_len=config["data"]["max_len"],
                                 filename=TRAINING_FILENAME)
@@ -472,7 +475,7 @@ model = GPT(
     n_layers = config["model"]["n_layers"],
     n_heads = config["model"]["n_heads"],
     rope_dims=config["model"]["rope_dims"],
-    RoPE=False,
+    RoPE=config["model"]["rope"],
 ).to(device)
 
 optimizer = torch.optim.AdamW(

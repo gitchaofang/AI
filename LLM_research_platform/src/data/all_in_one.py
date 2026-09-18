@@ -48,6 +48,7 @@ class TextDecodeDataset(Dataset): # for txt file
              self.index_path,
              mmap_mode = "r"
         )
+        print(f"successful")
 
     def data_prep(self):
         encoded_tokens = self.tokenizer.encode(self.text)

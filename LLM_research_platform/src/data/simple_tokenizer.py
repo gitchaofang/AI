@@ -30,7 +30,6 @@ class SimpleTokenizer:
 	def train(self):
 		chars = set()
 		for file_path in self.file_dir.glob("*.txt"):
-			print(f"training on {file_path}")
 			with open(file_path, "r", encoding = "utf-8") as f:
 				text = f.read()
 				print(f"text is: {text}")

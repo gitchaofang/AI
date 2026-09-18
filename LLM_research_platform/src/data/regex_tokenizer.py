@@ -55,6 +55,7 @@ class RegexTokenizer:
         # 2-257 = 256 byte tokens
         vocab_dict = {idx + TOKEN_OFFSET: bytes([idx]) for idx in range(256)} # for decode int -> bytes_object
         merge_rounds = self.vocab_size - TOKEN_OFFSET - 256
+        print(f"merge_rounds is: {merge_rounds}")
         for i in range(merge_rounds):
             counts = {}
             for ids in chunk_ids:

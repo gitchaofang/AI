@@ -1,6 +1,7 @@
 import regex as re
 from .helper import get_stats,merge
 from pathlib import Path
+import yaml
 
 
 # the main GPT text split patterns, see
@@ -11,6 +12,14 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 #FILE_DIR = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/token_training/")
 FILE_DIR = Path("/content/AI/LLM_research_platform/src/data/input_data/data/token_training/")
 
+# load config file
+LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
+COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
+# load yaml config
+with open("COLAB_YAML_PATH","r") as f:
+    config = yaml.safe_load(f)
+
+
 # for tokenization:
 # 0: for padding
 # 1: for EOS
@@ -19,7 +28,7 @@ PAD_ID = 0
 EOS_ID = 1 
 TOKEN_OFFSET = 2
 class RegexTokenizer:
-    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = 5000): 
+    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = config["tokenizer"]["vocab_size"]): 
         self.file_dir = Path(file_dir)
         # pattern
         self.pattern = GPT2_SPLIT_PATTERN if pattern is None else pattern

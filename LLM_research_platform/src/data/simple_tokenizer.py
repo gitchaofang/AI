@@ -49,6 +49,7 @@ class SimpleTokenizer:
 		return ids
 	
 	def encode(self, text):
+		print(f"text is: {text}")
 		chunks_text = self.compiled_pattern.findall(text)
 		encoded_ids = []
 

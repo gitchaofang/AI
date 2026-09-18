@@ -36,8 +36,8 @@ class TextDecodeDataset(Dataset): # for txt file
 
         with open(read_path, "r", encoding="utf-8") as f:
             self.text = f.read()
-        if not (os.path.exists(self.token_path) and os.path.exists(self.index_path)):
-            self.data_prep()
+#        if not (os.path.exists(self.token_path) and os.path.exists(self.index_path)):
+#            self.data_prep()
 
         self.tokens = np.memmap(
              self.token_path,
@@ -48,7 +48,6 @@ class TextDecodeDataset(Dataset): # for txt file
              self.index_path,
              mmap_mode = "r"
         )
-        print(f"successful")
 
     def data_prep(self):
         encoded_tokens = self.tokenizer.encode(self.text)

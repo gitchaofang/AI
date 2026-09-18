@@ -419,7 +419,7 @@ wandb.init(
         "n_layers": config["model"]["n_layers"],
         "n_heads": config["model"]["n_heads"],
         "max_seq_len": config["data"]["max_len"],
-        "learning_rate": config["training"]["learrning_rate"],
+        "learning_rate": config["training"]["learning_rate"],
         "epochs": config["training"]["epochs"],
         "accumulation_steps": config["training"]["accumulation_steps"],
     }

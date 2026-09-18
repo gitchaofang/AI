@@ -3,60 +3,32 @@ import random
 from torch.utils.data import Sampler
 
 class TokenBatchSampler(Sampler):
-    def __init__(self,
-                 dataset,
-                 max_batch_tokens_cnt,
-                 batch_size = 8,
-                 shuffle = True):
+    def __init__(self, dataset, batch_size, shuffle=True):
         self.dataset = dataset
-        self.max_batch_tokens_cnt = max_batch_tokens_cnt
-        self.shuffle = shuffle
         self.batch_size = batch_size
+        self.shuffle = shuffle
+
         self.indices = list(range(len(dataset)))
-    
-    def __iter__(self):
-        indices = sorted(self.indices,
-                         key = lambda i:
-                            self.dataset.get_length(i))
+        self.batches = []
 
-        batches = []
-        current_batch = []
-        current_token = 0
+        self._make_batches()
 
-        for idx in indices:
-            length = self.dataset.get_length(idx)
-#            if(length + current_token > self.max_batch_tokens_cnt or len(current_batch) >= self.batch_size):
-            if len(current_batch) >= self.batch_size:
-                batches.append(current_batch)
-                current_batch = []
-                current_token = 0
-            current_batch.append(idx)
-            current_token += length
+    def _make_batches(self):
+        indices = sorted(
+            self.indices,
+            key=lambda i: self.dataset.get_length(i)
+        )
 
-        if len(current_batch) > 0:
-            batches.append(current_batch)
+        for idx in range(0, len(indices), self.batch_size):
+            self.batches.append(
+                indices[idx:idx + self.batch_size]
+            )
 
         if self.shuffle:
-            random.shuffle(batches)
+            random.shuffle(self.batches)
 
-        for batch in batches:
-            yield batch
-            
+    def __iter__(self):
+        yield from self.batches
+
     def __len__(self):
-        indices = sorted(self.indices,
-                     key = lambda i: self.dataset.get_length(i))
-    
-        num_batches = 0
-        current_token = 0
-    
-        for idx in indices:
-            length = self.dataset.get_length(idx)
-            if length + current_token > self.max_batch_tokens_cnt and current_token > 0:
-                num_batches += 1
-                current_token = 0
-            current_token += length
-    
-        if current_token > 0:
-            num_batches += 1
-    
-        return num_batches
+        return len(self.batches)

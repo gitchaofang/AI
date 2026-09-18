@@ -145,7 +145,7 @@ class PaddingCollator:
         )
 
         # create 1d positions for text
-        positions = torch.arange(max_len,dtype=torch.int64)[None,:, None].expand(batch_size, max_len, 1)
+        positions = torch.arange(max_len,dtype=torch.int64)[None,:, None].expand(batch_size, max_len, 1).clone()
 
 
         for i, item in enumerate(batch):

@@ -35,7 +35,7 @@ class SimpleTokenizer:
 				text = f.read()
 				chars.update(text)
 
-		chars = sorted(list(set(self.text)))
+		chars = sorted(list(chars))
 		self.stoi = {
 				char: i + TOKEN_OFFSET 
 				for i, char in enumerate(chars)

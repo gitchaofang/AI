@@ -467,11 +467,11 @@ print("Device:", device)
 
 model = GPT(
     vocab_size = vocab_size,
-    d_model = config[""][""],
-    max_seq_len = MAX_LEN,
-    n_layers = 6,
-    n_heads = 6,
-    rope_dims=[64],
+    d_model = config["model"]["d_model"],
+    max_seq_len = config["data"]["max_len"],
+    n_layers = config["model"]["n_layers"],
+    n_heads = config["model"]["n_heads"],
+    rope_dims=config["model"]["rope_dims"],
     RoPE=True,
 ).to(device)
 
@@ -487,7 +487,7 @@ trainer = Trainer(
     device,
 )
 
-epoches = 200
+epoches = config["training"]["epochs"]
 accumulation_steps = config["training"]["accumulation_steps"]
 for epoch in range(epoches):
     model.train()

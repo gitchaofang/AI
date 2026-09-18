@@ -8,7 +8,7 @@ from src.base.transformer import TransformerBlock
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
 COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
 # load yaml config
-with open(COLAB_YAML_PATH,"r") as f:
+with open(LOCAL_YAML_PATH,"r") as f:
     config = yaml.safe_load(f)
 
 class GPT(nn.Module):
@@ -18,7 +18,7 @@ class GPT(nn.Module):
         d_model=config["model"]["d_model"],
         max_seq_len=config["data"]["max_len"],
         n_layers=config["model"]["n_layers"],
-        n_heads=config["model"]["n_head"],
+        n_heads=config["model"]["n_heads"],
         rope_dims=config["model"]["rope_dims"],
         RoPE=True,
     ):

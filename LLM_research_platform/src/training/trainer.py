@@ -7,9 +7,9 @@ class Trainer:
         self.optimizer = optimizer
         self.device = device
 
-    def train_step(self, x, y, mask):
+    def train_step(self, x, y, mask, positions):
 
-        logits = self.model(x, mask, is_prefill=False, is_generate=False)
+        logits = self.model(x, mask, positions, is_prefill=False, is_generate=False)
 
         B, T, V = logits.shape
         loss = F.cross_entropy(

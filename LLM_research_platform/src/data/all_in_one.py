@@ -18,6 +18,7 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 
 class TextDecodeDataset(Dataset): # for txt file
     def __init__(self, tokenizer, max_len, filename):
+        print(f"build dataset")
         self.file_dir = COLAB_FILE_PATH
         self.index_dir = COLAB_INDEX_PATH
         self.filename = filename

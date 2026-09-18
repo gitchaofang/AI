@@ -50,6 +50,7 @@ class TextDecodeDataset(Dataset): # for txt file
 
     def data_prep(self):
         encoded_tokens = self.tokenizer.encode(self.text)
+        print(f"tokens size: {len(encoded_tokens)}")
         all_tokens = [item for token_list in encoded_tokens for item in token_list]
         all_token_len = len(all_tokens)
         all_index = []

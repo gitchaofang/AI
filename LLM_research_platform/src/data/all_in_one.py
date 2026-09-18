@@ -36,10 +36,10 @@ class TextDecodeDataset(Dataset): # for txt file
 
         with open(read_path, "r", encoding="utf-8") as f:
             self.text = f.read()
-#        if not (os.path.exists(self.token_path) and os.path.exists(self.index_path)):
-#            self.data_prep()
-        self.data_prep()
-        
+        if not (os.path.exists(self.token_path) and os.path.exists(self.index_path)):
+            self.data_prep()
+#        self.data_prep()
+
         self.tokens = np.memmap(
              self.token_path,
              dtype = np.int32,

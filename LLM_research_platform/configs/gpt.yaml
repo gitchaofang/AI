@@ -5,7 +5,7 @@ data:
   file_dir: /content/AI/LLM_research_platform/src/data/input_data/data/token_training
   max_len: 256
   batch_size: 8
-  validation_batch_size: 1
+  validation_batch_size: 128
   shuffle: true
 
 tokenizer:
@@ -16,12 +16,12 @@ model:
   d_model: 384
   n_layers: 6
   n_heads: 6
-  rope: False
+  rope: True
   rope_dims: [64]
   dropout: 0.2
 
 training:
-  epochs: 200
+  epochs: 100
   learning_rate: 0.0003
   weight_decay: 0.01
   accumulation_steps: 8

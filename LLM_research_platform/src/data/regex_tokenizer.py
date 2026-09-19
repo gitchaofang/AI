@@ -34,6 +34,7 @@ class RegexTokenizer:
         self.pattern = GPT2_SPLIT_PATTERN if pattern is None else pattern
         self.compiled_pattern = re.compile(self.pattern)
         self.vocab_size = vocab_size
+        print(f"vocab_size is {vocab_size}")
         self.merge_dict = {}
         self.vocab_dict = {}
         

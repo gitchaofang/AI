@@ -480,7 +480,7 @@ model = GPT(
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
-    lr = 3e-4,
+    lr = config["training"]["learning_rate"],
 )
 
 

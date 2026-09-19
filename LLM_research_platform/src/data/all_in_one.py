@@ -38,7 +38,6 @@ class TextDecodeDataset(Dataset): # for txt file
             self.text = f.read()
         if not (os.path.exists(self.token_path) and os.path.exists(self.index_path)):
             self.data_prep()
-#        self.data_prep()
 
         self.tokens = np.memmap(
              self.token_path,

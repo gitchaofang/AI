@@ -446,7 +446,7 @@ loader_train = DataLoader(
     collate_fn = collator,
     batch_sampler = sampler_train,
     shuffle = False,
-#    pin_memory = True,
+    pin_memory = True,
 )
 
 #evaluation dataset
@@ -461,7 +461,7 @@ loader_eval = DataLoader(
     collate_fn = collator,
     batch_sampler = sampler_eval,
     shuffle = False,
-#    pin_memory = True,
+    pin_memory = True,
 )
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

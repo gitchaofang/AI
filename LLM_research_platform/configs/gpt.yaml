@@ -18,7 +18,7 @@ model:
   d_model: 384
   n_layers: 6
   n_heads: 6
-  rope: true
+  rope: False
   rope_dims: [64]
   dropout: 0.2
 

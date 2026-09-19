@@ -426,8 +426,8 @@ wandb.init(
     }
 )
 #traiing dataset
-tokenizer = RegexTokenizer()
-#tokenizer = SimpleTokenizer()
+#tokenizer = RegexTokenizer()
+tokenizer = SimpleTokenizer()
 tokenizer.train()
 print(f"tokenizer is trained")
 

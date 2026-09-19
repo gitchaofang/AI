@@ -454,7 +454,7 @@ dataset_eval = TextDecodeDataset(tokenizer=tokenizer,
                                  max_len = config["data"]["max_len"],
                                  filename = config["training"]["validation_file"]) 
 sampler_eval = TokenBatchSampler(dataset=dataset_eval,
-                                 batch_size=1)
+                                 batch_size=config["data"]["validation_batch_size"])
 
 loader_eval = DataLoader(
     dataset_eval,

@@ -15,8 +15,7 @@ from src.training.trainer import Trainer
 
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
 COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
-TRAINING_FILENAME = "training.txt"
-VALIDATION_FILENAME = "validation.txt"
+
 # load yaml config
 with open(LOCAL_YAML_PATH,"r") as f:
     config = yaml.safe_load(f)
@@ -43,7 +42,7 @@ tokenizer.train()
 print(f"tokenizer is trained")
 dataset_train = TextDecodeDataset(tokenizer=tokenizer,
                                 max_len=config["data"]["max_len"],
-                                filename=TRAINING_FILENAME)
+                                filename=config["training"]["training.txt"])
 sampler_train = TokenBatchSampler(dataset = dataset_train,
                                   batch_size=config["data"]["batch_size"])
 collator = PaddingCollator()
@@ -62,7 +61,7 @@ loader_train = DataLoader(
 #evaluation dataset
 dataset_eval = TextDecodeDataset(tokenizer=tokenizer,
                                  max_len = config["data"]["max_len"],
-                                 filename = VALIDATION_FILENAME) 
+                                 filename = config["training"]["validation.txt"]) 
 sampler_eval = TokenBatchSampler(dataset=dataset_eval,
                                  batch_size=1)
 
@@ -90,7 +89,7 @@ model = GPT(
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
-    lr = 3e-4,
+    lr = config["training"]["training_rate"],
 )
 
 

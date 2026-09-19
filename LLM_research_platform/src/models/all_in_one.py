@@ -439,14 +439,14 @@ sampler_train = TokenBatchSampler(dataset = dataset_train,
 collator = PaddingCollator()
 
 vocab_size = tokenizer.get_vocab_size()
-print(f"vocab_size is: {vocab_size}")
+#print(f"vocab_size is: {vocab_size}")
 
 loader_train = DataLoader(
     dataset_train,
     collate_fn = collator,
     batch_sampler = sampler_train,
     shuffle = False,
-    pin_memory = True,
+#    pin_memory = True,
 )
 
 #evaluation dataset
@@ -461,7 +461,7 @@ loader_eval = DataLoader(
     collate_fn = collator,
     batch_sampler = sampler_eval,
     shuffle = False,
-    pin_memory = True,
+#    pin_memory = True,
 )
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

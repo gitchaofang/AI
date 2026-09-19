@@ -433,9 +433,9 @@ print(f"tokenizer is trained")
 
 dataset_train = TextDecodeDataset(tokenizer=tokenizer,
                                 max_len=config["data"]["max_len"],
-                                filename=config["training"]["training_filename"])
+                                filename=config["training"]["training_file"])
 sampler_train = TokenBatchSampler(dataset = dataset_train,
-                                  batch_size=config["data"]["training_filename"])
+                                  batch_size=config["data"]["batch_size"])
 collator = PaddingCollator()
 
 vocab_size = tokenizer.get_vocab_size()
@@ -452,7 +452,7 @@ loader_train = DataLoader(
 #evaluation dataset
 dataset_eval = TextDecodeDataset(tokenizer=tokenizer,
                                  max_len = config["data"]["max_len"],
-                                 filename = config["training"]["validation_filename"]) 
+                                 filename = config["training"]["validation_file"]) 
 sampler_eval = TokenBatchSampler(dataset=dataset_eval,
                                  batch_size=1)
 

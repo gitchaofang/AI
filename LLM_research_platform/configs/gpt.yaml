@@ -26,8 +26,8 @@ training:
   weight_decay: 0.01
   accumulation_steps: 8
   max_grad_norm: 1.0
-  training_filename: training.txt
-  validation_filename: validation.txt
+  training_file: "training.txt"
+  validation_file: "validation.txt"
 
 logging:
   enabled: true

@@ -1,4 +1,4 @@
-from google.colab import drive. # only run in colab
+from google.colab import drive # only run in colab
 import tarfile
 from pathlib import Path
 from huggingface_hub import snapshot_download

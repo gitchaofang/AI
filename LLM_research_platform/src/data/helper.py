@@ -32,12 +32,6 @@ def imageToTensor(image):
 
     return tensor
 
-from google.colab import drive #onlyd for google colab
-def mount_gdrive():
-    drive.mount("content/drive")
-
-
-
 
         
 

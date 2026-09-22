@@ -4,7 +4,7 @@ from pathlib import Path
 from huggingface_hub import snapshot_download
 
 
-DATA_DIR = Path("/content/drive/MyDrive/VLM_Data/CC3M/shards")
+DATA_DIR = Path("/content/drive/MyDrive/VLM_DATA/CC3M/shards")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 snapshot_download(
@@ -13,7 +13,7 @@ snapshot_download(
     local_dir=DATA_DIR,
 )
 
-DEST_DIR = Path("/content/drive/MyDrive/VLM_Data/CC3M/normal")
+DEST_DIR = Path("/content/drive/MyDrive/VLM_DATA/CC3M/normal")
 
 DEST_DIR.mkdir(parents=True, exist_ok=True)
 

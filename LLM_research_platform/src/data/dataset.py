@@ -11,6 +11,7 @@ LOCAL_INDEX_PATH =  Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/
 COLAB_FILE_PATH = Path("/content/AI/LLM_research_platform/src/data/input_data/data/")
 COLAB_INDEX_PATH = Path("/content/AI/LLM_research_platform/src/data/input_data/data/index_files")
 
+# text
 class TextDecodeDataset(Dataset): # for txt file
     def __init__(self, tokenizer, max_len, filename):
         self.file_dir = LOCAL_FILE_PATH
@@ -77,3 +78,8 @@ class TextDecodeDataset(Dataset): # for txt file
 
     def get_length(self, key):
          return self.index[key][1]
+
+# image
+# I use google drrive as disk for store data. The path is:
+# index_map{index, image-data name}
+# use inex_map to fetch data from google drive during training.

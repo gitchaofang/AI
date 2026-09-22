@@ -3,7 +3,6 @@ import tarfile
 from pathlib import Path
 from huggingface_hub import snapshot_download
 
-drive.mount("/content/drive")
 
 DATA_DIR = Path("/content/drive/MyDrive/VLM_Data/CC3M/shards")
 DATA_DIR.mkdir(parents=True, exist_ok=True)

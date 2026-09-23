@@ -4,7 +4,7 @@ import numpy as np
 import os
 from pathlib import Path
 from torch.utils.data import Dataset
-from torch.utils.data import Sampler
+from torch.utils.data import BatchSampler
 from src.data.regex_tokenizer import RegexTokenizer
 
 LOCAL_FILE_PATH =  Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/")
@@ -87,7 +87,7 @@ class TextDecodeDataset(Dataset): # for txt file
 
         
 
-class TokenBatchSampler(Sampler):
+class TokenBatchSampler(BatchSampler):
     def __init__(self, dataset, batch_size, shuffle=True):
         self.dataset = dataset
         self.batch_size = batch_size

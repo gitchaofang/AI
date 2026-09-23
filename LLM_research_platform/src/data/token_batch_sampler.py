@@ -1,8 +1,8 @@
 import torch
 import random
-from torch.utils.data import Sampler
+from torch.utils.data import BatchSampler
 
-class TokenBatchSampler(Sampler):
+class TokenBatchSampler(BatchSampler):
     def __init__(self, dataset, batch_size, shuffle=True):
         self.dataset = dataset
         self.batch_size = batch_size

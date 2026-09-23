@@ -146,3 +146,5 @@ class ImageTextEncode(Dataset):
             "image": image,
             "meta_data": meta_data,
         }
+    def get_length(self):
+        return len(self.stems)

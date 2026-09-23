@@ -2,7 +2,11 @@ seed: 42
 device: auto
 
 data:
-  file_dir: /content/AI/LLM_research_platform/src/data/input_data/data/token_training
+  file_dir: "/content/AI/LLM_research_platform/src/data/input_data/data/token_training/"
+  local_file_path:  "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/"
+  local_index_path:  "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/index_files/"
+  colab_file_path: "/content/AI/LLM_research_platform/src/data/input_data/data/"
+  colab_index_path: "/content/AI/LLM_research_platform/src/data/input_data/data/index_files/
   max_len: 256
   batch_size: 8
   validation_batch_size: 128

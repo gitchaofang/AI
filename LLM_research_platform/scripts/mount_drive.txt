@@ -1,6 +1,7 @@
 # run this in colab cell first
 from google.colab import drive
-from pathlib import Path
+#Path("/content/drive").mkdir()
 
-Path("/content/drive").mkdir()
+
+!rm -rf /content/drive
 drive.mount("/content/drive")

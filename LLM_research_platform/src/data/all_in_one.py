@@ -268,44 +268,44 @@ class ImageDatasetBatchSampler(BatchSampler):
         ) // self.batch_size
     
 class VitCollator:
-    def __init__(self, token_pad = 0, label_pad = -100, image_only = vit_config["data"]["image_only"]):
+    def __init__(self, token_pad = 0, image_pad = 0.0,label_pad = -100, image_only = vit_config["data"]["image_only"]):
         self.token_pad = token_pad
+        self.image_pad = image_pad
         self.label_pad = label_pad
         self.image_only = image_only
 
     def __call__(self, batch):
         batch_size = len(batch)
         max_len_patch = max(len(x["patches"]) for x in batch)
-        max_len_text = max(len(x["caption_ids"]) for x in batch)
         patch_d = vit_config["data"]["color"]*vit_config["data"]["patch_size"]*vit_config["data"]["patch_size"]
 
         patched_input = torch.full(
             (batch_size, max_len_patch, patch_d),
             self.image_pad,
-            dtype = torch.batch[0]["patches"].dtype,
-        )
-
-        caption_input = torch.full(
-            (batch_size, max_len_text),
-            self.token_pad,
             dtype = batch[0]["patches"].dtype,
         )
+
+        if not self.image_only:
+            max_len_text = max(len(x["caption_ids"]) for x in batch)
+            caption_input = torch.full(
+                (batch_size, max_len_text),
+                self.token_pad,
+                dtype = torch.int64,
+            )
+            pad_mask_text = torch.zeros(
+                batch_size,
+                max_len_text,
+                dtype = torch.int64,
+            )
 
         patch_positions = torch.zeros(
             batch_size,
             max_len_patch,
             2,
-            self.token_pad,
             dtype = torch.int64,
         )
         
         pad_mask_patch = torch.zeros(
-            batch_size,
-            max_len_patch,
-            dtype = torch.int64,
-        )
-
-        pad_mask_text = torch.zeros(
             batch_size,
             max_len_patch,
             dtype = torch.int64,

@@ -84,6 +84,11 @@ class VitCollator:
                 self.token_pad,
                 dtype = torch.int64,
             )
+            pad_mask_text = torch.zeros(
+                batch_size,
+                max_len_text,
+                dtype = torch.int64,
+            )
 
         patch_positions = torch.zeros(
             batch_size,
@@ -98,11 +103,7 @@ class VitCollator:
             dtype = torch.int64,
         )
 
-        pad_mask_text = torch.zeros(
-            batch_size,
-            max_len_patch,
-            dtype = torch.int64,
-        )
+        
 
         meta_data = [] # list of dict
 

@@ -109,19 +109,15 @@ EXTRACTED_PATH  = Path(vit_config["data"]["extracted_path"])
 SHARED_PATH = Path(vit_config["data"]["shared_path"])
 
 class ImageTextEncode(Dataset):
-    def __init__(self, file_dir=EXTRACTED_PATH, tokenizer = None):
+    def __init__(self, file_dir=EXTRACTED_PATH, tokenizer = None, image_only = vit_config["data"]["image_only"]):
         self.file_dir = Path(file_dir)
         self.index_path = self.file_dir / "index.json"
         self.transform = transforms.ToTensor()
-        self.image_only = True
-
-        # for text
+        self.image_only =  image_only
         self.tokenizer = tokenizer
-        if self.tokenizer is not None:
-            self.image_only = False
+        assert (self.tokenizer == None and self.image_only == True) or (self.tokenizer != None and self.image_only == False)
 
-        # processing image:
-        # Load existing index
+        # Load existing index: [image name stems]
         if self.index_path.exists():
             with open(self.index_path, "r") as f:
                 self.stems = json.load(f)
@@ -147,10 +143,11 @@ class ImageTextEncode(Dataset):
         # PIL → Tensor
         image = self.transform(image)
 
-        # process text
+        with open(meta_data_path, "r") as f:
+            meta_data = json.load(f)
+
+         # process text
         if self.image_only:
-            with open(meta_data_path, "r") as f:
-                meta_data = json.load(f)
             text = meta_data["caption"]
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
@@ -159,6 +156,8 @@ class ImageTextEncode(Dataset):
                 "caption_ids": all_tokens, #[B,len(all_tokens)]
                 "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
             }
+
+        # if only image is needed
         return {
             "image": image, #[B,C,H,W]
             "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"

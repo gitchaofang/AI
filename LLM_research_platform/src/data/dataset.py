@@ -116,7 +116,7 @@ class ImageTextEncode(Dataset):
         self.transform = transforms.ToTensor()
         self.image_only =  image_only
         self.tokenizer = tokenizer
-        assert (self.tokenizer == None and self.image_only == True) or (self.tokenizer != None and self.image_only == False)
+        assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
 
         # Load existing index: [image name stems]
         if self.index_path.exists():
@@ -146,21 +146,21 @@ class ImageTextEncode(Dataset):
         patchify_res = patchify(image = image) 
 
         # images
-        patches = patchify_res["paches"]          # [N,  C * patch_size * patch_size]
-        pixel_coord = patchify_res["positions"]   # [N, 2]
+        patches = patchify_res["patches"]          # [N,  C * patch_size * patch_size]
+        patch_positions = patchify_res["positions"]   # [N, 2]
 
         # meta data
         with open(meta_data_path, "r") as f:
             meta_data = json.load(f)
 
          # process text
-        if self.image_only:
+        if not self.image_only:
             text = meta_data["caption"]
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
             return {
                 "patches": patches,            # [N,C * patch_size * patch_size]
-                "pixel_coord": pixel_coord,    # [N, 2]
+                "patch_positions": patch_positions,    # [N, 2]
                 "caption_ids": all_tokens,     # [len(all_tokens)]
                 "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
             }
@@ -168,7 +168,7 @@ class ImageTextEncode(Dataset):
         # if only image is needed
         return {
             "patches": patches, #[N,C * patch_size * patch_size]
-            "pixel_coord": pixel_coord, # [N, 2]
+            "patch_positions": patch_positions, # [N, 2]
             "meta_data": meta_data, #json: "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
         } 
     def get_length(self):

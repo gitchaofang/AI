@@ -1,8 +1,12 @@
 import torch
 import random
+import json
 import numpy as np
 import os
 from pathlib import Path
+from PIL import Image
+from .helper import patchify
+from torchvision import transforms
 from torch.utils.data import Dataset
 from torch.utils.data import BatchSampler
 from src.data.regex_tokenizer import RegexTokenizer
@@ -182,7 +186,7 @@ class ImageTextEncode(Dataset):
         self.transform = transforms.ToTensor()
         self.image_only =  image_only
         self.tokenizer = tokenizer
-        assert (self.tokenizer == None and self.image_only == True) or (self.tokenizer != None and self.image_only == False)
+        assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
 
         # Load existing index: [image name stems]
         if self.index_path.exists():
@@ -212,21 +216,21 @@ class ImageTextEncode(Dataset):
         patchify_res = patchify(image = image) 
 
         # images
-        patches = patchify_res["paches"]          # [N,  C * patch_size * patch_size]
-        pixel_coord = patchify_res["positions"]   # [N, 2]
+        patches = patchify_res["patches"]          # [N,  C * patch_size * patch_size]
+        patch_positions = patchify_res["positions"]   # [N, 2]
 
         # meta data
         with open(meta_data_path, "r") as f:
             meta_data = json.load(f)
 
          # process text
-        if self.image_only:
+        if not self.image_only:
             text = meta_data["caption"]
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
             return {
                 "patches": patches,            # [N,C * patch_size * patch_size]
-                "pixel_coord": pixel_coord,    # [N, 2]
+                "patch_positions": patch_positions,    # [N, 2]
                 "caption_ids": all_tokens,     # [len(all_tokens)]
                 "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
             }
@@ -234,7 +238,7 @@ class ImageTextEncode(Dataset):
         # if only image is needed
         return {
             "patches": patches, #[N,C * patch_size * patch_size]
-            "pixel_coord": pixel_coord, # [N, 2]
+            "patch_positions": patch_positions, # [N, 2]
             "meta_data": meta_data, #json: "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
         } 
     def get_length(self):
@@ -264,8 +268,9 @@ class ImageDatasetBatchSampler(BatchSampler):
         ) // self.batch_size
     
 class VitCollator:
-    def __init__(self, token_pad = 0, label_pad = -100, image_only = vit_config["data"]["image_only"]):
+    def __init__(self, image_pad = 0.0, token_pad = 0, label_pad = -100, image_only = vit_config["data"]["image_only"]):
         self.token_pad = token_pad
+        self.image_pad = 0.0
         self.label_pad = label_pad
         self.image_only = image_only
 
@@ -277,8 +282,8 @@ class VitCollator:
 
         patched_input = torch.full(
             (batch_size, max_len_patch, patch_d),
-            self.token_pad,
-            dtype = torch.int64,
+            self.image_pad,
+            dtype = torch.batch[0]["patches"].dtype,
         )
 
         caption_input = torch.full(
@@ -287,9 +292,10 @@ class VitCollator:
             dtype = torch.int64,
         )
 
-        pixel_coord = torch.full(
-            (batch_size,max_len_patch),
-            self.token_pad,
+        pixel_coord = torch.zeros(
+            batch_size,
+            max_len_patch,
+            2,
             dtype = torch.int64,
         )
         
@@ -311,12 +317,12 @@ class VitCollator:
             # patches
             length_patches = len(item["patches"]) 
             patched_input[i][:length_patches] = item["patches"] # patched input
-            pixel_coord[i][:length_patches] # pixel coordinates for RoPE
+            pixel_coord[i][:length_patches] = item["pixel_coord"] # pixel coordinates for RoPE
             pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
             # text
             length_text = len(item["caption_ids"])
             caption_input[i][:length_text] = item["caption_ids"]
-            pad_mask_text[i][:length_patches] = 1
+            pad_mask_text[i][:length_text] = 1
             meta_data.append(item["meta_data"])
 
         if not self.image_only:

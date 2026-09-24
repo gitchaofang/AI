@@ -72,18 +72,20 @@ class VitCollator:
 
         patched_input = torch.full(
             (batch_size, max_len_patch, patch_d),
-            self.token_pad,
-            dtype = torch.int64,
+            self.image_pad,
+            dtype = torch.batch[0]["patches"].dtype,
         )
 
         caption_input = torch.full(
             (batch_size, max_len_text),
             self.token_pad,
-            dtype = torch.int64,
+            dtype = batch[0]["patches"].dtype,
         )
 
-        pixel_coord = torch.full(
-            (batch_size,max_len_patch),
+        patch_positions = torch.zeros(
+            batch_size,
+            max_len_patch,
+            2,
             self.token_pad,
             dtype = torch.int64,
         )
@@ -106,18 +108,18 @@ class VitCollator:
             # patches
             length_patches = len(item["patches"]) 
             patched_input[i][:length_patches] = item["patches"] # patched input
-            pixel_coord[i][:length_patches] # pixel coordinates for RoPE
+            patch_positions[i][:length_patches] = item["patch_positions"] # pixel coordinates for RoPE
             pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
             # text
             length_text = len(item["caption_ids"])
             caption_input[i][:length_text] = item["caption_ids"]
-            pad_mask_text[i][:length_patches] = 1
+            pad_mask_text[i][:length_text] = 1
             meta_data.append(item["meta_data"])
 
         if not self.image_only:
             return {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
-                "pixel_coord": pixel_coord, # [B, max_len_patch]
+                "patch_positions": patch_positions, # [B, max_len_patch]
                 "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
                 "caption_text": caption_input, # [B, max_len_text]
                 "pad_mask_text": pad_mask_text, # [B, max_len_text]
@@ -126,7 +128,7 @@ class VitCollator:
 
         return {
             "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
-            "pixel_coord": pixel_coord, # [B, max_len_patch]
+            "patch_positions": patch_positions, # [B, max_len_patch]
             "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
             "meta_data": meta_data, # list of dict. B dicts
         } 

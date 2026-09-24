@@ -268,9 +268,8 @@ class ImageDatasetBatchSampler(BatchSampler):
         ) // self.batch_size
     
 class VitCollator:
-    def __init__(self, image_pad = 0.0, token_pad = 0, label_pad = -100, image_only = vit_config["data"]["image_only"]):
+    def __init__(self, token_pad = 0, label_pad = -100, image_only = vit_config["data"]["image_only"]):
         self.token_pad = token_pad
-        self.image_pad = 0.0
         self.label_pad = label_pad
         self.image_only = image_only
 
@@ -289,13 +288,14 @@ class VitCollator:
         caption_input = torch.full(
             (batch_size, max_len_text),
             self.token_pad,
-            dtype = torch.int64,
+            dtype = batch[0]["patches"].dtype,
         )
 
-        pixel_coord = torch.zeros(
+        patch_positions = torch.zeros(
             batch_size,
             max_len_patch,
             2,
+            self.token_pad,
             dtype = torch.int64,
         )
         
@@ -317,7 +317,7 @@ class VitCollator:
             # patches
             length_patches = len(item["patches"]) 
             patched_input[i][:length_patches] = item["patches"] # patched input
-            pixel_coord[i][:length_patches] = item["pixel_coord"] # pixel coordinates for RoPE
+            patch_positions[i][:length_patches] = item["patch_positions"] # pixel coordinates for RoPE
             pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
             # text
             length_text = len(item["caption_ids"])
@@ -328,7 +328,7 @@ class VitCollator:
         if not self.image_only:
             return {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
-                "pixel_coord": pixel_coord, # [B, max_len_patch]
+                "patch_positions": patch_positions, # [B, max_len_patch]
                 "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
                 "caption_text": caption_input, # [B, max_len_text]
                 "pad_mask_text": pad_mask_text, # [B, max_len_text]
@@ -337,8 +337,7 @@ class VitCollator:
 
         return {
             "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
-            "pixel_coord": pixel_coord, # [B, max_len_patch]
+            "patch_positions": patch_positions, # [B, max_len_patch]
             "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
             "meta_data": meta_data, # list of dict. B dicts
         } 
-    

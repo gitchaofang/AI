@@ -340,7 +340,7 @@ class VitCollator:
 
         return {
             "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
-            "patch_positions": patch_positions, # [B, max_len_patch]
+            "patch_positions": patch_positions, # [B, max_len_patch, 2]
             "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
             "meta_data": meta_data, # list of dict. B dicts
         } 

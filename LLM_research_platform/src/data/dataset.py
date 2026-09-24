@@ -143,8 +143,8 @@ class ImageTextEncode(Dataset):
         with open(meta_data_path, "r") as f:
             meta_data = json.load(f)
         return {
-            "image": image,
-            "meta_data": meta_data,
+            "image": image, #[B,C,H,W]
+            "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
         }
     def get_length(self):
         return len(self.stems)

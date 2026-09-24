@@ -79,7 +79,7 @@ class VitCollator:
 
         if not self.image_only:
             max_len_text = max(len(x["caption_ids"]) for x in batch)
-            caption_input = torch.full(
+            caption_ids = torch.full(
                 (batch_size, max_len_text),
                 self.token_pad,
                 dtype = torch.int64,
@@ -108,23 +108,27 @@ class VitCollator:
         meta_data = [] # list of dict
 
         for i, item in enumerate(batch):
+            meta_data.append(item["meta_data"])
             # patches
             length_patches = len(item["patches"]) 
             patched_input[i][:length_patches] = item["patches"] # patched input
             patch_positions[i][:length_patches] = item["patch_positions"] # pixel coordinates for RoPE
             pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
+
             # text
-            length_text = len(item["caption_ids"])
-            caption_input[i][:length_text] = item["caption_ids"]
-            pad_mask_text[i][:length_text] = 1
-            meta_data.append(item["meta_data"])
+            if not self.image_only:
+                length_text = len(item["caption_ids"])
+                caption_ids[i][:length_text] = item["caption_ids"]
+                pad_mask_text[i][:length_text] = 1
+          
+            
 
         if not self.image_only:
             return {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
                 "patch_positions": patch_positions, # [B, max_len_patch]
                 "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
-                "caption_text": caption_input, # [B, max_len_text]
+                "caption_ids": caption_ids, # [B, max_len_text]
                 "pad_mask_text": pad_mask_text, # [B, max_len_text]
                 "meta_data": meta_data, # list of dict. B dicts
             }

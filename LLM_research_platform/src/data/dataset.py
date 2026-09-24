@@ -3,6 +3,7 @@ import os
 import json
 import yaml
 from PIL import Image
+from .helper import patchify
 from torchvision import transforms
 import numpy as np
 from pathlib import Path
@@ -142,7 +143,13 @@ class ImageTextEncode(Dataset):
         image = Image.open(image_path).convert("RGB")
         # PIL → Tensor
         image = self.transform(image)
+        patchify_res = patchify(image = image) 
 
+        # images
+        patches = patchify_res["paches"]          # [N,  C * patch_size * patch_size]
+        pixel_coord = patchify_res["positions"]   # [N, 2]
+
+        # meta data
         with open(meta_data_path, "r") as f:
             meta_data = json.load(f)
 
@@ -152,14 +159,16 @@ class ImageTextEncode(Dataset):
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
             return {
-                "image": image, #[B,C,H,W]
-                "caption_ids": all_tokens, #[B,len(all_tokens)]
-                "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
+                "patches": patches,            # [N,C * patch_size * patch_size]
+                "pixel_coord": pixel_coord,    # [N, 2]
+                "caption_ids": all_tokens,     # [B,len(all_tokens)]
+                "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
             }
 
         # if only image is needed
         return {
-            "image": image, #[B,C,H,W]
+            "patches": patches, #[N,C * patch_size * patch_size]
+            "pixel_coord": pixel_coord, # [N, 2]
             "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
         } 
     def get_length(self):

@@ -33,23 +33,29 @@ def imageToTensor(image):
 
     return tensor
 
-def pad_to_patch_grid(image, patch_size = 16, pad_value = [0.0,0.0,0.0,]): 
-    '''
-    image: [C,H,W]
+def pad_to_patch_grid(
+    image,
+    patch_size=16,
+    pad_value=(0.0, 0.0, 0.0),
+):
+    """
+    image: [C, H, W]
     pad_value: [C]
-    '''
-    C, H ,W = image.shape
-    H_pad = ((H + patch_size - 1) // patch_size) * patch_size
-    W_pad = ((H + patch_size - 1) // patch_size) * patch_size 
+    """
+    C, H, W = image.shape
 
-    padded = image.new_empty(C,H_pad, W_pad)
+    H_pad = ((H + patch_size - 1) // patch_size) * patch_size
+    W_pad = ((W + patch_size - 1) // patch_size) * patch_size
+
+    padded = image.new_empty(C, H_pad, W_pad)
 
     # Fill with channel-specific values
     for c in range(C):
-        padded[C].fill_(pad_value[c])
+        padded[c].fill_(pad_value[c])
 
-    #Copy original image
-    padded[:,:H,:W] = image
+    # Copy original image
+    padded[:, :H, :W] = image
+
     return padded
 
 def make_2d_positions(H_patches, W_patches):
@@ -74,7 +80,7 @@ def make_2d_positions(H_patches, W_patches):
 
     return positions
 
-def patchify(image, patch_size = 16, pad_value = [0.0, 0.0, 0.0]):
+def patchify(image, patch_size = 16, pad_value = (0.0, 0.0, 0.0)):
     '''
     image: [C,H,W]
     returns:
@@ -83,7 +89,7 @@ def patchify(image, patch_size = 16, pad_value = [0.0, 0.0, 0.0]):
     # make images ready for patchify
     pad_image = pad_to_patch_grid(image, patch_size, pad_value = pad_value)
 
-    C,H,W = image.shape
+    C,H,W = pad_image.shape
     assert H % patch_size == 0
     assert W % patch_size == 0
 

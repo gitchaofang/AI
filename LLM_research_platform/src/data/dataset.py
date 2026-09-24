@@ -109,11 +109,18 @@ EXTRACTED_PATH  = Path(vit_config["data"]["extracted_path"])
 SHARED_PATH = Path(vit_config["data"]["shared_path"])
 
 class ImageTextEncode(Dataset):
-    def __init__(self, file_dir=EXTRACTED_PATH):
+    def __init__(self, file_dir=EXTRACTED_PATH, tokenizer = None):
         self.file_dir = Path(file_dir)
         self.index_path = self.file_dir / "index.json"
         self.transform = transforms.ToTensor()
+        self.image_only = True
 
+        # for text
+        self.tokenizer = tokenizer
+        if self.tokenizer is not None:
+            self.image_only = False
+
+        # processing image:
         # Load existing index
         if self.index_path.exists():
             with open(self.index_path, "r") as f:
@@ -139,12 +146,22 @@ class ImageTextEncode(Dataset):
         image = Image.open(image_path).convert("RGB")
         # PIL → Tensor
         image = self.transform(image)
-        # Load metadata
-        with open(meta_data_path, "r") as f:
-            meta_data = json.load(f)
+
+        # process text
+        if self.image_only:
+            with open(meta_data_path, "r") as f:
+                meta_data = json.load(f)
+            text = meta_data["caption"]
+            encoded_tokens = self.tokenizer.encode(text)
+            all_tokens = [item for token_list in encoded_tokens for item in token_list]
+            return {
+                "image": image, #[B,C,H,W]
+                "caption_ids": all_tokens, #[B,len(all_tokens)]
+                "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
+            }
         return {
             "image": image, #[B,C,H,W]
             "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
-        }
+        } 
     def get_length(self):
         return len(self.stems)

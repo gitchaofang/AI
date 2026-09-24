@@ -106,6 +106,10 @@ def patchify(image, patch_size = 16, pad_value = [0.0, 0.0, 0.0]):
         C * patch_size * patch_size,
     )
 
+    '''
+    patches: [N,C * patch_size * patch_size]
+    positions: [N, 2]
+    '''
     return {"patches": patches,
             "positions": positions}
 

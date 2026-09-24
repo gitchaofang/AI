@@ -162,4 +162,177 @@ class PaddingCollator:
             "pad_mask": pad_mask,
             "positions": positions,
         }
+
+            #-----------   image ------------
+
+# load config file
+LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
+COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
+# load yaml config
+with open(COLAB_YAML_PATH,"r") as f:
+    vit_config = yaml.safe_load(f)
+
+EXTRACTED_PATH  = Path(vit_config["data"]["extracted_path"]) 
+SHARED_PATH = Path(vit_config["data"]["shared_path"])
+
+class ImageTextEncode(Dataset):
+    def __init__(self, file_dir=EXTRACTED_PATH, tokenizer = None, image_only = vit_config["data"]["image_only"]):
+        self.file_dir = Path(file_dir)
+        self.index_path = self.file_dir / "index.json"
+        self.transform = transforms.ToTensor()
+        self.image_only =  image_only
+        self.tokenizer = tokenizer
+        assert (self.tokenizer == None and self.image_only == True) or (self.tokenizer != None and self.image_only == False)
+
+        # Load existing index: [image name stems]
+        if self.index_path.exists():
+            with open(self.index_path, "r") as f:
+                self.stems = json.load(f)
+        # Build index if it doesn't exist
+        else:
+            self.stems = []
+            for file_path in sorted(self.file_dir.glob("*.txt")):
+                self.stems.append(file_path.stem)
+            with open(self.index_path, "w") as f:
+                json.dump(self.stems, f)
+
+    def __len__(self):
+        return len(self.stems)
+
+    def __getitem__(self, key):
+        assert 0 <= key < len(self.stems), f"key {key} is out of range"
+        stem = self.stems[key]
+        image_path = self.file_dir / f"{stem}.jpg"
+        meta_data_path = self.file_dir / f"{stem}.json"
+
+        # Load image
+        image = Image.open(image_path).convert("RGB")
+        # PIL → Tensor
+        image = self.transform(image)
+        patchify_res = patchify(image = image) 
+
+        # images
+        patches = patchify_res["paches"]          # [N,  C * patch_size * patch_size]
+        pixel_coord = patchify_res["positions"]   # [N, 2]
+
+        # meta data
+        with open(meta_data_path, "r") as f:
+            meta_data = json.load(f)
+
+         # process text
+        if self.image_only:
+            text = meta_data["caption"]
+            encoded_tokens = self.tokenizer.encode(text)
+            all_tokens = [item for token_list in encoded_tokens for item in token_list]
+            return {
+                "patches": patches,            # [N,C * patch_size * patch_size]
+                "pixel_coord": pixel_coord,    # [N, 2]
+                "caption_ids": all_tokens,     # [len(all_tokens)]
+                "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
+            }
+
+        # if only image is needed
+        return {
+            "patches": patches, #[N,C * patch_size * patch_size]
+            "pixel_coord": pixel_coord, # [N, 2]
+            "meta_data": meta_data, #json: "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
+        } 
+    def get_length(self):
+        return len(self.stems)
+
+class ImageDatasetBatchSampler(BatchSampler):
+
+    def __init__(self, dataset, batch_size, shuffle=vit_config["data"]["shuffle"]):
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+
+    def __iter__(self):
+        indices = list(range(len(self.dataset)))
+
+        if self.shuffle:
+            random.shuffle(indices)
+
+        for i in range(0, len(indices), self.batch_size):
+            batch = indices[i:i + self.batch_size]
+            yield batch
+
+    def __len__(self):
+
+        return (
+            len(self.dataset) + self.batch_size - 1
+        ) // self.batch_size
+    
+class VitCollator:
+    def __init__(self, token_pad = 0, label_pad = -100, image_only = vit_config["data"]["image_only"]):
+        self.token_pad = token_pad
+        self.label_pad = label_pad
+        self.image_only = image_only
+
+    def __call__(self, batch):
+        batch_size = len(batch)
+        max_len_patch = max(len(x["patches"]) for x in batch)
+        max_len_text = max(len(x["caption_ids"]) for x in batch)
+        patch_d = vit_config["data"]["color"]*vit_config["data"]["patch_size"]*vit_config["data"]["patch_size"]
+
+        patched_input = torch.full(
+            (batch_size, max_len_patch, patch_d),
+            self.token_pad,
+            dtype = torch.int64,
+        )
+
+        caption_input = torch.full(
+            (batch_size, max_len_text),
+            self.token_pad,
+            dtype = torch.int64,
+        )
+
+        pixel_coord = torch.full(
+            (batch_size,max_len_patch),
+            self.token_pad,
+            dtype = torch.int64,
+        )
+        
+        pad_mask_patch = torch.zeros(
+            batch_size,
+            max_len_patch,
+            dtype = torch.int64,
+        )
+
+        pad_mask_text = torch.zeros(
+            batch_size,
+            max_len_patch,
+            dtype = torch.int64,
+        )
+
+        meta_data = [] # list of dict
+
+        for i, item in enumerate(batch):
+            # patches
+            length_patches = len(item["patches"]) 
+            patched_input[i][:length_patches] = item["patches"] # patched input
+            pixel_coord[i][:length_patches] # pixel coordinates for RoPE
+            pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
+            # text
+            length_text = len(item["caption_ids"])
+            caption_input[i][:length_text] = item["caption_ids"]
+            pad_mask_text[i][:length_patches] = 1
+            meta_data.append(item["meta_data"])
+
+        if not self.image_only:
+            return {
+                "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
+                "pixel_coord": pixel_coord, # [B, max_len_patch]
+                "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
+                "caption_text": caption_input, # [B, max_len_text]
+                "pad_mask_text": pad_mask_text, # [B, max_len_text]
+                "meta_data": meta_data, # list of dict. B dicts
+            }
+
+        return {
+            "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
+            "pixel_coord": pixel_coord, # [B, max_len_patch]
+            "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
+            "meta_data": meta_data, # list of dict. B dicts
+        } 
     

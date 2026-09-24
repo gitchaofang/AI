@@ -161,7 +161,7 @@ class ImageTextEncode(Dataset):
             return {
                 "patches": patches,            # [N,C * patch_size * patch_size]
                 "pixel_coord": pixel_coord,    # [N, 2]
-                "caption_ids": all_tokens,     # [B,len(all_tokens)]
+                "caption_ids": all_tokens,     # [len(all_tokens)]
                 "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
             }
 
@@ -169,7 +169,7 @@ class ImageTextEncode(Dataset):
         return {
             "patches": patches, #[N,C * patch_size * patch_size]
             "pixel_coord": pixel_coord, # [N, 2]
-            "meta_data": meta_data, #"caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
+            "meta_data": meta_data, #json: "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
         } 
     def get_length(self):
         return len(self.stems)

@@ -66,22 +66,67 @@ class VitCollator:
 
     def __call__(self, batch):
         batch_size = len(batch)
-        max_len = max(len(x["patches"]) for x in batch)
+        max_len_patch = max(len(x["patches"]) for x in batch)
+        max_len_text = max(len(x["caption_ids"]) for x in batch)
         patch_d = vit_config["data"]["color"]*vit_config["data"]["patch_size"]*vit_config["data"]["patch_size"]
 
         patched_input = torch.full(
-            (batch_size, max_len, patch_d),
+            (batch_size, max_len_patch, patch_d),
+            self.token_pad,
+            dtype = torch.int64,
+        )
+
+        caption_input = torch.full(
+            (batch_size, max_len_text),
+            self.token_pad,
+            dtype = torch.int64,
+        )
+
+        pixel_coord = torch.full(
+            (batch_size,max_len_patch),
             self.token_pad,
             dtype = torch.int64,
         )
         
-        pad_mask = torch.zeros(
+        pad_mask_patch = torch.zeros(
             batch_size,
-            max_len,
+            max_len_patch,
             dtype = torch.int64,
         )
 
+        pad_mask_text = torch.zeros(
+            batch_size,
+            max_len_patch,
+            dtype = torch.int64,
+        )
+
+        meta_data = [] # list of dict
+
         for i, item in enumerate(batch):
-            length = len(item["patches"]) # item["patches"]: [N, C * patch_size * patch_size]
-            patched_input[i][:length] = item["patches"]
-            pad_mask[i][:length] = 1
+            # patches
+            length_patches = len(item["patches"]) 
+            patched_input[i][:length_patches] = item["patches"] # patched input
+            pixel_coord[i][:length_patches] # pixel coordinates for RoPE
+            pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
+            # text
+            length_text = len(item["caption_ids"])
+            caption_input[i][:length_text] = item["caption_ids"]
+            pad_mask_text[i][:length_patches] = 1
+            meta_data.append(item["meta_data"])
+
+        if not self.image_only:
+            return {
+                "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
+                "pixel_coord": pixel_coord, # [B, max_len_patch]
+                "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
+                "caption_text": caption_input, # [B, max_len_text]
+                "pad_mask_text": pad_mask_text, # [B, max_len_text]
+                "meta_data": meta_data, # list of dict. B dicts
+            }
+
+        return {
+            "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
+            "pixel_coord": pixel_coord, # [B, max_len_patch]
+            "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
+            "meta_data": meta_data, # list of dict. B dicts
+        } 

@@ -52,6 +52,28 @@ def pad_to_patch_grid(image, patch_size = 16, pad_value = [0.0,0.0,0.0,]):
     padded[:,:H,:W] = image
     return padded
 
+def make_2d_positions(H_patches, W_patches):
+    """
+    Returns:
+        positions: [N, 2]
+
+    positions[:, 0] = x / column
+    positions[:, 1] = y / row
+    """
+
+    y, x = torch.meshgrid(
+        torch.arange(H_patches),
+        torch.arange(W_patches),
+        indexing="ij",
+    )
+
+    positions = torch.stack(
+        [x.flatten(), y.flatten()],
+        dim=-1,
+    )
+
+    return positions
+
 def patchify(image, patch_size = 16, pad_value = [0.0, 0.0, 0.0]):
     '''
     image: [C,H,W]
@@ -76,33 +98,16 @@ def patchify(image, patch_size = 16, pad_value = [0.0, 0.0, 0.0]):
     H_patches = H // patch_size
     W_patches = W // patch_size
 
+    positions = make_2d_positions(H_patches=H_patches, W_patches=W_patches)
+
     # [N, C * P * P]
     patches = patches.reshape(
         H_patches * W_patches,
         C * patch_size * patch_size,
     )
 
-    return patches
+    return {"patches": patches,
+            "positions": positions}
 
-def make_2d_positions(H_patches, W_patches):
-    """
-    Returns:
-        positions: [N, 2]
 
-    positions[:, 0] = x / column
-    positions[:, 1] = y / row
-    """
-
-    y, x = torch.meshgrid(
-        torch.arange(H_patches),
-        torch.arange(W_patches),
-        indexing="ij",
-    )
-
-    positions = torch.stack(
-        [x.flatten(), y.flatten()],
-        dim=-1,
-    )
-
-    return positions
 

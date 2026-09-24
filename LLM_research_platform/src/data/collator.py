@@ -111,15 +111,15 @@ class VitCollator:
             meta_data.append(item["meta_data"])
             # patches
             length_patches = len(item["patches"]) 
-            patched_input[i][:length_patches] = item["patches"] # patched input
-            patch_positions[i][:length_patches] = item["patch_positions"] # patch coordinates for RoPE
-            pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
+            patched_input[i,:length_patches] = item["patches"] # patched input
+            patch_positions[i,:length_patches] = item["patch_positions"] # patch coordinates for RoPE
+            pad_mask_patch[i,:length_patches] = 1 # pad maskes for patched input
 
             # text
             if not self.image_only:
                 length_text = len(item["caption_ids"])
-                caption_ids[i][:length_text] = item["caption_ids"]
-                pad_mask_text[i][:length_text] = 1
+                caption_ids[i,:length_text] = item["caption_ids"]
+                pad_mask_text[i,:length_text] = 1
           
             
 

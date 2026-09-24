@@ -1,11 +1,21 @@
 from pathlib import Path
 import tarfile
 import time
+from google.colab import drive # only run in colab
+import tarfile
+from pathlib import Path
+from huggingface_hub import snapshot_download
 
 DATA_DIR = Path("/content/drive/MyDrive/VLM_DATA/CC3M/shards")
 DEST_DIR = Path("/content/drive/MyDrive/VLM_DATA/CC3M/normal")
 
 DEST_DIR.mkdir(parents=True, exist_ok=True)
+
+snapshot_download( 
+    repo_id="pixparse/cc3m-wds", 
+    repo_type="dataset", 
+    local_dir=DATA_DIR, 
+)
 
 tar_files = sorted(DATA_DIR.glob("*.tar"))
 

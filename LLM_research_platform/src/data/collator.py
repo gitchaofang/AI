@@ -112,7 +112,7 @@ class VitCollator:
             # patches
             length_patches = len(item["patches"]) 
             patched_input[i][:length_patches] = item["patches"] # patched input
-            patch_positions[i][:length_patches] = item["patch_positions"] # pixel coordinates for RoPE
+            patch_positions[i][:length_patches] = item["patch_positions"] # patch coordinates for RoPE
             pad_mask_patch[i][:length_patches] = 1 # pad maskes for patched input
 
             # text
@@ -127,7 +127,7 @@ class VitCollator:
             return {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
                 "patch_positions": patch_positions, # [B, max_len_patch]
-                "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
+                "pad_mask_patch": pad_mask_patch,# [B, max_len_patch,2]
                 "caption_ids": caption_ids, # [B, max_len_text]
                 "pad_mask_text": pad_mask_text, # [B, max_len_text]
                 "meta_data": meta_data, # list of dict. B dicts

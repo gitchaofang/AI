@@ -27,9 +27,9 @@ def merge(ids,pair,idx):
 def imageToTensor(image):
     # PIL image -> [C,H,W] float tensor in [0,1]
     array = np.array(image)
-    tensor = torch.from_np(array)
+    tensor = torch.from_numpy(array)
     tensor = tensor.permute(2,0,1)
-    tensor = tensor.float() / 225.0
+    tensor = tensor.float() / 255.0
 
     return tensor
 
@@ -43,6 +43,7 @@ def pad_to_patch_grid(
     pad_value: [C]
     """
     C, H, W = image.shape
+    assert len(pad_value) == C
 
     H_pad = ((H + patch_size - 1) // patch_size) * patch_size
     W_pad = ((W + patch_size - 1) // patch_size) * patch_size

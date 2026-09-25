@@ -122,7 +122,7 @@ class GPT(nn.Module):
             # ------------------------------------------------------
             # learnable positional embedding only when RoPE is False
             # ------------------------------------------------------
-            x = (x + self.position_embedding(position_ids)) 
+            x = (x + self.position_embedding(position_ids))
 
         # -----------------------------------------
         # Transformer blocks

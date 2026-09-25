@@ -20,7 +20,7 @@ class GPT(nn.Module):
         n_layers=config["model"]["n_layers"],
         n_heads=config["model"]["n_heads"],
         rope_dims=config["model"]["rope_dims"],
-        RoPE=True,
+        RoPE=config["model"]["rope"],
     ):
         super().__init__()
 

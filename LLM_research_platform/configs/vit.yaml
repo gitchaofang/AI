@@ -21,6 +21,7 @@ model:
   n_layers: 6
   n_heads: 6
   rope: True
+  cross_attention: False
   rope_dims: [64]
   dropout: 0.2
 

@@ -23,6 +23,7 @@ model:
   rope: True
   rope_dims: [64]
   dropout: 0.2
+  mlp_ratio: 4
 
 training:
   epochs: 100

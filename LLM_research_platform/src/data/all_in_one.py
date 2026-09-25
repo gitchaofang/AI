@@ -344,3 +344,12 @@ class VitCollator:
             "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
             "meta_data": meta_data, # list of dict. B dicts
         } 
+    """
+        these are the data shape before going to the model:
+            patched_input: [B, N_max, C*P*P]
+            patch_positions: [B, N_max, 2]
+            pad_mask_patch: [B, N_max]
+            caption_ids: [B, T_max]
+            pad_mask_text: [B, T_max]
+            meta_data: list[B]
+    """

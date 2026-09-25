@@ -159,7 +159,7 @@ class ImageTextEncode(Dataset):
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
             return {
-                "patches": patches,            # [N,C * patch_size * patch_size]
+                "patches": patches,            # [N, C * patch_size * patch_size]
                 "patch_positions": patch_positions,    # [N, 2]
                 "caption_ids": all_tokens,     # [len(all_tokens)]
                 "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
@@ -173,3 +173,12 @@ class ImageTextEncode(Dataset):
         } 
     def get_length(self):
         return len(self.stems)
+    """
+    these are the data shape before going to the model:
+        patched_input: [B, N_max, C*P*P]
+        patch_positions: [B, N_max, 2]
+        pad_mask_patch: [B, N_max]
+        caption_ids: [B, T_max]
+        pad_mask_text: [B, T_max]
+        meta_data: list[B]
+    """

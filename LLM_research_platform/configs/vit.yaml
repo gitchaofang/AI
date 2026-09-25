@@ -6,9 +6,11 @@ data:
   shared_path: "/content/drive/MyDrive/VLM_DATA/CC3M/shards"
   patch_size: 16
   max_len: 256
+  color: 3
   batch_size: 8
   validation_batch_size: 128
-  shuffle: true
+  shuffle: True
+  image_only: False
 
 tokenizer:
   vocab_size: 10000

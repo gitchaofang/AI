@@ -5,14 +5,19 @@ import torch.nn as nn
 from .self_attention import SelfAttention
 from .cross_attention import CrossAttention
 
-# load config file
+# load config file for vit
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
 COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 # load yaml config
 with open(COLAB_YAML_PATH,"r") as f:
     # vit config
     vit_config = yaml.safe_load(f)
-    # load gpt config
+
+# load config file for gpt
+LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
+COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
+# load yaml config
+with open(COLAB_YAML_PATH,"r") as f:
     gpt_config = yaml.safe_load(f)
 
 # transformer:

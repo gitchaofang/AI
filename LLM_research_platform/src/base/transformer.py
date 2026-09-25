@@ -30,7 +30,7 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 class TransformerBlock(nn.Module):
-    def __init__(self, d_model, n_heads, max_seq_len, rope_dims, RoPE=True, cross_attention = vit_config["model"]["cross_attention"], ):
+    def __init__(self, d_model, n_heads, max_seq_len, rope_dims, RoPE=gpt_config["model"]["rope"], cross_attention = vit_config["model"]["cross_attention"], ):
         super().__init__()
         self.norm1 = nn.LayerNorm(d_model)
         self.attention = SelfAttention(d_model, n_heads, max_seq_len, rope_dims, RoPE=RoPE)

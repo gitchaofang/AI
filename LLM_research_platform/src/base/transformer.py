@@ -61,7 +61,8 @@ class TransformerBlock(nn.Module):
                 d_q=d_model,
                 d_model=d_model,
                 n_head=n_heads,
-                dropout=dropout])
+                dropout=dropout
+            )
         self.norm3 = nn.LayerNorm(d_model)     
         self.ffn = FeedForward(d_model=d_model,
                                mlp_ratio = gpt_config["model"]["mlp_ratio"],

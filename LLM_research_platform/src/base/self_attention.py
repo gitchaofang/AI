@@ -171,15 +171,15 @@ class SelfAttention(nn.Module):
                 self.kv_mask = pad_mask
                 self.kv_positions = positions
             else:
-                k_full = torch.cat([self.kv_cache[0], k], dim=1)
-                v_full = torch.cat([self.kv_cache[1], v], dim=1)
+                k_full = torch.cat([self.kv_cache[0], k], dim=2)
+                v_full = torch.cat([self.kv_cache[1], v], dim=2)
                 self.kv_cache = (k_full, v_full)
                 self.kv_mask = torch.cat([self.kv_mask, pad_mask], dim=1)
                 self.kv_positions = torch.cat([self.kv_positions, positions], dim=1,)
 
 
             k_full, v_full = self.kv_cache
-            T_k = k_full.shape[1]
+            T_k = k_full.shape[2]
             assert T_k <= self.max_seq_len, ( "KV cache exceeds max_seq_len")
 
             valid_mask = self.kv_mask.unsqueeze(-1) @ self.kv_mask.unsqueeze(-2)

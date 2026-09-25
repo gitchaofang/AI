@@ -69,7 +69,7 @@ class VitCollator:
         batch_size = len(batch)
         max_len_patch = max(len(x["patches"]) for x in batch)
         max_len_text = max(len(x["meta_data"]["caption"]) for x in batch)
-        patch_d = vit_config["data"]["color"]*vit_config["data"]["patch_size"]*vit_config["data"]["patch_size"]
+        patch_d = vit_config["data"]["in_channels"]*vit_config["data"]["patch_size"]*vit_config["data"]["patch_size"]
 
         patched_input = torch.full(
             (batch_size, max_len_patch, patch_d),

@@ -115,6 +115,7 @@ class ImageTextEncode(Dataset):
         self.transform = transforms.ToTensor()
         self.image_only =  image_only
         self.tokenizer = tokenizer
+        self.max_len = 0
         assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
 
         # Load existing index: [image name stems]
@@ -152,6 +153,13 @@ class ImageTextEncode(Dataset):
         with open(meta_data_path, "r") as f:
             meta_data = json.load(f)
 
+        # calcualte the max_len
+        width = meta_data["width"]
+        heigth = meta_data["heigth"]
+        patch_size = vit_config["data"]["patch_size"]
+        patch_len = (width / patch_size + 1) * (heigth / patch_size + 1)
+        self.mex_len = max(self.len, patch_len)
+                                
          # process text
         if not self.image_only:
             text = meta_data["caption"]
@@ -172,6 +180,8 @@ class ImageTextEncode(Dataset):
         } 
     def get_length(self):
         return len(self.stems)
+    def sample_max_len(self):
+        return self.max_len
     """
     these are the data shape before going to the model:
         patched_input: [B, N_max, C*P*P]

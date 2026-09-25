@@ -92,12 +92,11 @@ class TextDecodeDataset(Dataset): # for txt file
          return self.index[key][1]
 
 # -------------------------------------------------
-# image dala loading
-# I use google drive as disk for store data. The path is:
+# image data loading
+# use google drive as disk for store data. The path is:
 # extracted data: /content/drive/MyDrive/VLM_DATA/CC3M/normal 
 # shareds data: /content/drive/MyDrive/VLM_DATA/CC3M/shards
-# index_map{index, image-data name}
-# use inex_map to fetch data from google drive during training.
+# use inex_map to fetch data from google drive during training: index_map{index, image-data name}
 
 # load config file
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")

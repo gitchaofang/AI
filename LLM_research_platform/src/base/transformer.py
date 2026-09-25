@@ -40,17 +40,13 @@ class TransformerBlock(nn.Module):
         self.norm1 = nn.LayerNorm(d_model)
         self.attention = SelfAttention(d_model, n_heads, max_seq_len, rope_dims, RoPE=RoPE)
         if cross_attention:
-            # check two models have same batch size
-            assert vit_config["data"]["batch-size"] == gpt_config["data"]["batch_size"], "vision and test models have different batch sizes!"
             # parameters for content(vision) side
             self.cross_attention = CrossAttention(
                 d_kv=vit_config["model"]["d_model"],
                 d_q=d_model,
                 n_head=n_heads,
                 dropout=gpt_config["model"]["dropout"])
-            self.norm3 = nn.LayerNorm(d_model)
-            self.norm4 = nn.LayerNorm(d_model)
-            self.ffn_ca = FeedForward(d_model)          
+            self.norm3 = nn.LayerNorm(d_model)     
         self.norm2 = nn.LayerNorm(d_model)
         self.ffn = FeedForward(d_model)
 
@@ -58,12 +54,15 @@ class TransformerBlock(nn.Module):
         '''
         Text -> LayerNorm -> Self-Attention -> Residual -> LayerNorm -> Cross-Attention -> Residual -> LayerNorm -> FFN -> Residual
         '''
-        assert (content is None and not self.self.cross_attention) or (content and self.self.cross_attention)
+        assert (content is None and not self.cross_attention) or (content and self.self.cross_attention)
         # self_attention
         x = x + self.attention(self.norm1(x), pad_mask, positions ,is_prefill=is_prefill, is_generate=is_generate)
         # cross_attention
         if self.cross_attention:
-            x = x + self.cross_attention(content["patches"], self.norm3(x), content["mask"], pad_mask)
-        x = x + self.ffn(self.norm2(x))
+            x = x + self.cross_attention(content = content["patches"], 
+                                        q_x = self.norm2(x), 
+                                        kv_mask = content["mask"], 
+                                        q_mask = pad_mask)
+        x = x + self.ffn(self.norm3(x))
         
         return x

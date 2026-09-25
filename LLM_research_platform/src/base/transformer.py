@@ -48,7 +48,7 @@ class TransformerBlock(nn.Module):
         self.cross_attention_enabled = cross_attention_enabled
         self.norm1 = nn.LayerNorm(d_model)
         self.attention = SelfAttention(d_model=d_model, 
-                                       n_hdaes=n_heads, 
+                                       n_heads=n_heads, 
                                        max_seq_len=max_seq_len, 
                                        rope_dims=rope_dims, 
                                        RoPE=RoPE)
@@ -59,8 +59,9 @@ class TransformerBlock(nn.Module):
             self.cross_attention = CrossAttention(
                 d_kv=vit_config["model"]["d_model"],
                 d_q=d_model,
+                d_model=d_model,
                 n_head=n_heads,
-                dropout=gpt_config["model"]["dropout"])
+                dropout=dropout])
         self.norm3 = nn.LayerNorm(d_model)     
         self.ffn = FeedForward(d_model=d_model,
                                mlp_ratio = gpt_config["model"]["mlp_ratio"],

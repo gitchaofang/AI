@@ -42,7 +42,8 @@ class TransformerBlock(nn.Module):
                  rope_dims, 
                  RoPE=True, 
                  cross_attention_enabled=True,
-                 dropout = 0.2 
+                 dropout = 0.2,
+                 causal = True,
     ):
         super().__init__()
         self.cross_attention_enabled = cross_attention_enabled
@@ -51,7 +52,8 @@ class TransformerBlock(nn.Module):
                                        n_heads=n_heads, 
                                        max_seq_len=max_seq_len, 
                                        rope_dims=rope_dims, 
-                                       RoPE=RoPE)
+                                       RoPE=RoPE
+                                       causal=causal)
         self.norm2 = nn.LayerNorm(d_model)
 
         if cross_attention_enabled:
@@ -70,9 +72,9 @@ class TransformerBlock(nn.Module):
 
     def forward(self, x, pad_mask, positions, is_prefill=False, is_generate=False, content = None,):
         """
-        Text:
+        Decoder:
             x: [B, T, D]
-        Image content:
+        encoder content:
             content["patches"]: [B, N, D]
             content["mask"]:    [B, N]
 
@@ -80,9 +82,9 @@ class TransformerBlock(nn.Module):
             [B, T, D]
         """ 
         """
-        Text -> LayerNorm -> Self-Attention -> Residual -> LayerNorm -> Cross-Attention -> Residual -> LayerNorm -> FFN -> Residual
+        Decoder -> LayerNorm -> Self-Attention -> Residual -> LayerNorm -> Cross-Attention -> Residual -> LayerNorm -> FFN -> Residual
         """
-        # 1. Causal text self-attention
+        # 1. self-attention
         x = x + self.attention(
             x=self.norm1(x), 
             pad_mask=pad_mask, 
@@ -90,7 +92,7 @@ class TransformerBlock(nn.Module):
             is_prefill=is_prefill, 
             is_generate=is_generate
         )
-        # 2.Text -> image cross-attention
+        # 2. encoder -> decoder cross-attention
         if self.cross_attention_enabled:
             x = x + self.cross_attention(
                 content = content["patches"], 

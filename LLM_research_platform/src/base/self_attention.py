@@ -10,7 +10,7 @@ import numpy as np
 
 # self attention
 class SelfAttention(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, rope_dims, RoPE=True, pad_token=0, dropout = 0.2):
+    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, rope_dims, RoPE=True, pad_token=0, dropout = 0.2, causal = True):
         super().__init__()
         assert d_model % n_heads == 0
 
@@ -34,9 +34,12 @@ class SelfAttention(nn.Module):
 
         self.atten_dropout = nn.Dropout(dropout)
         self.out_dropout = nn.Dropout(dropout)
-        mask = torch.tril(
-            torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
-        )
+        if causal:
+            mask = torch.tril(
+                torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
+            )
+        else:
+            mask =  torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
         self.register_buffer(
             "causal_mask",
             mask.view(1, 1, self.max_seq_len, self.max_seq_len),

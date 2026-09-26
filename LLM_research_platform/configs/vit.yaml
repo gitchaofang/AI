@@ -5,8 +5,8 @@ data:
   extracted_path: "/content/drive/MyDrive/VLM_DATA/CC3M/normal"
   shared_path: "/content/drive/MyDrive/VLM_DATA/CC3M/shards"
   patch_size: 16
-  max_len: 256
-  color: 3
+  max_len: 512
+  in_channels: 3
   batch_size: 8
   validation_batch_size: 128
   shuffle: True
@@ -20,8 +20,9 @@ model:
   d_model: 384
   n_layers: 6
   n_heads: 6
+  num_class: 4
+  mlp_ratio: 4.0
   rope: True
-  cross_attention: False
   rope_dims: [64]
   dropout: 0.2
 

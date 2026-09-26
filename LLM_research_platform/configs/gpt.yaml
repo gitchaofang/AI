@@ -24,6 +24,8 @@ model:
   rope_dims: [64]
   dropout: 0.2
   mlp_ratio: 4
+  cross_attention: False
+  causal: True
 
 training:
   epochs: 100

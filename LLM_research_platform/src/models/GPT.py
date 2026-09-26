@@ -21,6 +21,7 @@ class GPT(nn.Module):
         n_heads=config["model"]["n_heads"],
         rope_dims=config["model"]["rope_dims"],
         RoPE=config["model"]["rope"],
+        cross_attention= config["model"]["cross_attention"]
     ):
         super().__init__()
 
@@ -42,6 +43,7 @@ class GPT(nn.Module):
                     n_heads=n_heads,
                     max_seq_len=max_seq_len,
                     rope_dims=rope_dims,
+                    cross_attention_enabled=cross_attention,
                     RoPE = RoPE,
                 )
                 for _ in range(n_layers)

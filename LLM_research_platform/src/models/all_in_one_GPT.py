@@ -256,13 +256,15 @@ class TransformerBlock(nn.Module):
 class GPT(nn.Module):
     def __init__(
         self,
-        vocab_size=config["tokenizer"]["vocab_size"],
+        vocab_size= config["tokenizer"]["vocab_size"],
         d_model=config["model"]["d_model"],
         max_seq_len=config["data"]["max_len"],
         n_layers=config["model"]["n_layers"],
         n_heads=config["model"]["n_heads"],
         rope_dims=config["model"]["rope_dims"],
-        RoPE=True,
+        RoPE=config["model"]["rope"],
+        cross_attention= config["model"]["cross_attention"],
+        causal = config["model"]["causal"]
     ):
         super().__init__()
 
@@ -284,7 +286,9 @@ class GPT(nn.Module):
                     n_heads=n_heads,
                     max_seq_len=max_seq_len,
                     rope_dims=rope_dims,
+                    cross_attention_enabled=cross_attention,
                     RoPE = RoPE,
+                    causal = causal,
                 )
                 for _ in range(n_layers)
             ]
@@ -361,10 +365,10 @@ class GPT(nn.Module):
 
             assert torch.all(position_ids >= 0)
             assert torch.all(position_ids < self.max_seq_len), ("Position ID exceeds max_seq_len")
-            # -----------------------------------------
+            # ------------------------------------------------------
             # learnable positional embedding only when RoPE is False
-            # -----------------------------------------
-            x = (x + self.position_embedding(position_ids))          
+            # ------------------------------------------------------
+            x = (x + self.position_embedding(position_ids))
 
         # -----------------------------------------
         # Transformer blocks

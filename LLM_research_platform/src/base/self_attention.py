@@ -10,7 +10,16 @@ import numpy as np
 
 # self attention
 class SelfAttention(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, rope_dims, RoPE=True, pad_token=0, dropout = 0.2, causal = True):
+    def __init__(self, 
+        d_model: int, 
+        n_heads: int, 
+        max_seq_len: int, 
+        rope_dims, 
+        RoPE=True, 
+        pad_token=0, 
+        dropout=0.2, 
+        causal=True
+    ):
         super().__init__()
         assert d_model % n_heads == 0
 

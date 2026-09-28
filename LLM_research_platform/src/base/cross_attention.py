@@ -3,7 +3,13 @@ from torch import nn
 import math
 
 class CrossAttention(nn.Module):
-    def __init__(self,d_kv: int, d_q: int, d_model: int, n_head: int, dropout = 0.2): # For cross_attention k and v have the same dimension
+    def __init__(self,
+        d_kv: int, 
+        d_q: int, 
+        d_model: int, 
+        n_head: int, 
+        dropout = 0.2
+    ): # For cross_attention k and v have the same dimension
         super().__init__()
         assert d_model % n_head == 0
         self.d_model = d_model
@@ -32,7 +38,7 @@ class CrossAttention(nn.Module):
         q_x = q_x.view(B, T_q, self.n_head, self.head_dim).transpose(1,2)
 
         # scores
-        scores = q_x @ k_x.transpose(-1,-2) #[B_q,H, T_q, D_h] @ [B_q, H, D_h, T_kv] -> [B_q, H, T_q, T_k]
+        scores = q_x @ k_x.transpose(-1,-2) #[B_q, H, T_q, D_h] @ [B_q, H, D_h, T_kv] -> [B_q, H, T_q, T_kv]
         scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(combined_mask == 0,-1e10)
 
@@ -53,9 +59,9 @@ class CrossAttention(nn.Module):
         # q_x: [B_q, T_q, D_q]
         # kv_mask: [B_kv, T_kv]
         # q_mask: [B_q, T_q]
-        B_kv, T_kv, D_kv = content.shape
-        B_q, T_q, D_q = q_x.shape
-        assert B_kv == B_q and D_kv ==self.d_kv and D_q == self.d_q
+        B_kv, _, D_kv = content.shape
+        B_q, _, D_q = q_x.shape
+        assert B_kv == B_q and D_kv == self.d_kv and D_q == self.d_q
 
         # transform to n_model
         k_x = self.k_proj(content)
@@ -63,8 +69,8 @@ class CrossAttention(nn.Module):
         q_x = self.q_proj(q_x)
         
         # build a combined mask
-        pad_mask = q_mask.unsqueeze(-1) @ kv_mask.unsqueeze(-2) #[B_q, T_q] @ [B_k,T_k] -> [B_q, T_q, T_k]
-        combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_k] -> [B_q, 1, T_q, T_k]
+        pad_mask = q_mask.unsqueeze(-1) @ kv_mask.unsqueeze(-2) #[B_q, T_q] @ [B_k,T_kv] -> [B_q, T_q, T_kv]
+        combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
 
         return self._dot_product(k_x, v_x, q_x, combined_mask)
 

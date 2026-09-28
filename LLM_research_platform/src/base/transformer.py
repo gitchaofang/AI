@@ -52,7 +52,7 @@ class TransformerBlock(nn.Module):
                                        n_heads=n_heads, 
                                        max_seq_len=max_seq_len, 
                                        rope_dims=rope_dims, 
-                                       RoPE=RoPE
+                                       RoPE=RoPE,
                                        causal=causal)
         self.norm2 = nn.LayerNorm(d_model)
 

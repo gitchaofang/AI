@@ -22,7 +22,8 @@ class GPT(nn.Module):
         rope_dims=config["model"]["rope_dims"],
         RoPE=config["model"]["rope"],
         cross_attention= config["model"]["cross_attention"],
-        causal = config["model"]["causal"]
+        causal = config["model"]["causal"],
+        dropout = 0.2,
     ):
         super().__init__()
 
@@ -31,6 +32,7 @@ class GPT(nn.Module):
         self.max_seq_len = max_seq_len
         self.RoPE = RoPE
         self.rope_dims = rope_dims
+        self.dropout = dropout
 
         self.token_embedding = nn.Embedding(vocab_size + 2 ,d_model,) # "+2" becasue 0 is for padding and 1 is for EOS
         # if not using RoPE, we use learnable positional embedding
@@ -44,8 +46,9 @@ class GPT(nn.Module):
                     n_heads=n_heads,
                     max_seq_len=max_seq_len,
                     rope_dims=rope_dims,
-                    cross_attention_enabled=cross_attention,
                     RoPE = RoPE,
+                    cross_attention_enabled=cross_attention,
+                    dropout = self.dropout,
                     causal = causal,
                 )
                 for _ in range(n_layers)
@@ -78,12 +81,18 @@ class GPT(nn.Module):
 
     def forward(
         self,
-        x,
-        pad_mask,
-        positions,
+        x, # [B, T]
+        pad_mask, # [B, T]
+        positions, # [B,T,M]
+        content = None, 
         is_prefill=False,
         is_generate=False,
-    ):
+    ):  
+        '''
+        encoder content:
+            content["patches"]: [B, N]
+            content["mask"]:    [B, N]
+        '''
         B, T_q = x.shape
 
         assert T_q <= self.max_seq_len
@@ -138,6 +147,7 @@ class GPT(nn.Module):
                 positions,
                 is_prefill=is_prefill,
                 is_generate=is_generate,
+                content = content,
             )
         x = self.norm(x)
         logits = self.lm_linear(x)

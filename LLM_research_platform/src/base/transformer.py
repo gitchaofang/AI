@@ -95,6 +95,7 @@ class TransformerBlock(nn.Module):
         )
         # 2. encoder -> decoder cross-attention
         if self.cross_attention_enabled:
+            assert content is not None ("no encoder input for cross-attention")
             x = x + self.cross_attention(
                 content = content["patches"], 
                 q_x = self.norm2(x), 

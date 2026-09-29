@@ -161,7 +161,7 @@ class SelfAttention(nn.Module):
 
 
     def forward(self, x, pad_mask, positions, is_prefill=False, is_generate=False):# For normal self-attention, k_positions and v_positions are the same
-        B, T_q, D = x.shape
+        B, T_q, _ = x.shape
         pad_mask = pad_mask.to(device=x.device, dtype=torch.float32)
 
         # q,k,v: [B,H,T,D_h]
@@ -183,10 +183,10 @@ class SelfAttention(nn.Module):
                 self.kv_mask = pad_mask
                 self.kv_positions = positions
             else:
-                k_full = torch.cat([self.kv_cache[0], k], dim=2)
-                v_full = torch.cat([self.kv_cache[1], v], dim=2)
+                k_full = torch.cat([self.kv_cache[0], k], dim=2,)
+                v_full = torch.cat([self.kv_cache[1], v], dim=2,)
                 self.kv_cache = (k_full, v_full)
-                self.kv_mask = torch.cat([self.kv_mask, pad_mask], dim=1)
+                self.kv_mask = torch.cat([self.kv_mask, pad_mask], dim=1,)
                 self.kv_positions = torch.cat([self.kv_positions, positions], dim=1,)
 
 

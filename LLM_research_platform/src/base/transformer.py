@@ -55,8 +55,8 @@ class TransformerBlock(nn.Module):
                                        RoPE=RoPE,
                                        dropout=dropout,
                                        causal=causal)
+        
         self.norm2 = nn.LayerNorm(d_model)
-
         if cross_attention_enabled:
             # parameters for content(vision) side
             self.cross_attention = CrossAttention(

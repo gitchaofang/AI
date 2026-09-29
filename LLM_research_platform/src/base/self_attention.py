@@ -34,7 +34,7 @@ class SelfAttention(nn.Module):
 
         assert len(rope_dims) >= 1
         assert sum(rope_dims) == self.head_dim
-        assert all(dim % 2 == 0 for dim in rope_dims)
+        assert all(dim % 2 == 0 for dim in self.rope_dims)
 
         self.q_proj = nn.Linear(d_model, d_model)
         self.k_proj = nn.Linear(d_model, d_model)
@@ -49,6 +49,7 @@ class SelfAttention(nn.Module):
             )
         else:
             mask =  torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
+
         self.register_buffer(
             "causal_mask",
             mask.view(1, 1, self.max_seq_len, self.max_seq_len),
@@ -86,7 +87,6 @@ class SelfAttention(nn.Module):
         assert T_pos == T
         assert len(self.rope_dims) == M
         assert sum(self.rope_dims) == D
-        assert all(dim % 2 == 0 for dim in self.rope_dims)
 
         out = torch.empty_like(x)
 
@@ -141,7 +141,7 @@ class SelfAttention(nn.Module):
 
     
     def _attention(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
-        B, H, T_q, D_h = q.shape
+        B, _, T_q, _ = q.shape
         
         scores = q @ k.transpose(-1, -2)
         scores = scores / math.sqrt(self.head_dim)

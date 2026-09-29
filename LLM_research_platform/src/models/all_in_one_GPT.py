@@ -27,7 +27,16 @@ TRAINING_FILENAME = "training.txt"
 VALIDATION_FILENAME = "validation.txt"
 # self attention
 class SelfAttention(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, max_seq_len: int, rope_dims, RoPE=True, pad_token=0, dropout = 0.2):
+    def __init__(self, 
+        d_model: int, 
+        n_heads: int, 
+        max_seq_len: int, 
+        rope_dims, 
+        RoPE=True, 
+        pad_token=0, 
+        dropout=0.2, 
+        causal=True
+    ):
         super().__init__()
         assert d_model % n_heads == 0
 
@@ -51,9 +60,12 @@ class SelfAttention(nn.Module):
 
         self.atten_dropout = nn.Dropout(dropout)
         self.out_dropout = nn.Dropout(dropout)
-        mask = torch.tril(
-            torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
-        )
+        if causal:
+            mask = torch.tril(
+                torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
+            )
+        else:
+            mask =  torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
         self.register_buffer(
             "causal_mask",
             mask.view(1, 1, self.max_seq_len, self.max_seq_len),
@@ -188,15 +200,15 @@ class SelfAttention(nn.Module):
                 self.kv_mask = pad_mask
                 self.kv_positions = positions
             else:
-                k_full = torch.cat([self.kv_cache[0], k], dim=1)
-                v_full = torch.cat([self.kv_cache[1], v], dim=1)
+                k_full = torch.cat([self.kv_cache[0], k], dim=2)
+                v_full = torch.cat([self.kv_cache[1], v], dim=2)
                 self.kv_cache = (k_full, v_full)
                 self.kv_mask = torch.cat([self.kv_mask, pad_mask], dim=1)
                 self.kv_positions = torch.cat([self.kv_positions, positions], dim=1,)
 
 
             k_full, v_full = self.kv_cache
-            T_k = k_full.shape[1]
+            T_k = k_full.shape[2]
             assert T_k <= self.max_seq_len, ( "KV cache exceeds max_seq_len")
 
             valid_mask = self.kv_mask.unsqueeze(-1) @ self.kv_mask.unsqueeze(-2)

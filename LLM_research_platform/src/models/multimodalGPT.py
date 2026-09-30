@@ -33,7 +33,7 @@ class MultimodalGPT(nn.Module):
         content = {"patches": encoder_out["patch_seq"],
                    "mask": encoder_out["pad_mask"]}
         logits = self.gpt(
-            x = text_x,
+            x=text_x,
             pad_mask=text_pad_mask,
             positions=None,
             content=content

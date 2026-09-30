@@ -47,31 +47,40 @@ class TransformerBlock(nn.Module):
                  cls_enabled = False,
     ):
         super().__init__()
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.max_seq_len = max_seq_len
+        self.RoPE = RoPE
         self.cross_attention_enabled = cross_attention_enabled
+        self.cross_attention_enabled = cross_attention_enabled
+        self.dropout = dropout
+        self.causal = causal
+        self.cls_enabled = cls_enabled
+
         self.norm1 = nn.LayerNorm(d_model)
-        self.attention = SelfAttention(d_model=d_model, 
-                                       n_heads=n_heads, 
-                                       max_seq_len=max_seq_len, 
-                                       rope_dims=rope_dims, 
-                                       RoPE=RoPE,
-                                       dropout=dropout,
-                                       causal=causal,
-                                       cls_enabled=cls_enabled)
+        self.attention = SelfAttention(d_model=self.d_model, 
+                                       n_heads=self.n_heads, 
+                                       max_seq_len=self.max_seq_len, 
+                                       rope_dims=self.rope_dims, 
+                                       RoPE=self.RoPE,
+                                       dropout=self.dropout,
+                                       causal=self.causal,
+                                       cls_enabled=self.cls_enabled)
         
         self.norm2 = nn.LayerNorm(d_model)
-        if cross_attention_enabled:
+        if self.cross_attention_enabled:
             # parameters for content(vision) side
             self.cross_attention = CrossAttention(
                 d_kv=vit_config["model"]["d_model"],
-                d_q=d_model,
-                d_model=d_model,
-                n_head=n_heads,
-                dropout=dropout
+                d_q=self.d_model,
+                d_model=self.d_model,
+                n_head=self.n_heads,
+                dropout=self.dropout
             )
-        self.norm3 = nn.LayerNorm(d_model)     
-        self.ffn = FeedForward(d_model=d_model,
-                               mlp_ratio = gpt_config["model"]["mlp_ratio"],
-                               dropout = dropout)
+        self.norm3 = nn.LayerNorm(self.d_model)     
+        self.ffn = FeedForward(d_model=self.d_model,
+                               mlp_ratio = 4,
+                               dropout = self.dropout)
 
     def forward(self, x, pad_mask, positions, is_prefill=False, is_generate=False, content = None,):
         """

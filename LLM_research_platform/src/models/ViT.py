@@ -166,18 +166,23 @@ class ViT(nn.Module):
         if self.cls_enabled:
             cls_out = out[:, 0]
             patch_out = out[:, 1:]
+            pad_mask_out = pad_mask[:,1:]
         else:
             cls_out = None
             patch_out = out
+            pad_mask_out = pad_mask
 
         # Classification
         if self.num_class is not None:
             assert self.cls_enabled, "Classification requires CLS token"
             logits = self.head(cls_out)
-
             return {
                 "class_logits": logits,
                 "patch_seq": patch_out,
+                "pad_mask": pad_mask_out
             }
 
-        return patch_out
+        return {
+            "patch_seq": patch_out,
+            "pad_mask": pad_mask_out
+        }

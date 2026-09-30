@@ -69,7 +69,7 @@ class ViT(nn.Module):
                     RoPE=self.RoPE,
                     cross_attention_enabled=self.cross_attention_enabled,
                     dropout = self.dropout,
-                    causal = self.cls_enabled,
+                    causal = self.causal,
                     cls_enabled = self.cls_enabled,
                 )
                 for _ in range(n_layers)

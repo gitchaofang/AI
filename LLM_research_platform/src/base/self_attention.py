@@ -33,10 +33,10 @@ class SelfAttention(nn.Module):
         # M-rope config
         self.rope_dims = rope_dims
         self.RoPE = RoPE
-
-        assert len(rope_dims) >= 1
-        assert sum(rope_dims) == self.head_dim
-        assert all(dim % 2 == 0 for dim in self.rope_dims)
+        if self.RoPE:
+            assert len(rope_dims) >= 1
+            assert sum(rope_dims) == self.head_dim
+            assert all(dim % 2 == 0 for dim in self.rope_dims)
 
         self.q_proj = nn.Linear(d_model, d_model)
         self.k_proj = nn.Linear(d_model, d_model)

@@ -52,10 +52,10 @@ class TransformerBlock(nn.Module):
         self.max_seq_len = max_seq_len
         self.RoPE = RoPE
         self.cross_attention_enabled = cross_attention_enabled
-        self.cross_attention_enabled = cross_attention_enabled
         self.dropout = dropout
         self.causal = causal
         self.cls_enabled = cls_enabled
+        self.rope_dims = rope_dims
 
         self.norm1 = nn.LayerNorm(d_model)
         self.attention = SelfAttention(d_model=self.d_model, 

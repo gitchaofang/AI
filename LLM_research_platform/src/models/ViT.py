@@ -37,6 +37,7 @@ class ViT(nn.Module):
         self.n_heads=n_heads
         self.dropout=dropout
         self.patch_size=patch_size
+        self.max_seq_len = max_seq_len
         self.RoPE=RoPE
         self.rope_dims=rope_dims
         self.mlp_ratio=mlp_ratio
@@ -88,24 +89,31 @@ class ViT(nn.Module):
         self._init_weight()
 
     def _init_weight(self):
-        nn.init.trunc_normal_(
-        self.cls_token,
-        std=0.02),
+        if self.cls_enabled:
+            nn.init.trunc_normal_(
+                self.cls_token,
+             std=0.02,
+            )
 
 
     def forward(self, patch_items):
         # inputs
         patch_input = patch_items["patched_input"] # [B, T, in_channel * patch_size * patch_size]
         B, T, patch_dim = patch_input.shape #B: batch_siae, T: patch numbers, D: patchify dimention
+
         assert self.patch_dim == patch_dim, "Patch dimension mismatch"
+
         pad_mask = patch_items["pad_mask_patch"] #[B, T]
         patch_positions = patch_items["patch_positions"] # [B,T,2]
+
+        # patch embedding
+        patch_ed_seq = self.token_embedding(patch_input)
 
         # update when CLS is enabled
         if self.cls_enabled:
             # add cls token at teh beggining of the patch series
             cls = self.cls_token.expand(B,-1,-1,)
-            patched_seq = torch.cat([cls, self.token_embedding(patch_input)], dim=1,) #[B, T + 1, d_model]
+            patched_seq = torch.cat([cls, patch_ed_seq], dim=1,) #[B, T + 1, d_model]
 
             # add extra dimention for patch_mask and patch_position
             cls_mask = torch.ones(
@@ -143,15 +151,22 @@ class ViT(nn.Module):
             )
         out = self.norm(patched_seq)
 
-        # For classification
-        if self.num_class:
-            cls = out[:,0] # [B,D]
-            logits = self.head(cls)
-            return {"class_logits": logits,
-                    "patch_seq": out[:,1:]} 
-        return out[:,1:] # [B, T, d_model]
+        # Separate CLS and patches
+        if self.cls_enabled:
+            cls_out = out[:, 0]
+            patch_out = out[:, 1:]
+        else:
+            cls_out = None
+            patch_out = out
 
+        # Classification
+        if self.num_class is not None:
+            assert self.cls_enabled, "Classification requires CLS token"
+            logits = self.head(cls_out)
 
+            return {
+                "class_logits": logits,
+                "patch_seq": patch_out,
+            }
 
-
-
+        return patch_out

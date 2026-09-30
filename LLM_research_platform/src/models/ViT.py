@@ -1,11 +1,7 @@
 import torch
 import yaml
-import numpy as np
 from pathlib import Path
 from torch import nn
-from PIL import Image
-from .helper import patchify
-from torchvision import transforms
 from src.base.transformer import TransformerBlock
 
 # load config file
@@ -48,6 +44,11 @@ class ViT(nn.Module):
         self.dropout=dropout
         self.cross_attention_enabled=cross_attention_enabled
 
+        assert self.d_model % self.n_heads == 0
+        if self.RoPE:
+            assert sum(self.rope_dims) == self.d_model // self.n_heads
+            assert all(dim % 2 == 0 for dim in self.rope_dims)
+
         # token embedding
         self.token_embedding = nn.Linear(self.patch_dim, self.d_model)
 
@@ -59,7 +60,7 @@ class ViT(nn.Module):
                     1, 1, len(self.rope_dims),
                     dtype=torch.int64,
                 )
-            ) #[1,1,self.rope_dims]
+            ) #[1,1,len(rope_dims)]
             self.max_seq_len += 1
 
          # if not using RoPE, we use learnable positional embedding
@@ -111,7 +112,10 @@ class ViT(nn.Module):
         assert self.patch_dim == patch_dim, "Patch dimension mismatch"
 
         pad_mask = patch_items["pad_mask_patch"] #[B, T]
-        patch_positions = patch_items["patch_positions"] # [B,T,2]
+        if self.RoPE:
+            patch_positions = patch_items["patch_positions"] # [B,T,2]
+        else:
+            patch_positions = None
 
         # patch embedding
         patched_seq = self.token_embedding(patch_input)

@@ -57,7 +57,14 @@ class ViT(nn.Module):
 
         if self.cls_enabled:
             self.cls_token = nn.Parameter(torch.zeros(1,1,self.d_model))
-            self.cls_pos = torch.ones(len(self.rope_dims),dtype=torch.int64).unsqueeze(0).unsqueeze(0) #[1,1,self.rope_dims]
+            self.register_buffer(
+                "cls_pos",
+                torch.ones(
+                    1, 1, len(self.rope_dims),
+                    dtype=torch.int64,
+                )
+            ) #[1,1,self.rope_dims]
+            self.max_seq_len += 1
 
 
         # self attention layers
@@ -82,7 +89,7 @@ class ViT(nn.Module):
         self.norm = nn.LayerNorm(d_model)
 
         # classification head
-        if self.num_class:
+        if self.num_class is not None:
             self.head = nn.Linear(d_model, self.num_class)
 
         # initialization for weights
@@ -107,13 +114,13 @@ class ViT(nn.Module):
         patch_positions = patch_items["patch_positions"] # [B,T,2]
 
         # patch embedding
-        patch_ed_seq = self.token_embedding(patch_input)
+        patched_seq = self.token_embedding(patch_input)
 
         # update when CLS is enabled
         if self.cls_enabled:
             # add cls token at teh beggining of the patch series
             cls = self.cls_token.expand(B,-1,-1,)
-            patched_seq = torch.cat([cls, patch_ed_seq], dim=1,) #[B, T + 1, d_model]
+            patched_seq = torch.cat([cls, patched_seq], dim=1,) #[B, T + 1, d_model]
 
             # add extra dimention for patch_mask and patch_position
             cls_mask = torch.ones(

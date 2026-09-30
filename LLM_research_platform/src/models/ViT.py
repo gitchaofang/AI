@@ -51,10 +51,6 @@ class ViT(nn.Module):
         # token embedding
         self.token_embedding = nn.Linear(self.patch_dim, self.d_model)
 
-        # if not using RoPE, we use learnable positional embedding
-        if not self.RoPE:
-            self.position_embedding = nn.Embedding(self.max_seq_len, self.d_model,)
-
         if self.cls_enabled:
             self.cls_token = nn.Parameter(torch.zeros(1,1,self.d_model))
             self.register_buffer(
@@ -65,6 +61,10 @@ class ViT(nn.Module):
                 )
             ) #[1,1,self.rope_dims]
             self.max_seq_len += 1
+
+         # if not using RoPE, we use learnable positional embedding
+        if not self.RoPE:
+            self.position_embedding = nn.Embedding(self.max_seq_len, self.d_model,)
 
 
         # self attention layers

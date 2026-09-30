@@ -26,6 +26,7 @@ model:
   mlp_ratio: 4
   cross_attention: False
   causal: True
+  cls: False
 
 training:
   epochs: 100

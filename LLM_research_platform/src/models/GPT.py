@@ -24,6 +24,7 @@ class GPT(nn.Module):
         cross_attention= config["model"]["cross_attention"],
         causal = config["model"]["causal"],
         dropout = 0.2,
+        cls_enabled = False,
     ):
         super().__init__()
 
@@ -50,6 +51,7 @@ class GPT(nn.Module):
                     cross_attention_enabled=cross_attention,
                     dropout = self.dropout,
                     causal = causal,
+                    cls_enabled = cls_enabled,
                 )
                 for _ in range(n_layers)
             ]

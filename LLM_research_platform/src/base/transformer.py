@@ -44,6 +44,7 @@ class TransformerBlock(nn.Module):
                  cross_attention_enabled=True,
                  dropout = 0.2,
                  causal = True,
+                 cls_enabled = False,
     ):
         super().__init__()
         self.cross_attention_enabled = cross_attention_enabled
@@ -54,7 +55,8 @@ class TransformerBlock(nn.Module):
                                        rope_dims=rope_dims, 
                                        RoPE=RoPE,
                                        dropout=dropout,
-                                       causal=causal)
+                                       causal=causal,
+                                       cls_enabled=cls_enabled)
         
         self.norm2 = nn.LayerNorm(d_model)
         if cross_attention_enabled:

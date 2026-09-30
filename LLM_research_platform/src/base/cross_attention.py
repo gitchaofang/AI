@@ -73,9 +73,3 @@ class CrossAttention(nn.Module):
         combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
 
         return self._dot_product(k_x, v_x, q_x, combined_mask)
-
-
-
-
-
-

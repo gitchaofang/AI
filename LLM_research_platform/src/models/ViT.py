@@ -16,41 +16,47 @@ with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
 class ViT(nn.Module):
     def __init__(self,
-                 d_model: int, 
-                 n_heads: int, 
-                 in_channels: int = 3, 
-                 max_seq_len: int = 512,
-                 patch_size = 16,
-                 n_layers: int = 5,
-                 mlp_ratio = 4.0,
-                 dropout: float = 0.2,
-                 RoPE: bool = True,
-                 num_class: int = None,
-                 rope_dim = [64],):
+                d_model: int, 
+                n_heads: int, 
+                in_channels: int = 3, 
+                max_seq_len: int = 512,
+                patch_size = 16,
+                n_layers: int = 5,
+                mlp_ratio = 4.0,
+                dropout: float = 0.2,
+                RoPE: bool = True,
+                num_class: int = None,
+                rope_dims = [64],
+                cls_enabled=True,
+                causal = False,
+                cross_attention_enabled=False):
 
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.dropout = dropout
-        self.patch_size = patch_size
-        self.RoPE = RoPE
-        self.rope_dim = rope_dim
-        self.mlp_ratio = mlp_ratio
-        self.patch_dim = in_channels * patch_size * patch_size
-        self.num_class = num_class
+        super().__init__()
+
+        self.d_model=d_model
+        self.n_heads=n_heads
+        self.dropout=dropout
+        self.patch_size=patch_size
+        self.RoPE=RoPE
+        self.rope_dims=rope_dims
+        self.mlp_ratio=mlp_ratio
+        self.patch_dim=in_channels * patch_size * patch_size
+        self.num_class=num_class
+        self.cls_enabled=cls_enabled
+        self.causal=causal
+        self.dropout=dropout
+        self.cross_attention_enabled=cross_attention_enabled
 
         # token embedding
         self.token_embedding = nn.Linear(self.patch_dim, d_model)
         # if not using RoPE, we use learnable positional embedding
         if not RoPE:
-            self.position_embedding = nn.Embedding(max_seq_len,d_model,)
+            self.position_embedding = nn.Embedding(max_seq_len, d_model,)
 
-         # CLS token
-        self.cls_token = nn.Parameter(torch.zeros(1,1,d_model))
+        if self.cls_enabled:
+            self.cls_token = nn.Parameter(torch.zeros(1,1,d_model))
+            self.cls_pos = torch.ones(len(rope_dims),dtype=torch.int64).unsqueeze(0).unsqueeze(0)
 
-        # if not using RoPE, we use learnable positional embedding
-        if not self.RoPE:
-            self.pos_embed = nn.Parameter(
-            torch.zeros(1,self.patch_dim + 1,d_model,))
 
         # self attention layers
         self.blocks = nn.ModuleList(
@@ -60,8 +66,11 @@ class ViT(nn.Module):
                     n_heads=n_heads,
                     max_seq_len=max_seq_len,
                     rope_dims=self.rope_dims,
-                    cross_attention_enabled=False,
                     RoPE=self.RoPE,
+                    cross_attention_enabled=self.cross_attention_enabled,
+                    dropout = self.dropout,
+                    causal = self.cls_enabled,
+                    cls_enabled = self.cls_enabled,
                 )
                 for _ in range(n_layers)
             ]
@@ -83,22 +92,43 @@ class ViT(nn.Module):
         std=0.02),
 
 
-    def forward(self, patch_items): # x, pad_mask, positions, is_prefill=False, is_generate=False, content = None,
-        patch_input = patch_items["patched_input"]
-        B, T, D = patch_input.shape
+    def forward(self, patch_items):
+        # inputs
+        patch_input = patch_items["patched_input"] # [B, T, in_channel * patch_size * patch_size]
+        B, T, patch_dim = patch_input.shape #B: batch_siae, T: patch numbers, D: patchify dimention
+        assert self.patch_dim == patch_dim, "Patch dimension mismatch"
         pad_mask = patch_items["pad_mask_patch"] #[B, T]
         patch_positions = patch_items["patch_positions"] # [B,T,2]
         
-        cls = self.cls_token.expand(B,-1,-1,)
-        patched_seq = torch.cat([cls, self.token_embedding(patch_input)], dim=1,) #[B, T + 1, d_model]
+        if self.cls_enabled:
+            # add cls token at teh beggining of the patch series
+            cls = self.cls_token.expand(B,-1,-1,)
+            patched_seq = torch.cat([cls, self.token_embedding(patch_input)], dim=1,) #[B, T + 1, d_model]
+
+            # add extra dimention for patch_mask and patch_position
+            cls_mask = torch.ones(
+                B, 1,
+                dtype=pad_mask.dtype,
+                device=pad_mask.device,
+            )
+
+            pad_mask = torch.cat(
+                [cls_mask, pad_mask],
+                dim=1,
+            )
+
+            # update position for RoPE
+            if not self.RoPE:
+                cls_position = self.cls_pos.expand(B,1,-1,)
+                patch_positions = torch.cat([cls_position,patch_positions], dim = 1)
 
         if not self.RoPE:
-            position_ids = torch.arange(T,device=patch_input.device,).unsqueeze(0).expand(B,T,)
+            position_ids = torch.arange(T,device=patch_input.device,).unsqueeze(0).expand(B,T,) # [B, T]
             patched_seq = (patched_seq + self.position_embedding(position_ids))
 
         # Transformer blocks
         for block in self.blocks:
-            patched_seq = self.block(
+            patched_seq = block(
                 x=patched_seq,
                 pad_mask=pad_mask,
                 positions=patch_positions,

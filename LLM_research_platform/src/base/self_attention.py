@@ -18,7 +18,8 @@ class SelfAttention(nn.Module):
         RoPE=True, 
         pad_token=0, 
         dropout=0.2, 
-        causal=True
+        causal=True,
+        cls_enabled = False,
     ):
         super().__init__()
         assert d_model % n_heads == 0
@@ -27,6 +28,7 @@ class SelfAttention(nn.Module):
         self.n_heads = n_heads
         self.max_seq_len = max_seq_len
         self.head_dim = d_model // n_heads
+        self.cls_enabled = cls_enabled
 
         # M-rope config
         self.rope_dims = rope_dims
@@ -88,6 +90,9 @@ class SelfAttention(nn.Module):
         assert len(self.rope_dims) == M
         assert sum(self.rope_dims) == D
 
+        if self.cls_enabled:
+            cls_head = x[:,:,0,:]
+
         out = torch.empty_like(x)
 
         dim_start = 0
@@ -136,7 +141,9 @@ class SelfAttention(nn.Module):
             out[..., dim_start + 1:dim_end:2] = (x_even * sin + x_odd * cos)
 
             dim_start = dim_end
-
+            
+        if self.cls_enabled:
+            out[:,0,:,:] = cls_head
         return out
 
     

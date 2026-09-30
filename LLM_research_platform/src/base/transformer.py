@@ -39,7 +39,8 @@ class TransformerBlock(nn.Module):
                  d_model, 
                  n_heads, 
                  max_seq_len, 
-                 rope_dims, 
+                 rope_dims,
+                 d_model_ca, 
                  RoPE=True, 
                  cross_attention_enabled=True,
                  dropout = 0.2,
@@ -52,6 +53,7 @@ class TransformerBlock(nn.Module):
         self.max_seq_len = max_seq_len
         self.RoPE = RoPE
         self.cross_attention_enabled = cross_attention_enabled
+        self.d_model_ca = d_model_ca
         self.dropout = dropout
         self.causal = causal
         self.cls_enabled = cls_enabled
@@ -71,7 +73,7 @@ class TransformerBlock(nn.Module):
         if self.cross_attention_enabled:
             # parameters for content(vision) side
             self.cross_attention = CrossAttention(
-                d_kv=vit_config["model"]["d_model"],
+                d_kv=self.d_model_ca,
                 d_q=self.d_model,
                 d_model=self.d_model,
                 n_head=self.n_heads,

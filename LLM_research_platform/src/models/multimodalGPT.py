@@ -30,10 +30,14 @@ class MultimodalGPT(nn.Module):
         encoder_out = self.vit(
             patch_items=patch_items
         )
+        content = {"patches": encoder_out["patch_seq"],
+                   "mask": encoder_out["pad_mask"]}
         logits = self.gpt(
             x = text_x,
             pad_mask=text_pad_mask,
-            positions = None,
+            positions=None,
+            content=content
             is_prefill=self.is_prefill,
             is_generate=self.is_generate
         )
+        return logits

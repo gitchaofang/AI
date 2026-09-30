@@ -48,23 +48,24 @@ class ViT(nn.Module):
         self.cross_attention_enabled=cross_attention_enabled
 
         # token embedding
-        self.token_embedding = nn.Linear(self.patch_dim, d_model)
+        self.token_embedding = nn.Linear(self.patch_dim, self.d_model)
+
         # if not using RoPE, we use learnable positional embedding
-        if not RoPE:
-            self.position_embedding = nn.Embedding(max_seq_len, d_model,)
+        if not self.RoPE:
+            self.position_embedding = nn.Embedding(self.max_seq_len, self.d_model,)
 
         if self.cls_enabled:
-            self.cls_token = nn.Parameter(torch.zeros(1,1,d_model))
-            self.cls_pos = torch.ones(len(rope_dims),dtype=torch.int64).unsqueeze(0).unsqueeze(0)
+            self.cls_token = nn.Parameter(torch.zeros(1,1,self.d_model))
+            self.cls_pos = torch.ones(len(self.rope_dims),dtype=torch.int64).unsqueeze(0).unsqueeze(0) #[1,1,self.rope_dims]
 
 
         # self attention layers
         self.blocks = nn.ModuleList(
             [
                 TransformerBlock(
-                    d_model=d_model,
-                    n_heads=n_heads,
-                    max_seq_len=max_seq_len,
+                    d_model=self.d_model,
+                    n_heads=self.n_heads,
+                    max_seq_len=self.max_seq_len,
                     rope_dims=self.rope_dims,
                     RoPE=self.RoPE,
                     cross_attention_enabled=self.cross_attention_enabled,
@@ -99,7 +100,8 @@ class ViT(nn.Module):
         assert self.patch_dim == patch_dim, "Patch dimension mismatch"
         pad_mask = patch_items["pad_mask_patch"] #[B, T]
         patch_positions = patch_items["patch_positions"] # [B,T,2]
-        
+
+        # update when CLS is enabled
         if self.cls_enabled:
             # add cls token at teh beggining of the patch series
             cls = self.cls_token.expand(B,-1,-1,)
@@ -118,9 +120,12 @@ class ViT(nn.Module):
             )
 
             # update position for RoPE
-            if not self.RoPE:
+            if self.RoPE:
                 cls_position = self.cls_pos.expand(B,1,-1,)
                 patch_positions = torch.cat([cls_position,patch_positions], dim = 1)
+
+            # T is original T + 1 if CLS is enabled
+            T += 1
 
         if not self.RoPE:
             position_ids = torch.arange(T,device=patch_input.device,).unsqueeze(0).expand(B,T,) # [B, T]

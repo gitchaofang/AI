@@ -24,7 +24,7 @@ with open(COLAB_YAML_PATH,"r") as f:
 class FeedForward(nn.Module):
     def __init__(self, d_model: int, mlp_ratio = 4, dropout = 0.2,):
         super().__init__()
-        hidden = d_model * mlp_ratio
+        hidden = int(d_model * mlp_ratio)
         self.net = nn.Sequential(
             nn.Linear(d_model, hidden),
             nn.GELU(),
@@ -106,7 +106,7 @@ class TransformerBlock(nn.Module):
         )
         # 2. encoder -> decoder cross-attention
         if self.cross_attention_enabled:
-            assert content is not None ("no encoder input for cross-attention")
+            assert content is not None, "no encoder input for cross-attention"
             x = x + self.cross_attention(
                 content = content["patches"], 
                 q_x = self.norm2(x), 

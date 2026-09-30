@@ -141,9 +141,9 @@ class SelfAttention(nn.Module):
             out[..., dim_start + 1:dim_end:2] = (x_even * sin + x_odd * cos)
 
             dim_start = dim_end
-            
+
         if self.cls_enabled:
-            out[:,0,:,:] = cls_head
+            out[:,:,0,:] = cls_head
         return out
 
     

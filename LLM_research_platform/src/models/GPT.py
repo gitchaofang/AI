@@ -27,38 +27,42 @@ class GPT(nn.Module):
         cls_enabled = False,
     ):
         super().__init__()
-
         self.vocab_size = vocab_size
         self.d_model = d_model
         self.max_seq_len = max_seq_len
         self.RoPE = RoPE
         self.rope_dims = rope_dims
         self.dropout = dropout
+        self.cross_attention = cross_attention
+        self.causal = causal
+        self.cls_enabled = cls_enabled
+        self.n_heads = n_heads
+        self.n_layers = n_layers
 
-        self.token_embedding = nn.Embedding(vocab_size + 2 ,d_model,) # "+2" becasue 0 is for padding and 1 is for EOS
+        self.token_embedding = nn.Embedding(self.vocab_size + 2 ,self.d_model,) # "+2" becasue 0 is for padding and 1 is for EOS
         # if not using RoPE, we use learnable positional embedding
-        if not RoPE:
-            self.position_embedding = nn.Embedding(max_seq_len,d_model,)
+        if not self.RoPE:
+            self.position_embedding = nn.Embedding(self.max_seq_len,self.d_model,)
 
         self.blocks = nn.ModuleList(
             [
                 TransformerBlock(
-                    d_model=d_model,
-                    n_heads=n_heads,
-                    max_seq_len=max_seq_len,
-                    rope_dims=rope_dims,
-                    RoPE = RoPE,
-                    cross_attention_enabled=cross_attention,
+                    d_model=self.d_model,
+                    n_heads=self.n_heads,
+                    max_seq_len=self.max_seq_len,
+                    rope_dims=self.rope_dims,
+                    RoPE=self.RoPE,
+                    cross_attention_enabled=self.cross_attention,
                     dropout = self.dropout,
-                    causal = causal,
-                    cls_enabled = cls_enabled,
+                    causal = self.causal,
+                    cls_enabled = self.cls_enabled,
                 )
-                for _ in range(n_layers)
+                for _ in range(self.n_layers)
             ]
         )
 
-        self.norm = nn.LayerNorm(d_model,)
-        self.lm_linear = nn.Linear(d_model, vocab_size + 2,)
+        self.norm = nn.LayerNorm(self.d_model,)
+        self.lm_linear = nn.Linear(self.d_model, self.vocab_size + 2,)
         self.position_offset = None
 
         self.apply(self._init_weights)

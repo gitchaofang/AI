@@ -18,6 +18,7 @@ tokenizer:
 
 model:
   d_model: 384
+  d_model_ca: 384
   n_layers: 6
   n_heads: 6
   rope: True

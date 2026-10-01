@@ -9,6 +9,10 @@ class MultimodalGPT(nn.Module):
         self.gpt = gpt
         self.encoder_out = None
 
+    def reset_cache(self):
+        self.encoder_out = None
+        self.gpt.reset_cache()
+
     def forward(self, 
                 patch_items, 
                 text_x, 
@@ -26,7 +30,7 @@ class MultimodalGPT(nn.Module):
             "patch_seq": patch_out: [B, T_kv, d_model_ca]
             "pad_mask": pad_mask_out: [B, T_kv]
         '''
-        if (is_generate and self.encoder_out is None) or (not is_generate):
+        if (not is_generate) or (self.encoder_out is None):
             self.encoder_out = self.vit(
                 patch_items=patch_items
             )

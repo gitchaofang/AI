@@ -125,7 +125,7 @@ class VitCollator:
         
         if not self.image_only:
             # create 1d positions for text
-            positions = torch.arange(max_len_text,dtype=torch.int64)[None,:, None].expand(batch_size, max_len_text, 1).clone()
+            positions = torch.arange(max_len_text,dtype=torch.int64).view(1, max_len_text, 1).expand(batch_size, -1, -1)
             return {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
                 "patch_positions": patch_positions, # [B, max_len_patch]

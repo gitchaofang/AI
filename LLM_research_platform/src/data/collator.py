@@ -128,8 +128,8 @@ class VitCollator:
             positions = torch.arange(max_len_text,dtype=torch.int64).view(1, max_len_text, 1).expand(batch_size, -1, -1)
             return {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
-                "patch_positions": patch_positions, # [B, max_len_patch]
-                "pad_mask_patch": pad_mask_patch,# [B, max_len_patch,2]
+                "patch_positions": patch_positions, # [B, max_len_patch, 2]
+                "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
                 "caption_ids": caption_ids, # [B, max_len_text]
                 "pad_mask_text": pad_mask_text, # [B, max_len_text]
                 "positions_text": positions, #[B, max_len_text,1]

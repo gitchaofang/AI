@@ -10,7 +10,7 @@ from src.data.dataset import TextDecodeDataset
 from src.data.collator import PaddingCollator
 from src.data.token_batch_sampler import TokenBatchSampler
 from src.models.GPT import GPT
-from src.training.trainer import Trainer
+from src.training.trainer_gpt import Trainer
 
 
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")

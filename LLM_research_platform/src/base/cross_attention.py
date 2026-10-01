@@ -38,14 +38,14 @@ class CrossAttention(nn.Module):
         q_x = q_x.view(B, T_q, self.n_head, self.head_dim).transpose(1,2)
 
         # scores
-        scores = q_x @ k_x.transpose(-1,-2) #[B_q, H, T_q, D_h] @ [B_q, H, D_h, T_kv] -> [B_q, H, T_q, T_kv]
+        scores = q_x @ k_x.transpose(-1,-2) #[B, H, T_q, D_h] @ [B, H, D_h, T_kv] -> [B, H, T_q, T_kv]
         scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(combined_mask == 0,-1e10)
 
         attention = torch.softmax(scores, dim = -1)
         attention = self.attn_dropout(attention)
 
-        out = attention @ v_x
+        out = attention @ v_x # [B, H, T_q, head_dim]
         out = out.transpose(1,2).contiguous().view(B, T_q, self.d_model)
         out = self.out_proj(out)
 
@@ -55,13 +55,13 @@ class CrossAttention(nn.Module):
 
     # here masks are pad_masks. causal mask is not needed in cross-attention
     def forward(self, content, q_x, kv_mask,q_mask): # usually k and va come from the same encode so we only use one input "content"
-        # k_x: [B_kv, T_kv, D_kv]
-        # q_x: [B_q, T_q, D_q]
+        # content: [B_kv, T_kv, d_kv]
+        # q_x: [B_q, T_q, d_q]
         # kv_mask: [B_kv, T_kv]
         # q_mask: [B_q, T_q]
         B_kv, _, D_kv = content.shape
         B_q, _, D_q = q_x.shape
-        assert B_kv == B_q and D_kv == self.d_kv and D_q == self.d_q
+        assert B_kv == B_q and D_kv == self.d_kv and D_q == self.d_q # B_kv = B_q == B
 
         # transform to n_model
         k_x = self.k_proj(content)
@@ -69,7 +69,7 @@ class CrossAttention(nn.Module):
         q_x = self.q_proj(q_x)
         
         # build a combined mask
-        pad_mask = q_mask.unsqueeze(-1) @ kv_mask.unsqueeze(-2) #[B_q, T_q] @ [B_k,T_kv] -> [B_q, T_q, T_kv]
+        pad_mask = q_mask.unsqueeze(-1) @ kv_mask.unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
         combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
 
         return self._dot_product(k_x, v_x, q_x, combined_mask)

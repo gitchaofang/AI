@@ -3,13 +3,18 @@ from torch import nn
 
 
 class MultimodalGPT(nn.Module):
-    def __init__(self,vit, gpt, is_prefill=False, is_generate=False):
+    def __init__(self,vit, gpt,):
         super().__init__()
         self.vit = vit
         self.gpt = gpt
-        self.is_prefill=is_prefill
-        self.is_generate=is_generate
-    def forward(self, patch_items, text_x, text_pad_mask, text_positions):
+
+    def forward(self, 
+                patch_items, 
+                text_x, 
+                text_pad_mask, 
+                text_positions,
+                is_prefill=False, 
+                is_generate=False):
         '''
         text_x: [B, T_q]
         text_pad_mask: [B, T_q]
@@ -30,7 +35,7 @@ class MultimodalGPT(nn.Module):
             pad_mask=text_pad_mask,
             positions=text_positions,
             content=content,
-            is_prefill=self.is_prefill,
-            is_generate=self.is_generate
+            is_prefill=is_prefill,
+            is_generate=is_generate
         )
         return logits

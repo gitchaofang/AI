@@ -47,9 +47,9 @@ class PaddingCollator:
 
         for i, item in enumerate(batch):
             length = len(item["input_ids"])
-            input_ids[i][:length] = batch[i]["input_ids"]
-            label_ids[i][:length] = batch[i]["labels"]
-            pad_mask[i][:length] = 1
+            input_ids[i,:length] = batch[i]["input_ids"]
+            label_ids[i,:length] = batch[i]["labels"]
+            pad_mask[i,:length] = 1
 
         return {
             "input_ids": input_ids,
@@ -68,7 +68,6 @@ class VitCollator:
     def __call__(self, batch):
         batch_size = len(batch)
         max_len_patch = max(len(x["patches"]) for x in batch)
-        max_len_text = max(len(x["meta_data"]["caption"]) for x in batch)
         patch_d = vit_config["data"]["in_channels"]*vit_config["data"]["patch_size"]*vit_config["data"]["patch_size"]
 
         patched_input = torch.full(

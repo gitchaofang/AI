@@ -98,7 +98,6 @@ class SelfAttention(nn.Module):
         dim_start = 0
 
         for m, rope_dim in enumerate(self.rope_dims):
-
             dim_end = dim_start + rope_dim
 
             # Features assigned to positional dimension m

@@ -29,8 +29,6 @@ class SelfAttention(nn.Module):
         self.max_seq_len = max_seq_len
         self.head_dim = d_model // n_heads
         self.cls_enabled = cls_enabled
-        if self.cls_enabled:
-            max_seq_len += 1
 
         # M-rope config
         self.rope_dims = rope_dims

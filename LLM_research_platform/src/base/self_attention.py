@@ -13,7 +13,7 @@ class SelfAttention(nn.Module):
     def __init__(self, 
         d_model: int, 
         n_heads: int, 
-        max_seq_len: int, 
+        max_seq_len: int, # this max_seq_len does not includ cls
         rope_dims, 
         RoPE=True, 
         pad_token=0, 
@@ -29,6 +29,8 @@ class SelfAttention(nn.Module):
         self.max_seq_len = max_seq_len
         self.head_dim = d_model // n_heads
         self.cls_enabled = cls_enabled
+        if self.cls_enabled:
+            max_seq_len += 1
 
         # M-rope config
         self.rope_dims = rope_dims
@@ -57,6 +59,7 @@ class SelfAttention(nn.Module):
             mask.view(1, 1, self.max_seq_len, self.max_seq_len),
         )
 
+        # for generation
         self.kv_cache = None
         self.kv_mask = None
         self.kv_positions = None
@@ -146,18 +149,18 @@ class SelfAttention(nn.Module):
         return out
 
     
-    def _attention(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q, T_k]
+    def _attention(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q,T_kv]
         B, _, T_q, _ = q.shape
         
-        scores = q @ k.transpose(-1, -2)
+        scores = q @ k.transpose(-1, -2) #[B,H,T_q,T_kv]
         scores = scores / math.sqrt(self.head_dim)
         scores = scores.masked_fill(combined_mask == 0, -1e10)
 
         attention = torch.softmax(scores, dim=-1)
-
         # dropout on attention
         attention = self.atten_dropout(attention)
-        out = attention @ v
+
+        out = attention @ v #[B,H,T_q,head_dim]
         out = out.transpose(1, 2).contiguous().view(B, T_q, self.d_model)
 
         out = self.out_proj(out)

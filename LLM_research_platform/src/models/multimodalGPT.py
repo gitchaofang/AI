@@ -19,8 +19,8 @@ class MultimodalGPT(nn.Module):
         text_x: [B, T_q]
         text_pad_mask: [B, T_q]
         patch_items:
-            "patched_input": [B, T_q, in_channel * patch_size * patch_size]
-            "pad_mask_patch": [B, T_q, 2]
+            "patched_input": [B, T_kv, in_channel * patch_size * patch_size]
+            "pad_mask_patch": [B, T_kv]
         encoder_out:
             "patch_seq": patch_out: [B, T_kv, d_model_ca]
             "pad_mask": pad_mask_out: [B, T_kv]

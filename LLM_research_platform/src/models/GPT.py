@@ -102,14 +102,11 @@ class GPT(nn.Module):
         B, T_q = x.shape
 
         assert T_q <= self.max_seq_len
-
-        assert positions.ndim == 3, (
-            "positions must have shape [B, T, M]"
-        )
-
-        assert positions.shape[0] == B
-        assert positions.shape[1] == T_q
         if self.RoPE:
+            assert positions is not None
+            assert positions.ndim == 3, "positions must have shape [B, T, M]"
+            assert positions.shape[0] == B
+            assert positions.shape[1] == T_q
             assert positions.shape[2] == len(self.rope_dims)
 
         assert not (

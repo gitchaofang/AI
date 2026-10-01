@@ -7,6 +7,7 @@ class MultimodalGPT(nn.Module):
         super().__init__()
         self.vit = vit
         self.gpt = gpt
+        self.encoder_out = None
 
     def forward(self, 
                 patch_items, 
@@ -25,11 +26,12 @@ class MultimodalGPT(nn.Module):
             "patch_seq": patch_out: [B, T_kv, d_model_ca]
             "pad_mask": pad_mask_out: [B, T_kv]
         '''
-        encoder_out = self.vit(
-            patch_items=patch_items
-        )
-        content = {"patches": encoder_out["patch_seq"],
-                   "mask": encoder_out["pad_mask"]}
+        if (is_generate and self.encoder_out is None) or (not is_generate):
+            self.encoder_out = self.vit(
+                patch_items=patch_items
+            )
+        content = {"patches": self.encoder_out["patch_seq"],
+                   "mask": self.encoder_out["pad_mask"]}
         logits = self.gpt(
             x=text_x,
             pad_mask=text_pad_mask,

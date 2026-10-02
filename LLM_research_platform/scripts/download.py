@@ -38,7 +38,7 @@ if True:
                 continue
             type = file_name.split('.')[0].split('-')[1]
             # iterate over files inside .tar and update index_dict
-            with tarfile.open(file_name, "r") as tar:
+            with tarfile.open(file_path, "r") as tar:
                 for member in tar:
                     index_dict[file_name] = file_path
 

@@ -58,7 +58,6 @@ import traceback
 from google.colab import auth
 
 import google.auth
-from google.auth.transport.requests import Request
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -86,7 +85,7 @@ from googleapiclient.http import BatchHttpRequest
 #
 # ------------------------------------------------------------
 
-DRY_RUN = True
+DRY_RUN = False
 
 
 # ------------------------------------------------------------
@@ -1120,10 +1119,10 @@ def trash_batch(
     # Create Drive batch.
     # --------------------------------------------------------
 
-    batch = BatchHttpRequest(
-        callback=make_batch_callback(
-            state
-        )
+    batch = drive.new_batch_http_request(
+      callback=make_batch_callback(
+        state
+      )
     )
 
     # --------------------------------------------------------

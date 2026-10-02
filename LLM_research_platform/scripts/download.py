@@ -11,7 +11,7 @@ TRAIN_PATH = Path("/content/drive/MyDrive/protected/data/cc3m/training")
 VALIDATION_PATH= Path("/content/drive/MyDrive/protected/data/cc3m/validation")
 
 # step 1: download all ".tar" shards
-if True:
+if False:
     snapshot_download(
         repo_id="pixparse/cc3m-wds",
         repo_type="dataset",
@@ -23,7 +23,10 @@ if True:
     )
 
 # step 2: build index dict and seperate ".tar" files in training and validation files:
+cnt = 0
 if True:
     for file_path in SHARD_PATH.iterdir():
+        type = file_path.split('.')[0].split('-')[1]
+        num = file_path.split('.')[0].split('-')[2]
         if file_path.is_file():
-            print(file_path.name)
+            print(f"{type}{num}")

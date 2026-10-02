@@ -11,7 +11,7 @@ TRAIN_PATH = Path("/content/drive/MyDrive/protected/data/cc3m/training")
 VALIDATION_PATH= Path("/content/drive/MyDrive/protected/data/cc3m/validation")
 
 # step 1: download all ".tar" shards
-if False:
+if True:
     snapshot_download(
         repo_id="pixparse/cc3m-wds",
         repo_type="dataset",

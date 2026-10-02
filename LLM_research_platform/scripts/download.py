@@ -28,7 +28,7 @@ if True:
     for file_path in SHARD_PATH.iterdir():
         if file_path.is_file():
             file_name = file_path.name
-            if file_name.split('.')[1] is not "tar":
+            if file_name.split('.')[1] != "tar":
                 continue
             type = file_name.split('.')[0].split('-')[1]
             num = file_name.split('.')[0].split('-')[2]

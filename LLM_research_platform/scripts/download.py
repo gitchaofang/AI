@@ -27,7 +27,7 @@ cnt = 0
 if True:
     for file_path in SHARD_PATH.iterdir():
         file_name = file_path.name
-        type = file_name.split('.')[0]#.split('-')[1]
+        type = file_name.split('.')[0].split('-')[1]
         #num = file_name.split('.')[0].split('-')[2]
         if file_path.is_file():
             #print(f"{type}{num}")

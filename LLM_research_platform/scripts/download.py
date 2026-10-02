@@ -24,6 +24,12 @@ if False:
 
 # step 2: build index dict and seperate ".tar" files in training and validation files:
 cnt = 0
+index_dict = {} 
+'''
+index_dict:
+    key: file_name
+    value: file address
+'''
 if True:
     for file_path in SHARD_PATH.iterdir():
         if file_path.is_file():
@@ -31,5 +37,12 @@ if True:
             if file_name.split('.')[1] != "tar":
                 continue
             type = file_name.split('.')[0].split('-')[1]
-            num = file_name.split('.')[0].split('-')[2]
-            print(f"{type}{num}")
+            # iterate over files inside .tar and update index_dict
+            with tarfile.open(file_name, "r") as tar:
+                for member in tar:
+                    index_dict[file_name] = file_path
+
+    for key, value in index_dict:
+        print(f"{key}: {value}")
+             
+            

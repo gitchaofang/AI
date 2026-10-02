@@ -123,7 +123,7 @@ MAX_BACKOFF_SECONDS = 60.0
 # PROTECTED COLAB FOLDER
 # ------------------------------------------------------------
 
-PROTECTED_COLAB_FOLDER_NAME = "Colab Notebooks"
+PROTECTED_COLAB_FOLDER_NAME = "protected"
 
 
 # ------------------------------------------------------------
@@ -265,7 +265,7 @@ def ensure_credentials():
 #
 # ============================================================
 
-def find_colab_notebooks_folder():
+def find_protected_folder():
 
     print()
     print("=" * 70)
@@ -274,7 +274,7 @@ def find_colab_notebooks_folder():
 
     query = (
         "'root' in parents "
-        "and name = 'Colab Notebooks' "
+        "and name = 'protected' "
         "and mimeType = "
         "'application/vnd.google-apps.folder' "
         "and trashed = false"
@@ -365,7 +365,7 @@ def find_colab_notebooks_folder():
 # ============================================================
 
 COLAB_FOLDER_ID = (
-    find_colab_notebooks_folder()
+    find_protected_folder()
 )
 
 PROTECTED_IDS = set()

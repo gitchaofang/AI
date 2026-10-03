@@ -1,5 +1,6 @@
 from pathlib import Path
 import tarfile
+import shutil
 import time
 import json
 from google.colab import drive # only run in colab
@@ -43,12 +44,21 @@ if True:
             if file_path.suffix != ".tar":
                 continue
             print(f"{file_name}")
+
             # iterate over files inside .tar and update index_dict
             with tarfile.open(file_path, "r") as tar:
                 for member in tar:
                     if not member.isfile():
                         continue
                     index_dict[member.name] = file_name
+
+            # copy **-train-**.tar to training dir and **-validation-**.tar to validation dir
+            type = file_name.split['.'][0].split['-'][1]
+            if type == "train":
+                shutil.copy2(file_path, TRAIN_PATH)
+            elif type == "validation":
+                shutil.copy2(file_path, VALIDATION_PATH)
+
 
 #    for key, value in index_dict.items():
 #        print(f"{key}: {value}")

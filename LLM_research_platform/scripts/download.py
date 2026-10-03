@@ -50,7 +50,7 @@ if True:
                 for member in tar:
                     if not member.isfile():
                         continue
-                    index_dict[member.name] = file_name
+                    index_dict[member.name].split('.')[0] = file_name
 
             # copy **-train-**.tar to training dir and **-validation-**.tar to validation dir
             type = file_name.split('.')[0].split('-')[1]

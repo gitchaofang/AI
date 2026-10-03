@@ -53,7 +53,7 @@ if True:
                     index_dict[member.name] = file_name
 
             # copy **-train-**.tar to training dir and **-validation-**.tar to validation dir
-            type = file_name.split['.'][0].split['-'][1]
+            type = file_name.split('.')[0].split['-'][1]
             if type == "train":
                 shutil.copy2(file_path, TRAIN_PATH)
                 print(f"{file_name} is copied to {TRAIN_PATH}")

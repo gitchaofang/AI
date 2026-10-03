@@ -152,8 +152,9 @@ class ImageTextEncode(Dataset):
                 raise FileNotFoundError(f"{image_name} not found in {tar_path}")
             if text_file is None:
                 raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
-    
-            image = Image.open(BytesIO(image_file.read())).convert("RGB")
+
+            image_bytes = image_file.read()
+            image = Image.open(BytesIO(image_bytes)).convert("RGB")
             meta_data = json.loads(text_file.read().decode("utf-8"))
 
         # PIL → Tensor

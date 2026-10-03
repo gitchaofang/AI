@@ -39,8 +39,8 @@ if True:
         cnt += 1
         if(cnt >= 10):
             break 
+        file_name = file_path.name
         if file_path.is_file():
-            file_name = file_path.name
             if file_path.suffix != ".tar":
                 continue
             print(f"{file_name}")
@@ -56,8 +56,10 @@ if True:
             type = file_name.split['.'][0].split['-'][1]
             if type == "train":
                 shutil.copy2(file_path, TRAIN_PATH)
+                print(f"{file_name} is copied to {TRAIN_PATH}")
             elif type == "validation":
                 shutil.copy2(file_path, VALIDATION_PATH)
+                print(f"{file_name} is copied to {VALIDATION_PATH}")
 
 
 #    for key, value in index_dict.items():

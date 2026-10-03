@@ -33,7 +33,7 @@ index_dict:
 if True:
     for file_path in SHARD_PATH.iterdir():
         cnt += 1
-        if(cnt >= 100):
+        if(cnt >= 30):
             break 
         if file_path.is_file():
             file_name = file_path.name
@@ -47,7 +47,7 @@ if True:
                         continue
                     index_dict[member.name] = file_name
 
-    for key, value in index_dict:
+    for key, value in index_dict.item():
         print(f"{key}: {value}")
              
             

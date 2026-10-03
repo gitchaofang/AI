@@ -37,14 +37,15 @@ if True:
             break 
         if file_path.is_file():
             file_name = file_path.name
-            print(f"{file_name}")
-            if file_name.split('.')[1] != "tar":
+            if file_path.suffix != ".tar":
                 continue
-            type = file_name.split('.')[0].split('-')[1]
+            print(f"{file_name}")
             # iterate over files inside .tar and update index_dict
             with tarfile.open(file_path, "r") as tar:
                 for member in tar:
-                    index_dict[file_name] = file_path
+                    if not member.isfile():
+                        continue
+                    index_dict[member.name] = file_name
 
     for key, value in index_dict:
         print(f"{key}: {value}")

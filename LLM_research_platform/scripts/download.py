@@ -33,7 +33,7 @@ index_dict:
 if True:
     for file_path in SHARD_PATH.iterdir():
         cnt += 1
-        if(cnt >= 30):
+        if(cnt >= 10):
             break 
         if file_path.is_file():
             file_name = file_path.name

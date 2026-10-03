@@ -37,8 +37,6 @@ index_dict:
 if True:
     for file_path in SHARD_PATH.iterdir():
         cnt += 1
-        if(cnt >= 10):
-            break 
         file_name = file_path.name
         if file_path.is_file():
             if file_path.suffix != ".tar":

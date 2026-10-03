@@ -52,7 +52,8 @@ if True:
 
 #    for key, value in index_dict.items():
 #        print(f"{key}: {value}")
-    with open(INDEX_PATH,"w") as f:
+    index_dict_path = INDEX_PATH/"index.json"
+    with open(index_dict_path,"w") as f:
         json.dump(index_dict, f, indent=2)  
     print(f"Saved {len(index_dict)} entries to {INDEX_PATH}")   
             

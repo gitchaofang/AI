@@ -47,7 +47,7 @@ if True:
                         continue
                     index_dict[member.name] = file_name
 
-    for key, value in index_dict.item():
+    for key, value in index_dict.items():
         print(f"{key}: {value}")
              
             

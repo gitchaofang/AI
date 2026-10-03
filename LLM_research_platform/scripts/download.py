@@ -1,14 +1,17 @@
 from pathlib import Path
 import tarfile
 import time
+import json
 from google.colab import drive # only run in colab
 import tarfile
 from pathlib import Path
 from huggingface_hub import snapshot_download
 
 SHARD_PATH = Path("/content/drive/MyDrive/protected/data/cc3m/shards")
+INDEX_PATH = Path("/content/drive/MyDrive/protected/data/cc3m/")
 TRAIN_PATH = Path("/content/drive/MyDrive/protected/data/cc3m/training")
 VALIDATION_PATH= Path("/content/drive/MyDrive/protected/data/cc3m/validation")
+
 
 # step 1: download all ".tar" shards
 if False:
@@ -47,7 +50,9 @@ if True:
                         continue
                     index_dict[member.name] = file_name
 
-    for key, value in index_dict.items():
-        print(f"{key}: {value}")
-             
+#    for key, value in index_dict.items():
+#        print(f"{key}: {value}")
+    with open(INDEX_PATH,"w") as f:
+        json.dump(index_dict, f, indent=2)  
+    print(f"Saved {len(index_dict)} entries to {INDEX_PATH}")   
             

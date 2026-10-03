@@ -2,8 +2,7 @@ seed: 42
 device: auto
 
 data:
-  extracted_path: "/content/drive/MyDrive/VLM_DATA/CC3M/normal"
-  shared_path: "/content/drive/MyDrive/VLM_DATA/CC3M/shards"
+  data_path: "/content/drive/MyDrive/protected/data/cc3m/"
   patch_size: 16
   max_len: 512
   in_channels: 3

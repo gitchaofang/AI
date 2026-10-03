@@ -2,7 +2,9 @@ import torch
 import os
 import json
 import yaml
+import tarfile
 from PIL import Image
+from io import BytesIO
 from .helper import patchify
 from torchvision import transforms
 import numpy as np
@@ -105,42 +107,55 @@ COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
 
-EXTRACTED_PATH  = Path(vit_config["data"]["extracted_path"]) 
-SHARED_PATH = Path(vit_config["data"]["shared_path"])
-
 class ImageTextEncode(Dataset):
-    def __init__(self, file_dir=EXTRACTED_PATH, tokenizer = None, image_only = vit_config["data"]["image_only"]):
-        self.file_dir = Path(file_dir)
-        self.index_path = self.file_dir / "index.json"
+    def __init__(self, data_dir, tokenizer = None, image_only = vit_config["data"]["image_only"]):
+        self.data_dir = Path(data_dir)
+        self.index_path = self.data_dir/f"index.json"
         self.transform = transforms.ToTensor()
         self.image_only =  image_only
         self.tokenizer = tokenizer
-        self.max_len = 0
         assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
 
-        # Load existing index: [image name stems]
+        '''
+        Load index dict:
+            key: sample name
+            value: address in google drive
+        '''
+        
         if self.index_path.exists():
             with open(self.index_path, "r") as f:
-                self.stems = json.load(f)
+                index = json.load(f)
         # Build index if it doesn't exist
         else:
-            self.stems = []
-            for file_path in sorted(self.file_dir.glob("*.txt")):
-                self.stems.append(file_path.stem)
-            with open(self.index_path, "w") as f:
-                json.dump(self.stems, f)
+            raise FileNotFoundError(
+                f"Index file does not exist: {self.index_path}"
+            )
+        # build a list of tuples(file_name ("00015"), tar_file_name("cc3m-train_0565"))
+        self.id_tar_pair = list(index.items())
 
     def __len__(self):
-        return len(self.stems)
+        return len(self.id_tar_pair)
 
     def __getitem__(self, key):
-        assert 0 <= key < len(self.stems), f"key {key} is out of range"
-        stem = self.stems[key]
-        image_path = self.file_dir / f"{stem}.jpg"
-        meta_data_path = self.file_dir / f"{stem}.json"
+        assert 0 <= key < len(self.id_tar_pair), f"key {key} is out of range"
+        sample_id, tar_name = self.id_tar_pair[key]
+        tar_path = self.data_dir / "training" / tar_name
+        image_name = f"{sample_id}.jpg"
+        meta_data_name = f"{sample_id}.json"
 
-        # Load image
-        image = Image.open(image_path).convert("RGB")
+        # Load image and meta_data
+        with tarfile.open(tar_path, "r") as tar:
+            image_file = tar.extractfile(image_name)
+            text_file = tar.extractfile(meta_data_name)
+            # Check if any of image_file and text_file is None
+            if image_file is None:
+                raise FileNotFoundError(f"{image_name} not found in {tar_path}")
+            if text_file is None:
+                raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
+    
+            image = Image.open(BytesIO(image_file.read())).convert("RGB")
+            meta_data = json.loads(text_file.read().decode("utf-8"))
+
         # PIL → Tensor
         image = self.transform(image)
         patchify_res = patchify(image = image) 
@@ -148,27 +163,17 @@ class ImageTextEncode(Dataset):
         # images
         patches = patchify_res["patches"]          # [N,  C * patch_size * patch_size]
         patch_positions = patchify_res["positions"]   # [N, 2]
-
-        # meta data
-        with open(meta_data_path, "r") as f:
-            meta_data = json.load(f)
-
-        # calcualte the max_len
-        width = meta_data["width"]
-        heigth = meta_data["heigth"]
-        patch_size = vit_config["data"]["patch_size"]
-        patch_len = (width / patch_size + 1) * (heigth / patch_size + 1)
-        self.mex_len = max(self.len, patch_len)
                                 
-         # process text
+        # process text
         if not self.image_only:
             text = meta_data["caption"]
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
+            caption_ids = torch.tensor(all_tokens,dtype=torch.int64)
             return {
                 "patches": patches,            # [N, C * patch_size * patch_size]
                 "patch_positions": patch_positions,    # [N, 2]
-                "caption_ids": all_tokens,     # [len(all_tokens)]
+                "caption_ids": caption_ids,     # [len(all_tokens)]
                 "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
             }
 
@@ -179,9 +184,8 @@ class ImageTextEncode(Dataset):
             "meta_data": meta_data, #json: "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
         } 
     def get_length(self):
-        return len(self.stems)
-    def sample_max_len(self):
-        return self.max_len
+        return len(self.id_tar_pair)
+    
     """
     these are the data shape before going to the model:
         patched_input: [B, N_max, C*P*P]

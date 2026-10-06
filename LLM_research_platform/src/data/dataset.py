@@ -3,6 +3,7 @@ import os
 import json
 import yaml
 import tarfile
+import shutil
 from PIL import Image
 from io import BytesIO
 from .helper import patchify
@@ -143,25 +144,80 @@ class ImageTextEncode(Dataset):
         image_name = f"{sample_id}.jpg"
         meta_data_name = f"{sample_id}.json"
 
-        # Load image and meta_data
-        with tarfile.open(tar_path, "r") as tar:
-            image_file = tar.extractfile(image_name)
-            text_file = tar.extractfile(meta_data_name)
-            # Check if any of image_file and text_file is None
-            if image_file is None:
-                raise FileNotFoundError(f"{image_name} not found in {tar_path}")
-            if text_file is None:
-                raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
+        '''
+            Load image and metadata with 3 options (only one will be applied):
+                1. check if image and metadata can be loaded from colab cache
+                2. check if image and metadata can be loaded from google drive cach
+                3. It not cached, extract them from .tar shard
+        '''
+        # colab cache dir info:
+        colab_cache_path = Path("content/cache")
+        colab_cache_path.mkdir(parents=True, exist_ok=True)
+        total_colab, used_colab, free_colab = shutil.disk_usage(colab_cache_path)
+        total_colab /= 1024 ** 3
+        used_colab /= 1024 ** 3
+        free_colab /= 1024 ** 3
+        # google drive cache dir info
+        drive_cache_path = self.data_dir / "cache"
+        total_drive, used_drive, free_drive = shutil.disk_usage(drive_cache_path)
+        total_drive /= 1024 ** 3
+        used_drive /= 1024 ** 3
+        free_drive /= 1024 ** 3
+        
+        # Option 1: check if image and metadata can be loaded from colab cache
+        colab_image_path = colab_cache_path/f"{image_name}"
+        colab_meta_path = colab_cache_path/f"{meta_data_name}"
+        drive_image_path = drive_cache_path/f"{image_name}"
+        drive_meta_path = drive_cache_path/f"{meta_data_name}"
+        if colab_image_path.exists:
+            # Option 2: check if image and metadata can be loaded from google drive cache
+            with open(colab_image_path, "rb") as f:
+                image = Image.open(f).convert("RGB")
+            with open(colab_meta_path, "r") as f:
+                meta_data = json.load(f)
+        elif drive_image_path.exists:
+            # Option 1: check if image and metadata can be loaded from colab cache
+            with open(drive_image_path, "rb") as f:
+                image = Image.open(f).convert("RGB")
+            with open(drive_meta_path, "r") as f:
+                meta_data = json.load(f)
+        else:
+            # Option3: Load image and meta_data
+            with tarfile.open(tar_path, "r") as tar:
+                image_file = tar.extractfile(image_name)
+                text_file = tar.extractfile(meta_data_name)
+                # Check if any of image_file and text_file is None
+                if image_file is None:
+                    raise FileNotFoundError(f"{image_name} not found in {tar_path}")
+                if text_file is None:
+                    raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
+                
+                # read image
+                image_bytes = image_file.read()
+                image = Image.open(BytesIO(image_bytes)).convert("RGB")
+                # read matadata
+                meta_data = json.loads(text_file.read().decode("utf-8"))
 
-            image_bytes = image_file.read()
-            image = Image.open(BytesIO(image_bytes)).convert("RGB")
-            meta_data = json.loads(text_file.read().decode("utf-8"))
+                # cache image and metadata. Leave 50G on each disk
+                if free_colab > 50:
+                    with open(colab_image_path, "wb") as f:
+                        f.write(image_bytes)
+                    with open(colab_meta_path, "w") as f:
+                        json.dump(meta_data,f,indent=2)
+                elif free_drive > 50:
+                    with open(drive_image_path, "wb") as f:
+                        f.write(image_bytes)
+                    with open(drive_meta_path, "w") as f:
+                        json.dump(meta_data,f,indent=2)
 
-        # PIL → Tensor
+
+        '''
+            Read and patchfy image
+            Process text caption
+        '''
         image = self.transform(image)
+        # pachify
         patchify_res = patchify(image = image) 
-
-        # images
         patches = patchify_res["patches"]          # [N,  C * patch_size * patch_size]
         patch_positions = patchify_res["positions"]   # [N, 2]
                                 

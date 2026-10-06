@@ -110,7 +110,7 @@ with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
 
 class ImageTextEncode(Dataset):
-    def __init__(self, data_dir, tokenizer = None, image_only = vit_config["data"]["image_only"]):
+    def __init__(self, data_dir, tokenizer = None, image_only = vit_config["data"]["image_only"],for_training=True):
         self.data_dir = Path(data_dir)
         self.index_path = self.data_dir/f"index.json"
         self.transform = transforms.ToTensor()
@@ -120,6 +120,7 @@ class ImageTextEncode(Dataset):
         self.colab_cache_path.mkdir(parents=True, exist_ok=True)
         self.drive_cache_path = self.data_dir / "cache"
         self.drive_cache_path.mkdir(parents=True, exist_ok=True)
+        self.for_training = for_training
         assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
 
         '''
@@ -145,7 +146,11 @@ class ImageTextEncode(Dataset):
     def __getitem__(self, key):
         assert 0 <= key < len(self.id_tar_pair), f"key {key} is out of range"
         sample_id, tar_name = self.id_tar_pair[key]
-        tar_path = self.data_dir / "training" / tar_name
+        if self.for_training:
+            tar_path = self.data_dir / "training" / tar_name
+        else:
+            tar_path = self.data_dir / "validation" / tar_name
+
         image_name = f"{sample_id}.jpg"
         meta_data_name = f"{sample_id}.json"
 
@@ -188,17 +193,19 @@ class ImageTextEncode(Dataset):
                 image_bytes = image_file.read()
                 image = Image.open(BytesIO(image_bytes)).convert("RGB")
                 # read matadata
-                meta_data = json.loads(text_file.read().decode("utf-8"))
+                meta_data = meta_data = json.load(text_file)
 
                  # Free disk space on colab (G) 
                 free_colab = shutil.disk_usage(self.colab_cache_path).free / 1024**3
 
                 # cache image and metadata. Leave 50G on each disk
-                if free_colab > CACHE_RESERVE_GB:
+                required_gb = (len(image_bytes)) / 1024**3
+
+                if free_colab - required_gb > CACHE_RESERVE_GB:
                     with open(colab_image_path, "wb") as f:
                         f.write(image_bytes)
                     with open(colab_meta_path, "w") as f:
-                        json.dump(meta_data,f,indent=2)
+                        json.dump(meta_data,f)
                 else:
                     # Free disk space on google drive (G) 
                     free_drive = shutil.disk_usage(self.drive_cache_path).free / 1024**3
@@ -206,7 +213,7 @@ class ImageTextEncode(Dataset):
                         with open(drive_image_path, "wb") as f:
                             f.write(image_bytes)
                         with open(drive_meta_path, "w") as f:
-                            json.dump(meta_data,f,indent=2)
+                            json.dump(meta_data,f)
 
 
         '''

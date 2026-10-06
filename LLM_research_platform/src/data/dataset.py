@@ -115,6 +115,10 @@ class ImageTextEncode(Dataset):
         self.transform = transforms.ToTensor()
         self.image_only =  image_only
         self.tokenizer = tokenizer
+        self.colab_cache_path = Path("/content/cache")
+        self.colab_cache_path.mkdir(parents=True, exist_ok=True)
+        self.drive_cache_path = self.data_dir / "cache"
+        self.drive_cache_path.mkdir(parents=True, exist_ok=True)
         assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
 
         '''
@@ -150,25 +154,23 @@ class ImageTextEncode(Dataset):
                 2. check if image and metadata can be loaded from google drive cach
                 3. It not cached, extract them from .tar shard
         '''
+        
         # colab cache dir info:
-        colab_cache_path = Path("content/cache")
-        colab_cache_path.mkdir(parents=True, exist_ok=True)
-        total_colab, used_colab, free_colab = shutil.disk_usage(colab_cache_path)
+        total_colab, used_colab, free_colab = shutil.disk_usage(self.colab_cache_path)
         total_colab /= 1024 ** 3
         used_colab /= 1024 ** 3
         free_colab /= 1024 ** 3
         # google drive cache dir info
-        drive_cache_path = self.data_dir / "cache"
-        total_drive, used_drive, free_drive = shutil.disk_usage(drive_cache_path)
+        total_drive, used_drive, free_drive = shutil.disk_usage(self.drive_cache_path)
         total_drive /= 1024 ** 3
         used_drive /= 1024 ** 3
         free_drive /= 1024 ** 3
         
         # Option 1: check if image and metadata can be loaded from colab cache
-        colab_image_path = colab_cache_path/f"{image_name}"
-        colab_meta_path = colab_cache_path/f"{meta_data_name}"
-        drive_image_path = drive_cache_path/f"{image_name}"
-        drive_meta_path = drive_cache_path/f"{meta_data_name}"
+        colab_image_path = self.colab_cache_path/f"{image_name}"
+        colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
+        drive_image_path = self.drive_cache_path/f"{image_name}"
+        drive_meta_path = self.drive_cache_path/f"{meta_data_name}"
         if colab_image_path.exists():
             # Option 2: check if image and metadata can be loaded from google drive cache
             with open(colab_image_path, "rb") as f:

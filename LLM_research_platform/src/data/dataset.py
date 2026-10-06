@@ -155,18 +155,7 @@ class ImageTextEncode(Dataset):
                 2. check if image and metadata can be loaded from google drive cach
                 3. It not cached, extract them from .tar shard
         '''
-
-        # colab cache dir info:
-        total_colab, used_colab, free_colab = shutil.disk_usage(self.colab_cache_path)
-        total_colab /= 1024 ** 3
-        used_colab /= 1024 ** 3
-        free_colab /= 1024 ** 3
-        # google drive cache dir info
-        total_drive, used_drive, free_drive = shutil.disk_usage(self.drive_cache_path)
-        total_drive /= 1024 ** 3
-        used_drive /= 1024 ** 3
-        free_drive /= 1024 ** 3
-        
+ 
         # Option 1: check if image and metadata can be loaded from colab cache
         colab_image_path = self.colab_cache_path/f"{image_name}"
         colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
@@ -200,6 +189,17 @@ class ImageTextEncode(Dataset):
                 image = Image.open(BytesIO(image_bytes)).convert("RGB")
                 # read matadata
                 meta_data = json.loads(text_file.read().decode("utf-8"))
+
+                 # colab cache dir info:
+                total_colab, used_colab, free_colab = shutil.disk_usage(self.colab_cache_path)
+                total_colab /= 1024 ** 3
+                used_colab /= 1024 ** 3
+                free_colab /= 1024 ** 3
+                # google drive cache dir info
+                total_drive, used_drive, free_drive = shutil.disk_usage(self.drive_cache_path)
+                total_drive /= 1024 ** 3
+                used_drive /= 1024 ** 3
+                free_drive /= 1024 ** 3
 
                 # cache image and metadata. Leave 50G on each disk
                 if free_colab > CACHE_RESERVE_GB:

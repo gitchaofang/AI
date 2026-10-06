@@ -104,6 +104,7 @@ class TextDecodeDataset(Dataset): # for txt file
 # load config file
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
 COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
+CACHE_RESERVE_GB = 50
 # load yaml config
 with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
@@ -154,7 +155,7 @@ class ImageTextEncode(Dataset):
                 2. check if image and metadata can be loaded from google drive cach
                 3. It not cached, extract them from .tar shard
         '''
-        
+
         # colab cache dir info:
         total_colab, used_colab, free_colab = shutil.disk_usage(self.colab_cache_path)
         total_colab /= 1024 ** 3
@@ -201,12 +202,12 @@ class ImageTextEncode(Dataset):
                 meta_data = json.loads(text_file.read().decode("utf-8"))
 
                 # cache image and metadata. Leave 50G on each disk
-                if free_colab > 50:
+                if free_colab > CACHE_RESERVE_GB:
                     with open(colab_image_path, "wb") as f:
                         f.write(image_bytes)
                     with open(colab_meta_path, "w") as f:
                         json.dump(meta_data,f,indent=2)
-                elif free_drive > 50:
+                elif free_drive > CACHE_RESERVE_GB:
                     with open(drive_image_path, "wb") as f:
                         f.write(image_bytes)
                     with open(drive_meta_path, "w") as f:

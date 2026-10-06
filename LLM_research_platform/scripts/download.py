@@ -53,8 +53,8 @@ if True:
         if file_path.is_file():
             if file_path.suffix != ".tar":
                 continue
-            print(f"{file_name}")
             shard_type = file_name.split('.')[0].split('-')[1]
+            print(f"{file_name}, type: {shard_type}")
             # iterate over files inside .tar and update index_dict
             with tarfile.open(file_path, "r") as tar:
                 for member in tar:
@@ -62,7 +62,7 @@ if True:
                         continue
 
                     # for metadata
-                    if member.name.endswith(".json"):
+                    if member.name.endswith(".jpg"):
                         # update index dictionaries
                         sample_id = Path(member.name).stem
                         index_dict[sample_id] = file_name
@@ -71,7 +71,7 @@ if True:
                             index_dict_train[sample_id] = file_name
                         elif shard_type == "validation":
                             index_dict_valid[sample_id] = file_name
-
+                    elif member.name.endswith(".json"): # Only training shards have .json files.
                         cnt += 1
                         with tar.extractfile(member) as f:
                             data = json.load(f)
@@ -100,19 +100,19 @@ if True:
         # store over all index
         index_dict_path = INDEX_PATH/"index.json"
         with open(index_dict_path,"w") as f:
-            json.dump(index_dict, f, indent=2)  
+            json.dump(index_dict, f)  
         print(f"Saved {len(index_dict)} entries to {INDEX_PATH}")
 
         # store index for training data
         index_dict_train_path = TRAIN_PATH/"index.json"
         with open(index_dict_train_path,"w") as f:
-            json.dump(index_dict_train, f, indent=2)  
+            json.dump(index_dict_train, f)  
         print(f"Saved {len(index_dict_train)} entries to {TRAIN_PATH}")
 
         # store index for validation
         index_dict_valid_path = VALIDATION_PATH/"index.json"
         with open(index_dict_valid_path,"w") as f:
-            json.dump(index_dict_valid, f, indent=2)  
+            json.dump(index_dict_valid, f)  
         print(f"Saved {len(index_dict_valid)} entries to {VALIDATION_PATH}")  
     # Store metadata:
     if True:

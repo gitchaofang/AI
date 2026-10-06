@@ -1,9 +1,7 @@
 from pathlib import Path
 import tarfile
 import shutil
-import time
 import json
-from google.colab import drive # only run in colab
 from huggingface_hub import snapshot_download
 
 INDEX_PATH = Path("/content/drive/MyDrive/protected/data/cc3m/")
@@ -64,15 +62,17 @@ if True:
                     if not member.isfile():
                         continue
 
-                    # update index dictionaries
-                    index_dict[member.name.split('.')[0]] = file_name
-                    if shard_type == "train":
-                        index_dict_train[member.name.split('.')[0]] = file_name
-                    elif shard_type == "validation":
-                        index_dict_valid[member.name.split('.')[0]] = file_name
-                    
                     # for metadata
                     if member.name.endswith(".json"):
+                        # update index dictionaries
+                        sample_id = Path(member.name).stem
+                        index_dict[sample_id] = file_name
+
+                        if shard_type == "train":
+                            index_dict_train[sample_id] = file_name
+                        elif shard_type == "validation":
+                            index_dict_valid[sample_id] = file_name
+
                         cnt += 1
                         with tar.extractfile(member) as f:
                             data = json.load(f)
@@ -98,22 +98,27 @@ if True:
 #    for key, value in index_dict.items():
 #        print(f"{key}: {value}")
     if True:
+        # store over all index
         index_dict_path = INDEX_PATH/"index.json"
         with open(index_dict_path,"w") as f:
             json.dump(index_dict, f, indent=2)  
         print(f"Saved {len(index_dict)} entries to {INDEX_PATH}")
+
+        # store index for training data
         index_dict_train_path = TRAIN_PATH/"index.json"
-        with open(index_dict_path,"w") as f:
+        with open(index_dict_train_path,"w") as f:
             json.dump(index_dict, f, indent=2)  
         print(f"Saved {len(index_dict_train)} entries to {TRAIN_PATH}")
+
+        # store index for validation
         index_dict_valid_path = VALIDATION_PATH/"index.json"
         with open(index_dict_valid_path,"w") as f:
             json.dump(index_dict_valid, f, indent=2)  
-        print(f"Saved {len(index_dict_train)} entries to {VALIDATION_PATH}")  
+        print(f"Saved {len(index_dict_valid)} entries to {VALIDATION_PATH}")  
     # Store metadata:
     if True:
         meta_dict = {
-            "total samples": cnt // 3,
+            "total samples": cnt,
             "max_len_patch": max_len_patch,
             "max_len_text": max_len_text,
         }

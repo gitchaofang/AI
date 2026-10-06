@@ -169,13 +169,13 @@ class ImageTextEncode(Dataset):
         colab_meta_path = colab_cache_path/f"{meta_data_name}"
         drive_image_path = drive_cache_path/f"{image_name}"
         drive_meta_path = drive_cache_path/f"{meta_data_name}"
-        if colab_image_path.exists:
+        if colab_image_path.exists():
             # Option 2: check if image and metadata can be loaded from google drive cache
             with open(colab_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")
             with open(colab_meta_path, "r") as f:
                 meta_data = json.load(f)
-        elif drive_image_path.exists:
+        elif drive_image_path.exists():
             # Option 1: check if image and metadata can be loaded from colab cache
             with open(drive_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")

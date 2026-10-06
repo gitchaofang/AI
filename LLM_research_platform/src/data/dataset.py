@@ -175,79 +175,95 @@ class ImageTextEncode(Dataset):
             colab_text_path = self.colab_cache_path/f"{text_data_name}"
             drive_text_path = self.drive_cache_path/f"{text_data_name}"
 
-        if (colab_image_path.is_file()):
-            # Option 1: check if image and metadata can be loaded from colab cache
+        # -------------------------------------------------
+        # Determine cache hits
+        # -------------------------------------------------
+        if shard_type == "train":
+            colab_cache_hit = (colab_image_path.is_file() and colab_meta_path.is_file())
+            drive_cache_hit = (drive_image_path.is_file() and drive_meta_path.is_file())
+        elif shard_type == "validation":
+            colab_cache_hit = (colab_image_path.is_file() and colab_text_path.is_file())
+            drive_cache_hit = (drive_image_path.is_file() and drive_text_path.is_file())
+
+        # -------------------------------------------------
+        # Option 1: Colab cache
+        # -------------------------------------------------
+        if colab_cache_hit:
             with open(colab_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")
-            if shard_type == "train" and colab_meta_path.is_file():
+            if shard_type == "train":
                 with open(colab_meta_path, "r") as f:
                     meta_data = json.load(f)
-            elif shard_type == "validation" and colab_text_path.is_file():
+            elif shard_type == "validation":
                 with open(colab_text_path, "r", encoding="utf-8") as f:
-                    text_data = f.read(f)
-        elif (drive_image_path.is_file()):
-            # Option 2: check if image and metadata can be loaded from google drive cache
+                    text_data = f.read()
+        # -------------------------------------------------
+        # Option 2: Google Drive cache
+        # -------------------------------------------------
+        elif drive_cache_hit:
             with open(drive_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")
-            if shard_type == "train" and drive_meta_path.is_file():
+            if shard_type == "train":
                 with open(drive_meta_path, "r") as f:
                     meta_data = json.load(f)
-            elif shard_type == "validation" and drive_text_path.is_file():
+            elif shard_type == "validation":
                 with open(drive_text_path, "r", encoding="utf-8") as f:
                     text_data = f.read()
+        # -------------------------------------------------
+        # Option 3: Load from .tar
+        # -------------------------------------------------
         else:
-            # Option3: Load image and meta_data
             with tarfile.open(tar_path, "r") as tar:
                 image_file = tar.extractfile(image_name)
                 if shard_type == "train":
                     meta_file = tar.extractfile(meta_data_name)
                 elif shard_type == "validation":
                     text_file = tar.extractfile(text_data_name)
-                # Check if any of image_file and text_file is None
+                # Check if any of image_file and
+                # text_file is None
                 if image_file is None:
                     raise FileNotFoundError(f"{image_name} not found in {tar_path}")
-                if shard_type == "train" and meta_file is None:
+                if (shard_type == "train" and meta_file is None):
                     raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
-                elif shard_type == "validatin" and text_file is None:
+                elif (shard_type == "validation"and text_file is None):
                     raise FileNotFoundError(f"{text_data_name} not found in {tar_path}")
                 
                 # read image
                 image_bytes = image_file.read()
                 image = Image.open(BytesIO(image_bytes)).convert("RGB")
-                # read matadata or txt
+
+                # read metadata or txt
                 if shard_type == "train":
                     meta_data = json.load(meta_file)
                 elif shard_type == "validation":
-                    text_data = text_file.read().decode("utf-8")
+                    text_data = (text_file.read().decode("utf-8"))
+                # Free disk space on colab (G)
+                free_colab = (shutil.disk_usage(self.colab_cache_path).free / 1024**3)
 
-                 # Free disk space on colab (G) 
-                free_colab = shutil.disk_usage(self.colab_cache_path).free / 1024**3
-
-                # cache image and metadata. Leave 50G on each disk
-                required_gb = (len(image_bytes)) / 1024**3
-
-                if free_colab - required_gb > CACHE_RESERVE_GB:
-                    with open(colab_image_path, "wb") as f:
+                # cache image and metadata.
+                # Leave 50G on each disk
+                required_gb = (len(image_bytes) / 1024**3)
+                if (free_colab - required_gb > CACHE_RESERVE_GB):
+                    with open(colab_image_path,"wb") as f:
                         f.write(image_bytes)
                     if shard_type == "train":
                         with open(colab_meta_path, "w") as f:
                             json.dump(meta_data,f)
                     elif shard_type == "validation":
-                        with open(colab_text_path, "w", encoding="utf-8") as f:
+                        with open(colab_text_path, "w",encoding="utf-8") as f:
                             f.write(text_data)
                 else:
-                    # Free disk space on google drive (G) 
-                    free_drive = shutil.disk_usage(self.drive_cache_path).free / 1024**3
+                    # Free disk space on google drive (G)
+                    free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
                     if free_drive > CACHE_RESERVE_GB:
-                        with open(drive_image_path, "wb") as f:
+                        with open(drive_image_path,"wb") as f:
                             f.write(image_bytes)
                         if shard_type == "train":
                             with open(drive_meta_path, "w") as f:
                                 json.dump(meta_data,f)
                         elif shard_type == "validation":
-                            with open(drive_text_path, "w", encoding="utf-8") as f:
+                            with open(drive_text_path,"w",encoding="utf-8") as f:
                                 f.write(text_data)
-
 
         '''
             Read and patchfy image

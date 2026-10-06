@@ -161,13 +161,13 @@ class ImageTextEncode(Dataset):
         colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
         drive_image_path = self.drive_cache_path/f"{image_name}"
         drive_meta_path = self.drive_cache_path/f"{meta_data_name}"
-        if colab_image_path.exists():
+        if (colab_image_path.is_file() and colab_meta_path.is_file()):
             # Option 2: check if image and metadata can be loaded from google drive cache
             with open(colab_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")
             with open(colab_meta_path, "r") as f:
                 meta_data = json.load(f)
-        elif drive_image_path.exists():
+        elif (drive_image_path.is_file() and drive_meta_path.is_file()):
             # Option 1: check if image and metadata can be loaded from colab cache
             with open(drive_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")
@@ -192,8 +192,6 @@ class ImageTextEncode(Dataset):
 
                  # Free disk space on colab (G) 
                 free_colab = shutil.disk_usage(self.colab_cache_path).free / 1024**3
-                # Free disk space on google drive (G) 
-                free_drive = shutil.disk_usage(self.drive_cache_path).free / 1024**3
 
                 # cache image and metadata. Leave 50G on each disk
                 if free_colab > CACHE_RESERVE_GB:
@@ -201,11 +199,14 @@ class ImageTextEncode(Dataset):
                         f.write(image_bytes)
                     with open(colab_meta_path, "w") as f:
                         json.dump(meta_data,f,indent=2)
-                elif free_drive > CACHE_RESERVE_GB:
-                    with open(drive_image_path, "wb") as f:
-                        f.write(image_bytes)
-                    with open(drive_meta_path, "w") as f:
-                        json.dump(meta_data,f,indent=2)
+                else:
+                    # Free disk space on google drive (G) 
+                    free_drive = shutil.disk_usage(self.drive_cache_path).free / 1024**3
+                    if free_drive > CACHE_RESERVE_GB:
+                        with open(drive_image_path, "wb") as f:
+                            f.write(image_bytes)
+                        with open(drive_meta_path, "w") as f:
+                            json.dump(meta_data,f,indent=2)
 
 
         '''

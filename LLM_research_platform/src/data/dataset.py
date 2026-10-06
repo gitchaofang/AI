@@ -146,13 +146,17 @@ class ImageTextEncode(Dataset):
     def __getitem__(self, key):
         assert 0 <= key < len(self.id_tar_pair), f"key {key} is out of range"
         sample_id, tar_name = self.id_tar_pair[key]
+        shard_type = tar_name.split('.')[0].split('-')[1]
         if self.for_training:
             tar_path = self.data_dir / "training" / tar_name
         else:
             tar_path = self.data_dir / "validation" / tar_name
 
         image_name = f"{sample_id}.jpg"
-        meta_data_name = f"{sample_id}.json"
+        if shard_type == "train":
+            meta_data_name = f"{sample_id}.json"
+        elif shard_type == "validation":
+            text_data_name = f"{sample_id}.txt"
 
         '''
             Load image and metadata with 3 options (only one will be applied):
@@ -163,37 +167,58 @@ class ImageTextEncode(Dataset):
  
         # Option 1: check if image and metadata can be loaded from colab cache
         colab_image_path = self.colab_cache_path/f"{image_name}"
-        colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
         drive_image_path = self.drive_cache_path/f"{image_name}"
-        drive_meta_path = self.drive_cache_path/f"{meta_data_name}"
-        if (colab_image_path.is_file() and colab_meta_path.is_file()):
-            # Option 2: check if image and metadata can be loaded from google drive cache
+        if shard_type == "train":
+            colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
+            drive_meta_path = self.drive_cache_path/f"{meta_data_name}"
+        elif shard_type == "validation":
+            colab_text_path = self.colab_cache_path/f"{text_data_name}"
+            drive_text_path = self.drive_cache_path/f"{text_data_name}"
+
+        if (colab_image_path.is_file()):
+            # Option 1: check if image and metadata can be loaded from colab cache
             with open(colab_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")
-            with open(colab_meta_path, "r") as f:
-                meta_data = json.load(f)
-        elif (drive_image_path.is_file() and drive_meta_path.is_file()):
-            # Option 1: check if image and metadata can be loaded from colab cache
+            if shard_type == "train" and colab_meta_path.is_file():
+                with open(colab_meta_path, "r") as f:
+                    meta_data = json.load(f)
+            elif shard_type == "validation" and colab_text_path.is_file():
+                with open(colab_text_path, "r", encoding="utf-8") as f:
+                    text_data = f.read(f)
+        elif (drive_image_path.is_file()):
+            # Option 2: check if image and metadata can be loaded from google drive cache
             with open(drive_image_path, "rb") as f:
                 image = Image.open(f).convert("RGB")
-            with open(drive_meta_path, "r") as f:
-                meta_data = json.load(f)
+            if shard_type == "train" and drive_meta_path.is_file():
+                with open(drive_meta_path, "r") as f:
+                    meta_data = json.load(f)
+            elif shard_type == "validation" and drive_text_path.is_file():
+                with open(drive_text_path, "r", encoding="utf-8") as f:
+                    text_data = f.read()
         else:
             # Option3: Load image and meta_data
             with tarfile.open(tar_path, "r") as tar:
                 image_file = tar.extractfile(image_name)
-                text_file = tar.extractfile(meta_data_name)
+                if shard_type == "train":
+                    meta_file = tar.extractfile(meta_data_name)
+                elif shard_type == "validation":
+                    text_file = tar.extractfile(text_data_name)
                 # Check if any of image_file and text_file is None
                 if image_file is None:
                     raise FileNotFoundError(f"{image_name} not found in {tar_path}")
-                if text_file is None:
+                if shard_type == "train" and meta_file is None:
                     raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
+                elif shard_type == "validatin" and text_file is None:
+                    raise FileNotFoundError(f"{text_data_name} not found in {tar_path}")
                 
                 # read image
                 image_bytes = image_file.read()
                 image = Image.open(BytesIO(image_bytes)).convert("RGB")
-                # read matadata
-                meta_data = meta_data = json.load(text_file)
+                # read matadata or txt
+                if shard_type == "train":
+                    meta_data = json.load(meta_file)
+                elif shard_type == "validation":
+                    text_data = text_file.read().decode("utf-8")
 
                  # Free disk space on colab (G) 
                 free_colab = shutil.disk_usage(self.colab_cache_path).free / 1024**3
@@ -204,16 +229,24 @@ class ImageTextEncode(Dataset):
                 if free_colab - required_gb > CACHE_RESERVE_GB:
                     with open(colab_image_path, "wb") as f:
                         f.write(image_bytes)
-                    with open(colab_meta_path, "w") as f:
-                        json.dump(meta_data,f)
+                    if shard_type == "train":
+                        with open(colab_meta_path, "w") as f:
+                            json.dump(meta_data,f)
+                    elif shard_type == "validation":
+                        with open(colab_text_path, "w", encoding="utf-8") as f:
+                            f.write(text_data)
                 else:
                     # Free disk space on google drive (G) 
                     free_drive = shutil.disk_usage(self.drive_cache_path).free / 1024**3
                     if free_drive > CACHE_RESERVE_GB:
                         with open(drive_image_path, "wb") as f:
                             f.write(image_bytes)
-                        with open(drive_meta_path, "w") as f:
-                            json.dump(meta_data,f)
+                        if shard_type == "train":
+                            with open(drive_meta_path, "w") as f:
+                                json.dump(meta_data,f)
+                        elif shard_type == "validation":
+                            with open(drive_text_path, "w", encoding="utf-8") as f:
+                                f.write(text_data)
 
 
         '''
@@ -228,22 +261,31 @@ class ImageTextEncode(Dataset):
                                 
         # process text
         if not self.image_only:
-            text = meta_data["caption"]
+            if shard_type == "train":
+                text = meta_data["caption"]
+            elif shard_type == "validation":
+                text = text_data
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
             caption_ids = torch.tensor(all_tokens,dtype=torch.int64)
-            return {
-                "patches": patches,            # [N, C * patch_size * patch_size]
-                "patch_positions": patch_positions,    # [N, 2]
-                "caption_ids": caption_ids,     # [len(all_tokens)]
-                "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
-            }
+            if shard_type == "train":
+                return {
+                    "patches": patches,            # [N, C * patch_size * patch_size]
+                    "patch_positions": patch_positions,    # [N, 2]
+                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                    "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
+                }
+            elif shard_type == "validation":
+                return {
+                    "patches": patches,            # [N, C * patch_size * patch_size]
+                    "patch_positions": patch_positions,    # [N, 2]
+                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                }
 
         # if only image is needed
         return {
             "patches": patches, #[N,C * patch_size * patch_size]
             "patch_positions": patch_positions, # [N, 2]
-            "meta_data": meta_data, #json: "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
         } 
     def get_length(self):
         return len(self.id_tar_pair)

@@ -50,12 +50,11 @@ max_len_text = 0
 if True:
     for file_path in SHARD_PATH.iterdir():
         file_name = file_path.name
-        shard_type = file_name.split('.')[0].split('-')[1]
         if file_path.is_file():
             if file_path.suffix != ".tar":
                 continue
             print(f"{file_name}")
-
+            shard_type = file_name.split('.')[0].split('-')[1]
             # iterate over files inside .tar and update index_dict
             with tarfile.open(file_path, "r") as tar:
                 for member in tar:

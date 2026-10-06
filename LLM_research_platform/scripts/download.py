@@ -53,7 +53,7 @@ if True:
         if file_path.is_file():
             if file_path.suffix != ".tar":
                 continue
-            shard_type = file_name.split('.')[0].split('-')[1]
+            shard_type = file_path.stem.split("-")[1]
             print(f"{file_name}, type: {shard_type}")
             # iterate over files inside .tar and update index_dict
             with tarfile.open(file_path, "r") as tar:

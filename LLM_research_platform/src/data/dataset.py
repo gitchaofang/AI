@@ -190,16 +190,10 @@ class ImageTextEncode(Dataset):
                 # read matadata
                 meta_data = json.loads(text_file.read().decode("utf-8"))
 
-                 # colab cache dir info:
-                total_colab, used_colab, free_colab = shutil.disk_usage(self.colab_cache_path)
-                total_colab /= 1024 ** 3
-                used_colab /= 1024 ** 3
-                free_colab /= 1024 ** 3
-                # google drive cache dir info
-                total_drive, used_drive, free_drive = shutil.disk_usage(self.drive_cache_path)
-                total_drive /= 1024 ** 3
-                used_drive /= 1024 ** 3
-                free_drive /= 1024 ** 3
+                 # Free disk space on colab (G) 
+                free_colab = shutil.disk_usage(self.colab_cache_path).free / 1024**3
+                # Free disk space on google drive (G) 
+                free_drive = shutil.disk_usage(self.drive_cache_path).free / 1024**3
 
                 # cache image and metadata. Leave 50G on each disk
                 if free_colab > CACHE_RESERVE_GB:

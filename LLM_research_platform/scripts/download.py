@@ -107,7 +107,7 @@ if True:
         # store index for training data
         index_dict_train_path = TRAIN_PATH/"index.json"
         with open(index_dict_train_path,"w") as f:
-            json.dump(index_dict, f, indent=2)  
+            json.dump(index_dict_train, f, indent=2)  
         print(f"Saved {len(index_dict_train)} entries to {TRAIN_PATH}")
 
         # store index for validation

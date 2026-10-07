@@ -59,7 +59,7 @@ class PaddingCollator:
         }
     
 class VitCollator:
-    def __init__(self, token_pad = 0, image_pad = 0.0, label_pad = -100, image_only = vit_config["data"]["image_only"], for_training = True):
+    def __init__(self, token_pad = 0, image_pad = 0.0, label_pad = -100, image_only = False, for_training = True):
         self.token_pad = token_pad
         self.label_pad = label_pad
         self.image_pad = image_pad
@@ -69,7 +69,7 @@ class VitCollator:
     def __call__(self, batch):
         batch_size = len(batch)
         max_len_patch = max(len(x["patches"]) for x in batch)
-        patch_d = vit_config["data"]["in_channels"]*vit_config["data"]["patch_size"]*vit_config["data"]["patch_size"]
+        patch_d = batch[0]["paches"].shape[2]
 
         patched_input = torch.full(
             (batch_size, max_len_patch, patch_d),
@@ -103,7 +103,6 @@ class VitCollator:
             dtype = torch.int64,
         )
 
-        
         if self.for_training:
             meta_data = [] # list of dict
 

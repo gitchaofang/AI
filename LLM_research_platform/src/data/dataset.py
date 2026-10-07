@@ -43,8 +43,6 @@ class TextDecodeDataset(Dataset): # for txt file
         self.token_path = self.index_dir / f"{stem}_{max_len}_tokens.bin"
         self.index_path = self.index_dir / f"{stem}_{max_len}_index.npy"
 
-
-
         with open(read_path, "r", encoding="utf-8") as f:
             self.text = f.read()
         if not (os.path.exists(self.token_path) and os.path.exists(self.index_path)):
@@ -306,14 +304,16 @@ class ImageDataset(Dataset):
                 return {
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
-                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                    "caption_ids": caption_ids[:-1],     # [len(all_tokens) - 1]
+                    "caption_label": caption_ids[1:,],   # [len(all_tokens) - 1]
                     "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
                 }
             elif shard_type == "validation":
                 return {
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
-                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                    "caption_ids": caption_ids[:-1],     # [len(all_tokens) - 1]
+                    "caption_label": caption_ids[1:,],   # [len(all_tokens) - 1]
                 }
 
         # if only image is needed

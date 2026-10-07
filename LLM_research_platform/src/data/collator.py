@@ -59,8 +59,9 @@ class PaddingCollator:
         }
     
 class VitCollator:
-    def __init__(self, token_pad = 0, image_pad = 0.0, image_only = False, for_training = True):
+    def __init__(self, token_pad = 0, image_pad = 0.0, label_pad = -100, image_only = False, for_training = True):
         self.token_pad = token_pad
+        self.label_pad = label_pad
         self.image_pad = image_pad
         self.image_only = image_only
         self.for_training = for_training
@@ -81,6 +82,11 @@ class VitCollator:
             caption_ids = torch.full(
                 (batch_size, max_len_text),
                 self.token_pad,
+                dtype = torch.int64,
+            )
+            caption_ids_label = torch.full(
+                (batch_size,max_len_text),
+                self.label_pad,
                 dtype = torch.int64,
             )
             pad_mask_text = torch.zeros(
@@ -118,6 +124,7 @@ class VitCollator:
             if not self.image_only:
                 length_text = len(item["caption_ids"])
                 caption_ids[i,:length_text] = item["caption_ids"]
+                caption_ids_label[i, :length_text] = item["caption_ids_label"]
                 pad_mask_text[i,:length_text] = 1
           
         if not self.image_only:
@@ -128,6 +135,7 @@ class VitCollator:
                 "patch_positions": patch_positions, # [B, max_len_patch, 2]
                 "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
                 "caption_ids": caption_ids, # [B, max_len_text]
+                "caption_ids_label": caption_ids_label, #[B, max_len_text]
                 "pad_mask_text": pad_mask_text, # [B, max_len_text]
                 "positions_text": positions, #[B, max_len_text,1]
             }

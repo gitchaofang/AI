@@ -2,11 +2,16 @@ import torch
 import pytest
 import os
 import regex as re
+import yaml
+import Path
 from torch.utils.data import DataLoader
 from src.data.regex_tokenizer import RegexTokenizer
 from src.data.all_in_one import TextDecodeDataset
+from src.data.dataset import ImageDataset
+from src.data.image_dataset_sampler import ImageDatasetBatchSampler
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
+from src.data.collator import VitCollator
 from src.models.all_in_one import SelfAttention
 from src.models.all_in_one import Trainer
 from src.models.all_in_one import GPT
@@ -19,6 +24,14 @@ DATASET_INPUT_FILENAME = "swift.txt"
 B = 10
 T = 26
 D = 32
+
+# load config file
+LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
+COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
+CACHE_RESERVE_GB = 50
+# load yaml config
+with open(COLAB_YAML_PATH,"r") as f:
+    vit_config = yaml.safe_load(f)
 
 @pytest.fixture
 # create tokenizer and train it
@@ -181,7 +194,7 @@ def test_dataloader(tokenizer):
                 original["labels"]
             )
 
-def test_dataset(tokenizer):
+def test_text_dataset(tokenizer):
     dataset = TextDecodeDataset(tokenizer=tokenizer,
                                 max_len=512,
                                 filename=DATASET_INPUT_FILENAME)
@@ -189,7 +202,7 @@ def test_dataset(tokenizer):
                                 batch_size=8,
                                 shuffle=False)
     collator = PaddingCollator()
-    loader = DataLoader(dataset,
+    loader = DataLoader(dataset=dataset,
                         collate_fn = collator,
                         batch_sampler = batch_sampler,
                         pin_memory = True)
@@ -204,6 +217,36 @@ def test_dataset(tokenizer):
             if valid_len > 1:
                 assert torch.equal(x[i, 1:valid_len],y[i,:valid_len - 1])
 
+def test_image_dataset(tokenizer):
+    dataset = ImageDataset(data_dir = vit_config["data"]["data_path"],
+                          tokenizer=tokenizer,
+                          image_only = vit_config["data"]["image_only"],
+                          for_training=True)
+    
+    batch_sampler = ImageDatasetBatchSampler(dataset = dataset,
+                                       batch_size=vit_config["data"]["batch_size"],
+                                       shuffle = vit_config["data"]["shuffle"])
+
+    collator = VitCollator(token_pad = 0,
+                           image_pad = 0.0,
+                           laebel_pad = -100,
+                           image_only=vit_config["data"]["image_only"])
+
+    loader = DataLoader(dataset=dataset,
+                        collate_fn = collator,
+                        batch_sampler = batch_sampler,
+                        pin_memory = True
+                        )
+    for i, batch in enumerate(loader):
+        patched_seq = batch["patched_input"]
+        patch_positions = batch["patch_positions"]
+        pad_mask_patch = batch["pad_mask_patch"]
+        caption_ids = batch["caption_ids"]
+        pad_mask_text = batch["pad_mask_text"]
+        positions_text = batch["positions"]
+        meta_data = batch["meta_data"]
+        print(f"batch {i}: batch size is {len(batch)}")
+        
 
 # ----------model--------------
 def test_Selfattention(model_pram):

@@ -59,9 +59,8 @@ class PaddingCollator:
         }
     
 class VitCollator:
-    def __init__(self, token_pad = 0, image_pad = 0.0, label_pad = -100, image_only = False, for_training = True):
+    def __init__(self, token_pad = 0, image_pad = 0.0, image_only = False, for_training = True):
         self.token_pad = token_pad
-        self.label_pad = label_pad
         self.image_pad = image_pad
         self.image_only = image_only
         self.for_training = for_training

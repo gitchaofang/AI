@@ -69,7 +69,7 @@ class VitCollator:
     def __call__(self, batch):
         batch_size = len(batch)
         max_len_patch = max(len(x["patches"]) for x in batch)
-        patch_d = batch[0]["paches"].shape[2]
+        patch_d = batch[0]["patches"].shape[2]
 
         patched_input = torch.full(
             (batch_size, max_len_patch, patch_d),

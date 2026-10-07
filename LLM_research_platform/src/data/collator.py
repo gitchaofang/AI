@@ -59,11 +59,12 @@ class PaddingCollator:
         }
     
 class VitCollator:
-    def __init__(self, token_pad = 0, image_pad = 0.0, label_pad = -100, image_only = vit_config["data"]["image_only"]):
+    def __init__(self, token_pad = 0, image_pad = 0.0, label_pad = -100, image_only = vit_config["data"]["image_only"], for_training = True):
         self.token_pad = token_pad
         self.label_pad = label_pad
         self.image_pad = image_pad
         self.image_only = image_only
+        self.for_training = for_training
 
     def __call__(self, batch):
         batch_size = len(batch)
@@ -103,11 +104,12 @@ class VitCollator:
         )
 
         
-
-        meta_data = [] # list of dict
+        if self.for_training:
+            meta_data = [] # list of dict
 
         for i, item in enumerate(batch):
-            meta_data.append(item["meta_data"])
+            if self.for_training:
+                meta_data.append(item["meta_data"])
             # patches
             length_patches = len(item["patches"]) 
             patched_input[i,:length_patches] = item["patches"] # patched input
@@ -120,24 +122,23 @@ class VitCollator:
                 caption_ids[i,:length_text] = item["caption_ids"]
                 pad_mask_text[i,:length_text] = 1
           
-            
-        
         if not self.image_only:
             # create 1d positions for text
             positions = torch.arange(max_len_text,dtype=torch.int64).view(1, max_len_text, 1).expand(batch_size, -1, -1)
-            return {
+            res_dict = {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
                 "patch_positions": patch_positions, # [B, max_len_patch, 2]
                 "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
                 "caption_ids": caption_ids, # [B, max_len_text]
                 "pad_mask_text": pad_mask_text, # [B, max_len_text]
                 "positions_text": positions, #[B, max_len_text,1]
-                "meta_data": meta_data, # list of dict. B dicts
             }
+            if self.for_training:
+                res_dict["meta_data"] = meta_data, # list of dict. B dicts
+            return res_dict
 
         return {
             "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
             "patch_positions": patch_positions, # [B, max_len_patch, 2]
             "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
-            "meta_data": meta_data, # list of dict. B dicts
         } 

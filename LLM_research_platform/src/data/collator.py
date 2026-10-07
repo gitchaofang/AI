@@ -134,7 +134,7 @@ class VitCollator:
                 "positions_text": positions, #[B, max_len_text,1]
             }
             if self.for_training:
-                res_dict["meta_data"] = meta_data, # list of dict. B dicts
+                res_dict["meta_data"] = meta_data # list of dict. B dicts
             return res_dict
 
         return {

@@ -151,7 +151,7 @@ class ImageDataset(Dataset):
         os.replace(tmp_path, path)
 
 
-    def atomic_write_text(self, path, text, encoding="utf-8"):
+    def _atomic_write_text(self, path, text, encoding="utf-8"):
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
         with open(tmp_path, "w", encoding=encoding) as f:
             f.write(text)
@@ -170,7 +170,7 @@ class ImageDataset(Dataset):
     def __getitem__(self, key):
         assert 0 <= key < len(self.id_tar_pair), f"key {key} is out of range"
         sample_id, tar_name = self.id_tar_pair[key]
-        shard_type = tar_name.split('.')[0].split('-')[1]
+        shard_type = Path(tar_name).stem.split("-")[1]
         if self.for_training:
             tar_path = self.data_dir / "training" / tar_name
         else:
@@ -269,31 +269,19 @@ class ImageDataset(Dataset):
                 required_gb = (len(image_bytes) / 1024**3)
                 if (free_colab - required_gb > CACHE_RESERVE_GB):
                     self._atomic_write_bytes(colab_image_path, image_bytes)
-                    #with open(colab_image_path,"wb") as f:
-                    #    f.write(image_bytes)
                     if shard_type == "train":
                         self._atomic_write_json(colab_meta_path, meta_data)
-                        #with open(colab_meta_path, "w") as f:
-                        #    json.dump(meta_data,f)
                     elif shard_type == "validation":
                         self._atomic_write_text(colab_text_path, text_data)
-                        #with open(colab_text_path, "w",encoding="utf-8") as f:
-                        #    f.write(text_data)
                 else:
                     # Free disk space on google drive (G)
                     free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
-                    if free_drive > CACHE_RESERVE_GB:
+                    if (free_drive - required_gb > CACHE_RESERVE_GB):
                         self._atomic_write_bytes(drive_image_path, image_bytes)
-                        #with open(drive_image_path,"wb") as f:
-                        #    f.write(image_bytes)
                         if shard_type == "train":
                             self._atomic_write_json(drive_meta_path, meta_data)
-                            #with open(drive_meta_path, "w") as f:
-                            #    json.dump(meta_data,f)
                         elif shard_type == "validation":
                             self._atomic_write_text(drive_text_path, text_data)
-                            #with open(drive_text_path,"w",encoding="utf-8") as f:
-                            #    f.write(text_data)
 
         '''
             Read and patchfy image

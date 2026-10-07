@@ -148,8 +148,6 @@ class ImageDataset(Dataset):
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
         with open(tmp_path, "wb") as f:
             f.write(data)
-            f.flush()
-            os.fsync(f.fileno())
         os.replace(tmp_path, path)
 
 
@@ -157,8 +155,6 @@ class ImageDataset(Dataset):
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
         with open(tmp_path, "w", encoding=encoding) as f:
             f.write(text)
-            f.flush()
-            os.fsync(f.fileno())
         os.replace(tmp_path, path)
 
 
@@ -166,8 +162,6 @@ class ImageDataset(Dataset):
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
         with open(tmp_path, "w") as f:
             json.dump(data, f)
-            f.flush()
-            os.fsync(f.fileno())
         os.replace(tmp_path, path)
 
     def __len__(self):

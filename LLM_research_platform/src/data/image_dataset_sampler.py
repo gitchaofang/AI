@@ -16,7 +16,7 @@ SHARED_PATH = Path(vit_config["data"]["shared_path"])
 
 class ImageDatasetBatchSampler(BatchSampler):
 
-    def __init__(self, dataset, batch_size, shuffle=vit_config["data"]["shuffle"]):
+    def __init__(self, dataset, batch_size, shuffle=True):
         self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -29,12 +29,8 @@ class ImageDatasetBatchSampler(BatchSampler):
 
         for i in range(0, len(indices), self.batch_size):
             batch = indices[i:i + self.batch_size]
-            if len(batch) == self.batch_size:
-                yield batch
+            yield batch
 
 
     def __len__(self):
-
-        return (
-            len(self.dataset) + self.batch_size - 1
-        ) // self.batch_size
+        return (len(self.dataset) + self.batch_size - 1) // self.batch_size

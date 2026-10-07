@@ -300,12 +300,15 @@ class ImageDataset(Dataset):
             encoded_tokens = self.tokenizer.encode(text)
             all_tokens = [item for token_list in encoded_tokens for item in token_list]
             caption_ids = torch.tensor(all_tokens,dtype=torch.int64)
+            # if caption_ids has less than 2 tokens, causal LLM can't work
+            if len(caption_ids) < 2:
+                raise ValueError(f"Sample {sample_id} has fewer than 2 tokens")
             if shard_type == "train":
                 return {
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
                     "caption_ids": caption_ids[:-1],     # [len(all_tokens) - 1]
-                    "caption_label": caption_ids[1:,],   # [len(all_tokens) - 1]
+                    "caption_ids_label": caption_ids[1:,],   # [len(all_tokens) - 1]
                     "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
                 }
             elif shard_type == "validation":
@@ -313,7 +316,7 @@ class ImageDataset(Dataset):
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
                     "caption_ids": caption_ids[:-1],     # [len(all_tokens) - 1]
-                    "caption_label": caption_ids[1:,],   # [len(all_tokens) - 1]
+                    "caption_ids_label": caption_ids[1:,],   # [len(all_tokens) - 1]
                 }
 
         # if only image is needed

@@ -109,7 +109,7 @@ CACHE_RESERVE_GB = 50
 with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
 
-class ImageTextEncode(Dataset):
+class ImageDataset(Dataset):
     def __init__(self, data_dir, tokenizer = None, image_only = vit_config["data"]["image_only"],for_training=True):
         self.data_dir = Path(data_dir)
         self.index_path = self.data_dir/f"index.json"

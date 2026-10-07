@@ -110,9 +110,12 @@ with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
 
 class ImageDataset(Dataset):
-    def __init__(self, data_dir, tokenizer = None, image_only = vit_config["data"]["image_only"],for_training=True):
+    def __init__(self, data_dir, tokenizer = None, image_only = vit_config["data"]["image_only"], for_training=True):
         self.data_dir = Path(data_dir)
-        self.index_path = self.data_dir/f"index.json"
+        if for_training:
+            self.index_path = self.data_dir/f"training"/f"index.json"
+        else:
+            self.index_path = self.data_dir/f"validation"/f"index.json"
         self.transform = transforms.ToTensor()
         self.image_only =  image_only
         self.tokenizer = tokenizer

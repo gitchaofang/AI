@@ -1,18 +1,8 @@
 import torch
 import random
-import Path
+from pathlib import Path
 import yaml
 from torch.utils.data import BatchSampler
-
-# load config file
-LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
-COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
-# load yaml config
-with open(COLAB_YAML_PATH,"r") as f:
-    vit_config = yaml.safe_load(f)
-
-EXTRACTED_PATH  = Path(vit_config["data"]["extracted_path"]) 
-SHARED_PATH = Path(vit_config["data"]["shared_path"])
 
 class ImageDatasetBatchSampler(BatchSampler):
 

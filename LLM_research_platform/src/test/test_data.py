@@ -33,15 +33,15 @@ with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
 
 @pytest.fixture
-# create tokenizer and train it
 def tokenizer():
+    print(f"train tokenizer")
     tokenizer = RegexTokenizer()
     tokenizer.train()
     return tokenizer
 
 @pytest.fixture
-# test text
 def test_text():
+    print(f"build text_text")
     read_path = os.path.join(DATA_DIR, ENCODE_DECODE_FILENAME)
     with open(read_path, "r", encoding="utf-8") as f:
         text = f.read()
@@ -53,7 +53,8 @@ def test_text():
 # positions: tentor for RoPE
 # pad_mask: padding mask
 # rope_dims: dims for RoPE
-def model_pram():
+def model_param():
+    print(f"build model params")
     # x [B,T,D]
     # pad_mask [B,T]
     x = torch.randint(2,255,(B,T,D), dtype = torch.int64)
@@ -253,11 +254,11 @@ def test_image_dataset(tokenizer):
         
 
 # ----------model--------------
-def test_Selfattention(model_pram):
-    x = model_pram["ids"]
-    positions = model_pram["pos"]
-    pad_mask = model_pram["mask"]
-    rope_dims = model_pram["rdim"]
+def test_Selfattention(model_param):
+    x = model_param["ids"]
+    positions = model_param["pos"]
+    pad_mask = model_param["mask"]
+    rope_dims = model_param["rdim"]
 
     self_attention = SelfAttention(d_model = D,
                                    n_heads = 2,

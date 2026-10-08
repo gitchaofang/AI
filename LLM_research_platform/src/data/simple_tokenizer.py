@@ -56,12 +56,14 @@ class SimpleTokenizer:
 		for chunk_text in chunks_text:
 			encoded_ids.append(self._encode_chunk(chunk_text))
 
+		all_tokens = [item for token_list in encoded_ids for item in token_list]
+
 		# deal with EOS
-		if encoded_ids:
-			encoded_ids[-1].append(EOS_ID)
+		if all_tokens and all_tokens[-1] != EOS_ID:
+			all_tokens[-1].append(EOS_ID)
 		else:
 			encoded_ids.append([EOS_ID])
-		return encoded_ids
+		return all_tokens
 	
 	def decode(self, ids):
 		return "".join(self.itos[id] for id in ids)		

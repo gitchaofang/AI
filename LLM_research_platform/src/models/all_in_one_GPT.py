@@ -8,10 +8,11 @@ from pathlib import Path
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from src.data.regex_tokenizer import RegexTokenizer
-from src.data.all_in_one import TextDecodeDataset
-from src.data.all_in_one import TokenBatchSampler
-from src.data.all_in_one import PaddingCollator
+from src.data.dataset import TextDecodeDataset
+from src.data.token_batch_sampler import TokenBatchSampler
+from src.data.collator import PaddingCollator
 from src.data.simple_tokenizer import SimpleTokenizer
+
 
 
 # load config file

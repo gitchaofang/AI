@@ -6,7 +6,8 @@ import yaml
 import time
 from pathlib import Path
 from torch.utils.data import DataLoader
-from src.data.regex_tokenizer import RegexTokenizer
+#from src.data.regex_tokenizer import RegexTokenizer
+from src.data.regex_tokenizer_with_lib import RegexTokenizer
 from src.data.all_in_one import TextDecodeDataset
 from src.data.dataset import ImageDataset
 from src.data.image_dataset_sampler import ImageDatasetBatchSampler

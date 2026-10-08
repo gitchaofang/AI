@@ -217,25 +217,29 @@ def test_text_dataset(tokenizer):
                 assert torch.equal(x[i, 1:valid_len],y[i,:valid_len - 1])
 
 def test_image_dataset(tokenizer):
+    print(f"image test starts")
     dataset = ImageDataset(data_dir = vit_config["data"]["data_path"],
                           tokenizer=tokenizer,
                           image_only = vit_config["data"]["image_only"],
                           for_training=True)
-    
+    print(f"dataset done")
     batch_sampler = ImageDatasetBatchSampler(dataset = dataset,
                                        batch_size=vit_config["data"]["batch_size"],
                                        shuffle = vit_config["data"]["shuffle"])
+    print(f"sampler done")
 
     collator = VitCollator(token_pad = 0,
                            image_pad = 0.0,
                            laebel_pad = -100,
                            image_only=vit_config["data"]["image_only"])
+    print(f"collator done")
 
     loader = DataLoader(dataset=dataset,
                         collate_fn = collator,
                         batch_sampler = batch_sampler,
                         pin_memory = True
                         )
+    print(f"iteration starts")
     for i, batch in enumerate(loader):
         patched_seq = batch["patched_input"]
         patch_positions = batch["patch_positions"]

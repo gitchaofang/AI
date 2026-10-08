@@ -13,7 +13,7 @@ data:
   shuffle: true
 
 tokenizer:
-  vocab_size: 270
+  vocab_size: 10000
   pattern: gpt2
 
 model:
@@ -30,7 +30,7 @@ model:
   cls: False
 
 training:
-  epochs: 100
+  epochs: 3
   learning_rate: 0.0003
   weight_decay: 0.01
   accumulation_steps: 8

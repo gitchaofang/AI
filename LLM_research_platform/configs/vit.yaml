@@ -12,7 +12,7 @@ data:
   image_only: False
 
 tokenizer:
-  vocab_size: 10000
+  vocab_size: 300
   pattern: gpt2
 
 model:

@@ -218,6 +218,8 @@ def test_text_dataset(tokenizer):
             if valid_len > 1:
                 assert torch.equal(x[i, 1:valid_len],y[i,:valid_len - 1])
 
+#----------ViT------------------------
+
 def test_image_dataset_basic(tokenizer):
     print(f"image test starts")
     dataset = ImageDataset(data_dir = vit_config["data"]["data_path"],
@@ -244,6 +246,7 @@ def test_image_dataset_basic(tokenizer):
     print(f"iteration starts")
     epochs = vit_config["training"]["epochs"]
     for epoch in epochs:
+        epoch_start = time.perf_counter()
         for i, batch in enumerate(loader):
             patched_input = batch["patched_input"]
             patch_positions = batch["patch_positions"]
@@ -264,6 +267,12 @@ def test_image_dataset_basic(tokenizer):
             assert pad_mask_text.shape[0] == B
             assert positions_text.shape[0] == B
             print(f"batch {i}: batch size is {len(batch)}")
+        epoch_time = time.perf_counter() - epoch_start
+        print(
+        f"Epoch [{epoch + 1}/{epochs}] "
+        f"took {epoch_time:.2f} seconds "
+        f"({epoch_time / 60:.2f} min)"
+    )
 
 def test_image_dataset_sample_single_sample(tokenizer):
     dataset = ImageDataset(

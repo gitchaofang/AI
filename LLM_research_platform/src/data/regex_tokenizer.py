@@ -32,8 +32,8 @@ class RegexTokenizer:
     def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = config["tokenizer"]["vocab_size"]): 
         self.file_dir = Path(file_dir)
         self.file_dir.mkdir(parents=True, exist_ok=True)
-        self.merge_dict_path = Path(file_dir)/"merge.json"
-        self.vocab_dict_path = Path(file_dir)/"vocab.json"
+        self.merge_dict_path = self.file_dir / "merge.json"
+        self.vocab_dict_path = self.file_dir / "vocab.json"
 
         # pattern
         self.pattern = GPT2_SPLIT_PATTERN if pattern is None else pattern

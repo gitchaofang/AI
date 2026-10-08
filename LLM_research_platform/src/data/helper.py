@@ -2,7 +2,7 @@ import regex as re
 import torch
 import numpy as np
 from PIL import Image
-import totch.nn.functional as F
+import torch.nn.functional as F
 
 
 # text tokenization

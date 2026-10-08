@@ -12,9 +12,9 @@ from src.data.image_dataset_sampler import ImageDatasetBatchSampler
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 from src.data.collator import VitCollator
-from src.models.all_in_one import SelfAttention
-from src.models.all_in_one import Trainer
-from src.models.all_in_one import GPT
+from src.base import SelfAttention
+from src.training.trainer_gpt import Trainer
+from src.models import GPT
 
 DATA_DIR =  "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/"
 GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""

@@ -57,8 +57,7 @@ class TextDecodeDataset(Dataset): # for txt file
     def data_prep(self):
         encoded_tokens = self.tokenizer.encode(self.text)
         print(f"tokens size: {len(encoded_tokens)}")
-        all_tokens = [item for token_list in encoded_tokens for item in token_list]
-        all_token_len = len(all_tokens)
+        all_token_len = len(encoded_tokens)
         all_index = []
         offset = 0
 
@@ -68,7 +67,7 @@ class TextDecodeDataset(Dataset): # for txt file
             offset = end
 
         # Convert to NumPy
-        all_tokens = np.asarray(all_tokens,dtype=np.int32)
+        all_tokens = np.asarray(encoded_tokens,dtype=np.int32)
         index = np.asarray(all_index,dtype=np.int64)
 
         # Save

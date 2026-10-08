@@ -123,7 +123,8 @@ class RegexTokenizer:
                 break
             idx = self.merge_dict[pair]
             chunk_ids = merge(chunk_ids, pair, idx)
-        return chunk_ids
+            all_tokens = [item for token_list in chunk_ids for item in token_list]
+        return all_tokens
 
     def encode(self, text):
         chunks_text = self.compiled_pattern.findall(text)

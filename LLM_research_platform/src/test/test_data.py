@@ -12,7 +12,7 @@ from src.data.image_dataset_sampler import ImageDatasetBatchSampler
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 from src.data.collator import VitCollator
-from src.base import SelfAttention
+from src.base.self_attention import SelfAttention
 from src.training.trainer_gpt import Trainer
 from src.models import GPT
 

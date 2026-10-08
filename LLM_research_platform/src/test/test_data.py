@@ -13,7 +13,6 @@ from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
 from src.data.collator import VitCollator
 from src.base.self_attention import SelfAttention
-from src.training.trainer_gpt import Trainer
 from src.models import GPT
 
 DATA_DIR =  "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/"

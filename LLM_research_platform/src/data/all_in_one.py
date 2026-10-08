@@ -2,6 +2,7 @@ import torch
 import random
 import json
 import numpy as np
+import yaml
 import os
 from pathlib import Path
 from PIL import Image

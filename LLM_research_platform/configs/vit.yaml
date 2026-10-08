@@ -3,8 +3,8 @@ device: auto
 
 data:
   data_path: "/content/drive/MyDrive/protected/data/cc3m/"
-  patch_size: 128
-  max_len: 512
+  patch_size: 16
+  max_len: 3000
   in_channels: 3
   batch_size: 8
   validation_batch_size: 128

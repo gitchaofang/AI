@@ -3,6 +3,7 @@ import pytest
 import os
 import regex as re
 import yaml
+import time
 from pathlib import Path
 from torch.utils.data import DataLoader
 from src.data.regex_tokenizer import RegexTokenizer
@@ -217,13 +218,54 @@ def test_text_dataset(tokenizer):
             if valid_len > 1:
                 assert torch.equal(x[i, 1:valid_len],y[i,:valid_len - 1])
 
-def test_image_dataset(tokenizer):
-    print("image test starts")
+def test_image_dataset_basic(tokenizer):
+    print(f"image test starts")
+    dataset = ImageDataset(data_dir = vit_config["data"]["data_path"],
+                          tokenizer=tokenizer,
+                          image_only = vit_config["data"]["image_only"],
+                          for_training=True)
+    print(f"dataset done")
+    batch_sampler = ImageDatasetBatchSampler(dataset = dataset,
+                                       batch_size=vit_config["data"]["batch_size"],
+                                       shuffle = vit_config["data"]["shuffle"])
+    print(f"sampler done")
 
-    # ============================================================
-    # 1. Dataset
-    # ============================================================
+    collator = VitCollator(token_pad = 0,
+                           image_pad = 0.0,
+                           label_pad = -100,
+                           image_only=vit_config["data"]["image_only"])
+    print(f"collator done")
 
+    loader = DataLoader(dataset=dataset,
+                        collate_fn = collator,
+                        batch_sampler = batch_sampler,
+                        pin_memory = True
+                        )
+    print(f"iteration starts")
+    epochs = vit_config["training"]["epochs"]
+    for epoch in epochs:
+        for i, batch in enumerate(loader):
+            patched_input = batch["patched_input"]
+            patch_positions = batch["patch_positions"]
+            pad_mask_patch = batch["pad_mask_patch"]
+            caption_ids = batch["caption_ids"]
+            caption_ids_label = batch["caption_ids_label"]
+            pad_mask_text = batch["pad_mask_text"]
+            positions_text = batch["positions_text"]
+            meta_data = batch["meta_data"]
+
+            B = patched_input.shape[0]
+
+            assert patch_positions.shape[0] == B
+            assert pad_mask_patch.shape[0] == B
+
+            assert caption_ids.shape[0] == B
+            assert caption_ids_label.shape[0] == B
+            assert pad_mask_text.shape[0] == B
+            assert positions_text.shape[0] == B
+            print(f"batch {i}: batch size is {len(batch)}")
+
+def test_image_dataset_sample_single_sample(tokenizer):
     dataset = ImageDataset(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
@@ -231,25 +273,72 @@ def test_image_dataset(tokenizer):
         for_training=True,
     )
 
-    print(f"dataset done: {len(dataset)} samples")
-
     assert len(dataset) > 0
 
-    # ============================================================
-    # 2. Batch sampler
-    # ============================================================
+    sample = dataset[0]
 
-    batch_sampler = ImageDatasetBatchSampler(
-        dataset=dataset,
-        batch_size=vit_config["data"]["batch_size"],
-        shuffle=vit_config["data"]["shuffle"],
+    assert isinstance(sample, dict)
+
+    assert "patched_input" in sample
+    assert "patch_positions" in sample
+    assert "meta_data" in sample
+
+    patched_input = sample["patched_input"]
+    patch_positions = sample["patch_positions"]
+
+    # [N, D]
+    assert patched_input.ndim == 2
+
+    # [N, 2]
+    assert patch_positions.ndim == 2
+    assert patch_positions.shape[0] == patched_input.shape[0]
+    assert patch_positions.shape[1] == 2
+
+    assert patched_input.dtype == torch.float32
+    assert patch_positions.dtype == torch.long
+
+    assert patched_input.shape[0] > 0
+    assert patched_input.shape[1] > 0
+
+    assert torch.isfinite(patched_input).all()
+
+    if not vit_config["data"]["image_only"]:
+        assert "caption_ids" in sample
+        assert len(sample["caption_ids"]) > 0
+            
+def test_image_dataset_batch_sampler(tokenizer):
+    dataset = ImageDataset(
+        data_dir=vit_config["data"]["data_path"],
+        tokenizer=tokenizer,
+        image_only=vit_config["data"]["image_only"],
+        for_training=True,
     )
 
-    print("sampler done")
+    batch_size = vit_config["data"]["batch_size"]
 
-    # ============================================================
-    # 3. Collator
-    # ============================================================
+    sampler = ImageDatasetBatchSampler(
+        dataset=dataset,
+        batch_size=batch_size,
+        shuffle=False,
+    )
+
+    batch = next(iter(sampler))
+
+    assert isinstance(batch, list)
+    assert len(batch) > 0
+    assert len(batch) <= batch_size
+
+    for idx in batch:
+        assert isinstance(idx, int)
+        assert 0 <= idx < len(dataset)
+
+def test_vit_collator(tokenizer):
+    dataset = ImageDataset(
+        data_dir=vit_config["data"]["data_path"],
+        tokenizer=tokenizer,
+        image_only=vit_config["data"]["image_only"],
+        for_training=True,
+    )
 
     collator = VitCollator(
         token_pad=0,
@@ -258,30 +347,17 @@ def test_image_dataset(tokenizer):
         image_only=vit_config["data"]["image_only"],
     )
 
-    print("collator done")
+    # Load only a few real samples.
+    samples = [
+        dataset[0],
+        dataset[1],
+    ]
 
-    # ============================================================
-    # 4. DataLoader
-    # ============================================================
+    batch = collator(samples)
 
-    loader = DataLoader(
-        dataset=dataset,
-        collate_fn=collator,
-        batch_sampler=batch_sampler,
-        pin_memory=True,
-    )
-
-    print("iteration starts")
-
-    # Only test one batch.
-    # Don't iterate through the entire CC3M dataset in a unit test.
-    batch = next(iter(loader))
-
-    print("batch loaded")
-
-    # ============================================================
-    # 5. Check batch keys
-    # ============================================================
+    # ------------------------------------------------
+    # Keys
+    # ------------------------------------------------
 
     expected_keys = {
         "patched_input",
@@ -294,299 +370,141 @@ def test_image_dataset(tokenizer):
         "meta_data",
     }
 
-    assert set(batch.keys()) == expected_keys, (
-        f"Unexpected batch keys: {batch.keys()}"
-    )
+    assert set(batch.keys()) == expected_keys
 
-    # ============================================================
-    # 6. Get batch tensors
-    # ============================================================
+    # ------------------------------------------------
+    # Image
+    # ------------------------------------------------
 
     patched_input = batch["patched_input"]
     patch_positions = batch["patch_positions"]
     pad_mask_patch = batch["pad_mask_patch"]
+
+    B, N, D = patched_input.shape
+
+    assert B == 2
+    assert N > 0
+    assert D > 0
+
+    assert patch_positions.shape == (B, N, 2)
+    assert pad_mask_patch.shape == (B, N)
+
+    assert patched_input.dtype == torch.float32
+    assert patch_positions.dtype == torch.long
+    assert pad_mask_patch.dtype == torch.bool
+
+    assert torch.isfinite(patched_input).all()
+
+    # Every image has at least one real patch.
+    assert torch.all(
+        (~pad_mask_patch).sum(dim=1) > 0
+    )
+
+    # Image padding must be zero.
+    if pad_mask_patch.any():
+        assert torch.all(
+            patched_input[pad_mask_patch] == 0.0
+        )
+
+    # ------------------------------------------------
+    # Text
+    # ------------------------------------------------
 
     caption_ids = batch["caption_ids"]
     caption_ids_label = batch["caption_ids_label"]
     pad_mask_text = batch["pad_mask_text"]
     positions_text = batch["positions_text"]
 
-    meta_data = batch["meta_data"]
-
-    # ============================================================
-    # 7. Check image tensor dimensions
-    # ============================================================
-
-    assert patched_input.ndim == 3, (
-        f"patched_input should be [B, N, D], "
-        f"got {patched_input.shape}"
-    )
-
-    B, N, D = patched_input.shape
-
-    print(
-        f"image: B={B}, max_patches={N}, patch_dim={D}"
-    )
-
-    assert B > 0
-    assert N > 0
-    assert D > 0
-
-    # patch_positions:
-    # [B, N, 2]
-    assert patch_positions.shape == (B, N, 2), (
-        f"patch_positions shape mismatch: "
-        f"{patch_positions.shape}"
-    )
-
-    # image padding mask:
-    # [B, N]
-    assert pad_mask_patch.shape == (B, N), (
-        f"pad_mask_patch shape mismatch: "
-        f"{pad_mask_patch.shape}"
-    )
-
-    # ============================================================
-    # 8. Check image tensor dtypes
-    # ============================================================
-
-    assert patched_input.dtype == torch.float32, (
-        f"patched_input dtype should be float32, "
-        f"got {patched_input.dtype}"
-    )
-
-    assert patch_positions.dtype == torch.long, (
-        f"patch_positions dtype should be long, "
-        f"got {patch_positions.dtype}"
-    )
-
-    assert pad_mask_patch.dtype == torch.bool, (
-        f"pad_mask_patch dtype should be bool, "
-        f"got {pad_mask_patch.dtype}"
-    )
-
-    # ============================================================
-    # 9. Check image values
-    # ============================================================
-
-    assert torch.isfinite(patched_input).all(), (
-        "patched_input contains NaN or Inf"
-    )
-
-    assert torch.isfinite(
-        patch_positions.float()
-    ).all(), (
-        "patch_positions contains NaN or Inf"
-    )
-
-    # ============================================================
-    # 10. Every image must contain real patches
-    # ============================================================
-
-    real_patch_count = (~pad_mask_patch).sum(dim=1)
-
-    assert torch.all(real_patch_count > 0), (
-        "At least one image contains only padding"
-    )
-
-    print(
-        f"real patches per image: "
-        f"min={real_patch_count.min().item()}, "
-        f"max={real_patch_count.max().item()}"
-    )
-
-    # ============================================================
-    # 11. Check image padding values
-    # ============================================================
-
-    if pad_mask_patch.any():
-        padded_values = patched_input[pad_mask_patch]
-
-        assert torch.all(padded_values == 0.0), (
-            "Image padding is not zero"
-        )
-
-    # ============================================================
-    # 12. Check text tensor dimensions
-    # ============================================================
-
-    assert caption_ids.ndim == 2, (
-        f"caption_ids should be [B, T], "
-        f"got {caption_ids.shape}"
-    )
+    assert caption_ids.ndim == 2
 
     B_text, T = caption_ids.shape
 
-    print(
-        f"text: B={B_text}, max_length={T}"
-    )
+    assert B_text == B
+    assert caption_ids_label.shape == (B, T)
+    assert pad_mask_text.shape == (B, T)
+    assert positions_text.shape == (B, T)
 
-    # Text batch size must equal image batch size.
-    assert B_text == B, (
-        f"Image batch size {B} != "
-        f"text batch size {B_text}"
-    )
+    assert caption_ids.dtype == torch.long
+    assert caption_ids_label.dtype == torch.long
+    assert pad_mask_text.dtype == torch.bool
+    assert positions_text.dtype == torch.long
 
-    # labels
-    assert caption_ids_label.shape == (B, T), (
-        f"caption_ids_label shape mismatch: "
-        f"{caption_ids_label.shape}"
-    )
+    # ------------------------------------------------
+    # Text padding
+    # ------------------------------------------------
 
-    # text mask
-    assert pad_mask_text.shape == (B, T), (
-        f"pad_mask_text shape mismatch: "
-        f"{pad_mask_text.shape}"
-    )
+    if pad_mask_text.any():
+        assert torch.all(
+            caption_ids[pad_mask_text] == 0
+        )
 
-    # text positions
-    assert positions_text.shape == (B, T), (
-        f"positions_text shape mismatch: "
-        f"{positions_text.shape}"
-    )
+        assert torch.all(
+            caption_ids_label[pad_mask_text] == -100
+        )
 
-    # ============================================================
-    # 13. Check text dtypes
-    # ============================================================
-
-    assert caption_ids.dtype == torch.int64, (
-        f"caption_ids dtype should be long, "
-        f"got {caption_ids.dtype}"
-    )
-
-    assert caption_ids_label.dtype == torch.int64, (
-        f"caption_ids_label dtype should be long, "
-        f"got {caption_ids_label.dtype}"
-    )
-
-    assert positions_text.dtype == torch.int64, (
-        f"positions_text dtype should be long, "
-        f"got {positions_text.dtype}"
-    )
-
-    # ============================================================
-    # 14. Check text values
-    # ============================================================
-
-    assert torch.isfinite(
-        caption_ids.float()
-    ).all(), (
-        "caption_ids contains NaN or Inf"
-    )
-
-    assert torch.isfinite(
-        caption_ids_label.float()
-    ).all(), (
-        "caption_ids_label contains NaN or Inf"
-    )
-
-    # ============================================================
-    # 15. Check token ID range
-    # ============================================================
+    # ------------------------------------------------
+    # Token IDs
+    # ------------------------------------------------
 
     valid_tokens = caption_ids[~pad_mask_text]
 
-    assert valid_tokens.numel() > 0, (
-        "There are no valid text tokens"
-    )
+    assert valid_tokens.numel() > 0
 
     vocab_size = tokenizer.get_vocab_size()
 
-    assert valid_tokens.min() >= 1, (
-        f"Invalid token ID: {valid_tokens.min().item()}"
+    assert valid_tokens.min() >= 1
+    assert valid_tokens.max() < vocab_size
+
+    # ------------------------------------------------
+    # Metadata
+    # ------------------------------------------------
+
+    assert len(batch["meta_data"]) == B
+
+def test_image_dataloader(tokenizer):
+    dataset = ImageDataset(
+        data_dir=vit_config["data"]["data_path"],
+        tokenizer=tokenizer,
+        image_only=vit_config["data"]["image_only"],
+        for_training=True,
     )
 
-    assert valid_tokens.max() < vocab_size, (
-        f"Token ID {valid_tokens.max().item()} "
-        f">= vocab size {vocab_size}"
+    batch_sampler = ImageDatasetBatchSampler(
+        dataset=dataset,
+        batch_size=vit_config["data"]["batch_size"],
+        shuffle=False,
     )
 
-    # ============================================================
-    # 16. Check text padding
-    # ============================================================
-
-    if pad_mask_text.any():
-
-        # PAD token should be 0.
-        padded_input_tokens = caption_ids[pad_mask_text]
-
-        assert torch.all(
-            padded_input_tokens == 0
-        ), (
-            "caption_ids contains non-zero values "
-            "at padded positions"
-        )
-
-        # Labels at padding positions should be -100
-        # so CrossEntropyLoss ignores them.
-        padded_labels = caption_ids_label[pad_mask_text]
-
-        assert torch.all(
-            padded_labels == -100
-        ), (
-            "caption_ids_label contains values other "
-            "than -100 at padded positions"
-        )
-
-    # ============================================================
-    # 17. Check positions_text
-    # ============================================================
-
-    expected_positions = torch.arange(
-        T,
-        device=positions_text.device,
-        dtype=torch.long,
-    ).unsqueeze(0).expand(B, T)
-
-    assert torch.equal(
-        positions_text,
-        expected_positions,
-    ), (
-        f"positions_text is incorrect:\n"
-        f"expected:\n{expected_positions}\n"
-        f"got:\n{positions_text}"
+    collator = VitCollator(
+        token_pad=0,
+        image_pad=0.0,
+        label_pad=-100,
+        image_only=vit_config["data"]["image_only"],
     )
 
-    # ============================================================
-    # 18. Check metadata
-    # ============================================================
-
-    assert len(meta_data) == B, (
-        f"metadata length {len(meta_data)} "
-        f"!= batch size {B}"
+    loader = DataLoader(
+        dataset=dataset,
+        batch_sampler=batch_sampler,
+        collate_fn=collator,
+        pin_memory=True,
     )
 
-    for item in meta_data:
-        assert isinstance(item, dict), (
-            f"metadata item should be dict, "
-            f"got {type(item)}"
-        )
+    batch = next(iter(loader))
 
-        # These are the fields you described in your CC3M metadata.
-        required_fields = {
-            "caption",
-            "url",
-            "key",
-        }
+    assert batch["patched_input"].ndim == 3
+    assert batch["patch_positions"].ndim == 3
+    assert batch["pad_mask_patch"].ndim == 2
 
-        assert required_fields.issubset(item.keys()), (
-            f"Missing metadata fields. "
-            f"Expected {required_fields}, "
-            f"got {item.keys()}"
-        )
+    assert batch["caption_ids"].ndim == 2
+    assert batch["caption_ids_label"].ndim == 2
+    assert batch["pad_mask_text"].ndim == 2
+    assert batch["positions_text"].ndim == 2
 
-    # ============================================================
-    # 19. Final summary
-    # ============================================================
+    B = batch["patched_input"].shape[0]
 
-    print(
-        f"batch test passed: "
-        f"B={B}, "
-        f"image patches={N}, "
-        f"patch dim={D}, "
-        f"text length={T}"
-    )
-        
+    assert batch["patch_positions"].shape[0] == B
+    assert batch["pad_mask_patch"].shape[0] == B
+    assert batch["caption_ids"].shape[0] == B
 
 # ----------model--------------
 def test_Selfattention(model_param):

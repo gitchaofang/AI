@@ -245,7 +245,7 @@ def test_image_dataset_basic(tokenizer):
                         )
     print(f"iteration starts")
     epochs = vit_config["training"]["epochs"]
-    for epoch in epochs:
+    for epoch in range(epochs):
         epoch_start = time.perf_counter()
         for i, batch in enumerate(loader):
             patched_input = batch["patched_input"]

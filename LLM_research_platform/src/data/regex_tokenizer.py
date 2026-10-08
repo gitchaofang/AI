@@ -132,13 +132,11 @@ class RegexTokenizer:
         for chunk in chunks_text:
             chunk_ids = [x + TOKEN_OFFSET for x in chunk.encode("utf-8")]
             encoded_ids.append(self._encode_chunk(chunk_ids))
+        
         all_tokens = [item for token_list in encoded_ids for item in token_list]
-        # deal with EOS
-        if all_tokens and all_tokens[-1] != EOS_ID:
-            all_tokens[-1] = EOS_ID
-        else:
-            all_tokens[-1] = EOS_ID
 
+        if not all_tokens or all_tokens[-1] != EOS_ID:
+            all_tokens.append(EOS_ID)
         return all_tokens
 
     def decode(self, ids): #ids is a list of integers, return a python string

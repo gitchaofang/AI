@@ -2,6 +2,7 @@ import regex as re
 from .helper import get_stats,merge
 from pathlib import Path
 import yaml
+import json
 
 
 # the main GPT text split patterns, see
@@ -30,6 +31,11 @@ TOKEN_OFFSET = 2
 class RegexTokenizer:
     def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = config["tokenizer"]["vocab_size"]): 
         self.file_dir = Path(file_dir)
+        self.merge_dict_path = Path(file_dir)/"merge.json"
+        self.merge_dict_path.mkdir(parents=True, exist_ok=True)
+        self.vocab_dict_path = Path(file_dir)/"vocab.json"
+        self.vocab_dict_path.mkdir(parents=True, exist_ok=True)
+
         # pattern
         self.pattern = GPT2_SPLIT_PATTERN if pattern is None else pattern
         self.compiled_pattern = re.compile(self.pattern)
@@ -42,6 +48,14 @@ class RegexTokenizer:
         return self.vocab_size
     
     def train(self): #this function should be called right after instantiating RegexTokenizer
+        # check if tokenizer has already been trained:
+        if self.merge_dict_path.is_file() and self.vocab_dict_path.is_file():
+            with self.merge_dict_path.open("r",encoding="utf-8") as f:
+                self.merge_dict = json.load(f)
+            with self.vocab_dict_path.open("r", encoding="utf-8") as f:
+                self.vocab_dict = json.load(f)
+            return
+        
         chunks = []
         for file_path in self.file_dir.glob("*.txt"):
             print(f"training on {file_path}")
@@ -75,6 +89,11 @@ class RegexTokenizer:
         
         self.merge_dict = merge_dict
         self.vocab_dict = vocab_dict
+        # write in to dir
+        with self.merge_dict_path.open("w", encoding="utf-8") as f:
+            json.dump(self.merge_dict, f)
+        with self.merge_dict_path.open("w", encoding="utf-8") as f:
+            json.dump(self.vocab_dict, f)
 
     def _encode_chunk(self, chunk_ids): #chunk_ids is list of decimal representations of bytes from the entire text after applying formate seperation
         while len(chunk_ids) >= 2:

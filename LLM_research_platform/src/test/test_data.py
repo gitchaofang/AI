@@ -242,6 +242,7 @@ def test_image_dataset(tokenizer):
         patch_positions = batch["patch_positions"]
         pad_mask_patch = batch["pad_mask_patch"]
         caption_ids = batch["caption_ids"]
+        caption_ids_label = batch["caption_ids_label"]
         pad_mask_text = batch["pad_mask_text"]
         positions_text = batch["positions"]
         meta_data = batch["meta_data"]

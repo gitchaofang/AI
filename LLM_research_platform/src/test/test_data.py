@@ -3,7 +3,7 @@ import pytest
 import os
 import regex as re
 import yaml
-import Path
+from pathlib import Path
 from torch.utils.data import DataLoader
 from src.data.regex_tokenizer import RegexTokenizer
 from src.data.all_in_one import TextDecodeDataset

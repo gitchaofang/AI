@@ -248,7 +248,7 @@ def test_image_dataset(tokenizer):
         caption_ids = batch["caption_ids"]
         caption_ids_label = batch["caption_ids_label"]
         pad_mask_text = batch["pad_mask_text"]
-        positions_text = batch["positions"]
+        positions_text = batch["positions_text"]
         meta_data = batch["meta_data"]
         print(f"batch {i}: batch size is {len(batch)}")
         

@@ -231,7 +231,7 @@ def test_image_dataset(tokenizer):
 
     collator = VitCollator(token_pad = 0,
                            image_pad = 0.0,
-                           laebel_pad = -100,
+                           label_pad = -100,
                            image_only=vit_config["data"]["image_only"])
     print(f"collator done")
 

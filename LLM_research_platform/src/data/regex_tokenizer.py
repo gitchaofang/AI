@@ -123,8 +123,7 @@ class RegexTokenizer:
                 break
             idx = self.merge_dict[pair]
             chunk_ids = merge(chunk_ids, pair, idx)
-        all_tokens = [item for token_list in chunk_ids for item in token_list]
-        return all_tokens
+        return chunk_ids
 
     def encode(self, text):
         chunks_text = self.compiled_pattern.findall(text)
@@ -133,14 +132,14 @@ class RegexTokenizer:
         for chunk in chunks_text:
             chunk_ids = [x + TOKEN_OFFSET for x in chunk.encode("utf-8")]
             encoded_ids.append(self._encode_chunk(chunk_ids))
-
+        all_tokens = [item for token_list in encoded_ids for item in token_list]
         # deal with EOS
-        if encoded_ids:
-            encoded_ids[-1].append(EOS_ID)
+        if all_tokens and all_tokens[-1] != EOS_ID:
+            all_tokens[-1].append(EOS_ID)
         else:
-            encoded_ids.append([EOS_ID])
+            all_tokens.append([EOS_ID])
 
-        return encoded_ids
+        return all_tokens
 
     def decode(self, ids): #ids is a list of integers, return a python string
         bytes_list = []

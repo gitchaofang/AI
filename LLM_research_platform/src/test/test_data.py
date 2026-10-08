@@ -220,6 +220,47 @@ def test_text_dataset(tokenizer):
 
 #----------ViT------------------------
 
+import time
+
+def test_num_workers(tokenizer):
+
+    dataset = ImageDataset(
+        data_dir=vit_config["data"]["data_path"],
+        tokenizer=tokenizer,
+        image_only=vit_config["data"]["image_only"],
+        for_training=True,
+    )
+
+    collator = VitCollator(
+        token_pad=0,
+        image_pad=0.0,
+        label_pad=-100,
+        image_only=vit_config["data"]["image_only"],
+    )
+
+    batch_sampler = ImageDatasetBatchSampler(
+        dataset=dataset,
+        batch_size=vit_config["data"]["batch_size"],
+        shuffle=False,
+    )
+
+    for num_workers in [0, 1, 2, 4, 8]:
+        loader = DataLoader(
+            dataset=dataset,
+            batch_sampler=batch_sampler,
+            collate_fn=collator,
+            num_workers=num_workers,
+        )
+        start = time.perf_counter()
+        for i, batch in enumerate(loader):
+            if i >= 20:
+                break
+        elapsed = time.perf_counter() - start
+        print(
+            f"num_workers={num_workers}: "
+            f"{elapsed:.2f} seconds"
+        )
+
 def test_image_dataset_basic(tokenizer):
     print(f"image test starts")
     dataset = ImageDataset(data_dir = vit_config["data"]["data_path"],

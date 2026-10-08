@@ -49,6 +49,7 @@ class RegexTokenizer:
     def train(self): #this function should be called right after instantiating RegexTokenizer
         # check if tokenizer has already been trained:
         if self.merge_dict_path.is_file() and self.vocab_dict_path.is_file():
+            print(f"merge_dicts and vocab_dicts are both loaded from {self.file_dir}")
             with self.merge_dict_path.open("r", encoding="utf-8") as f:
                 merge_data = json.load(f)
             self.merge_dict = {

@@ -241,7 +241,7 @@ def test_num_workers(tokenizer):
     batch_sampler = ImageDatasetBatchSampler(
         dataset=dataset,
         batch_size=vit_config["data"]["batch_size"],
-        shuffle=False,
+        shuffle=True,
     )
 
     for num_workers in [0, 1, 2, 4, 8]:

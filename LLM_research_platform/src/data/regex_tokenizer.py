@@ -12,7 +12,7 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 
 #FILE_DIR = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/token_training/")
 #FILE_DIR = Path("/content/AI/LLM_research_platform/src/data/input_data/data/token_training/")
-FILE_DIR = Path("/content/token_train")
+FILE_DIR = "/content/token_train"
 # load config file
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
 COLAB_YAML_PATH = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")

@@ -135,9 +135,9 @@ class RegexTokenizer:
         all_tokens = [item for token_list in encoded_ids for item in token_list]
         # deal with EOS
         if all_tokens and all_tokens[-1] != EOS_ID:
-            all_tokens[-1].append(EOS_ID)
+            all_tokens[-1] = EOS_ID
         else:
-            all_tokens.append([EOS_ID])
+            all_tokens[-1] = EOS_ID
 
         return all_tokens
 

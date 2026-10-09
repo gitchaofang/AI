@@ -290,8 +290,7 @@ def test_image_dataset_basic(tokenizer,shared_set):
     dataset = ImageDatasetLocal(data_dir = vit_config["data"]["data_path_local"],
                           tokenizer=tokenizer,
                           image_only = vit_config["data"]["image_only"],
-                          for_training=True,
-                          saved_samples_set=shared_set,)
+                          for_training=True,)
     print(f"dataset done")
     batch_sampler = ImageDatasetBatchSampler(dataset = dataset,
                                        batch_size=vit_config["data"]["batch_size"],

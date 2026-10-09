@@ -259,7 +259,6 @@ def test_num_workers(tokenizer,shared_set):
             batch_sampler=batch_sampler,
             collate_fn=collator,
             num_workers=num_workers,
-            num_workers = 4,
         )
         start = time.perf_counter()
         for i, batch in enumerate(loader):

@@ -149,7 +149,7 @@ class ImageDataset(Dataset):
         for cache_dir in (self.colab_cache_path, self.drive_cache_path):
             for image_path in cache_dir.glob("*.jpg"):
                 sample_id = image_path.stem
-                
+
                 if self.for_training:
                     companion_path = cache_dir / f"{sample_id}.json"
                 else:
@@ -280,7 +280,7 @@ class ImageDataset(Dataset):
                 # everytime opening a tar, try to go through all the files that have not been cached.
                 free_colab = (shutil.disk_usage(self.colab_cache_path).free / 1024**3)
                 free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
-                if free_colab < CACHE_RESERVE_GB or free_drive < CACHE_RESERVE_GB:          
+                if free_colab > CACHE_RESERVE_GB or free_drive > CACHE_RESERVE_GB:          
                     for member in tar:
                         if member.isfile() and member.name.endswith(".jpg"):
                             stem = Path(member.name).stem

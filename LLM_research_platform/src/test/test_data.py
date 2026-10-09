@@ -332,7 +332,8 @@ def test_image_dataset_basic(tokenizer,shared_set):
             assert caption_ids_label.shape[0] == B
             assert pad_mask_text.shape[0] == B
             assert positions_text.shape[0] == B
-            print(f"batch {i}: batch size is {len(batch)}")
+            if i % 100 == 0:
+                print(f"batch {i}: batch size is {len(batch)}")
         epoch_time = time.perf_counter() - epoch_start
         print(
         f"Epoch [{epoch + 1}/{epochs}] "

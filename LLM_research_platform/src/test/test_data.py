@@ -224,9 +224,18 @@ def test_text_dataset(tokenizer):
 #----------ViT------------------------
 import time
 
+class SharedSet(set):
+    pass
+
 class SetManager(BaseManager):
     pass
-SetManager.register("SharedSet", set)
+
+SetManager.register(
+    "SharedSet",
+    SharedSet,
+    exposed=("add", "update", "discard", "remove", "clear", "__contains__", "__len__"),
+)
+
 @pytest.fixture
 def shared_set():
     print("build shared_set")

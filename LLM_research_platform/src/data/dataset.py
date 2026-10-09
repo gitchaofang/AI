@@ -403,14 +403,7 @@ class ImageDatasetLocal(Dataset):
             self.colab_cache_path = self.data_dir/f"training/"
         self.colab_cache_path.mkdir(parents=True, exist_ok=True)
         self.for_training = for_training
-        assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
-
-        '''
-        Load index dict:
-            key: sample name
-            value: address in google drive
-        '''
-        
+        assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)        
         self.sample_ids = set()
 
         # initialize shared-set
@@ -423,26 +416,6 @@ class ImageDatasetLocal(Dataset):
                 self.sample_ids.add(sample_id)
 
 
-    def _atomic_write_bytes(self,path, data):
-        tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
-        with open(tmp_path, "wb") as f:
-            f.write(data)
-        os.replace(tmp_path, path)
-
-
-    def _atomic_write_text(self, path, text, encoding="utf-8"):
-        tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
-        with open(tmp_path, "w", encoding=encoding) as f:
-            f.write(text)
-        os.replace(tmp_path, path)
-
-
-    def _atomic_write_json(self, path, data):
-        tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
-        with open(tmp_path, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp_path, path)
-
     def __len__(self):
         return len(self.id_tar_pair)
 
@@ -452,7 +425,6 @@ class ImageDatasetLocal(Dataset):
         shard_type = "validation"
         if self.for_training:
             shard_type = "train"
-        
 
         image_name = f"{sample_id}.jpg"
         if shard_type == "train":
@@ -460,14 +432,6 @@ class ImageDatasetLocal(Dataset):
         elif shard_type == "validation":
             text_data_name = f"{sample_id}.txt"
 
-        '''
-            Load image and metadata with 3 options (only one will be applied):
-                1. check if image and metadata can be loaded from colab cache
-                2. check if image and metadata can be loaded from google drive cach
-                3. It not cached, extract them from .tar shard
-        '''
- 
-        # Option 1: check if image and metadata can be loaded from colab cache
         colab_image_path = self.colab_cache_path/f"{image_name}"
         if shard_type == "train":
             colab_meta_path = self.colab_cache_path/f"{meta_data_name}"

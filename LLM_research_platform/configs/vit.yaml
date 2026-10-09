@@ -3,6 +3,7 @@ device: auto
 
 data:
   data_path: "/content/drive/MyDrive/protected/data/cc3m/"
+  data_path_local: "/content/cache"
   patch_size: 16
   max_len: 3000
   in_channels: 3

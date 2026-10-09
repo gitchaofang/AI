@@ -108,7 +108,7 @@ with open(COLAB_YAML_PATH,"r") as f:
     vit_config = yaml.safe_load(f)
 
 class ImageDataset(Dataset):
-    def __init__(self, data_dir, tokenizer = None, image_only = vit_config["data"]["image_only"], for_training=True):
+    def __init__(self, data_dir, saved_samples_set, tokenizer = None, image_only = vit_config["data"]["image_only"], for_training=True):
         self.data_dir = Path(data_dir)
         if for_training:
             self.index_path = self.data_dir/f"training"/f"index.json"
@@ -122,6 +122,7 @@ class ImageDataset(Dataset):
         self.drive_cache_path = self.data_dir / "cache"
         self.drive_cache_path.mkdir(parents=True, exist_ok=True)
         self.for_training = for_training
+        self.saved_samples_set = saved_samples_set
         assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
 
         '''
@@ -258,27 +259,64 @@ class ImageDataset(Dataset):
                     meta_data = json.load(meta_file)
                 elif shard_type == "validation":
                     text_data = (text_file.read().decode("utf-8"))
-                # Free disk space on colab (G)
-                free_colab = (shutil.disk_usage(self.colab_cache_path).free / 1024**3)
 
-                # cache image and metadata.
-                # Leave 50G on each disk
-                required_gb = (len(image_bytes) / 1024**3)
-                if (free_colab - required_gb > CACHE_RESERVE_GB):
-                    self._atomic_write_bytes(colab_image_path, image_bytes)
-                    if shard_type == "train":
-                        self._atomic_write_json(colab_meta_path, meta_data)
-                    elif shard_type == "validation":
-                        self._atomic_write_text(colab_text_path, text_data)
-                else:
-                    # Free disk space on google drive (G)
-                    free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
-                    if (free_drive - required_gb > CACHE_RESERVE_GB):
-                        self._atomic_write_bytes(drive_image_path, image_bytes)
+                # cache files
+                # everytime opening a tar, try to go through all the files that have not been cached.
+                
+                for member in tar:
+                    if member.isfile() and member.name.endswith(".jpg"):
+                        stem = Path(member.name).stem
+                        if stem in self.saved_samples_set:
+                            continue
+
+                        image_name = f"{stem}.jpg"
+                        image_file = tar.extractfile(image_name)
+                        if image_file is None:
+                            raise FileNotFoundError(f"{image_name} not found in {tar_path}")
+                        image_bytes_cache = image_file.read()
                         if shard_type == "train":
-                            self._atomic_write_json(drive_meta_path, meta_data)
+                            meta_data_name = f"{stem}.json"
+                            meta_file = tar.extractfile(meta_data_name)
+                            if meta_file is None:
+                                raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
+                            meta_data_cache = json.load(meta_file)
                         elif shard_type == "validation":
-                            self._atomic_write_text(drive_text_path, text_data)
+                            text_data_name = f"{stem}.txt"
+                            text_file = tar.extractfile(text_data_name)
+                            if text_file is None:
+                                raise FileNotFoundError(f"{text_data_name} not found in {tar_path}")
+                            text_data_cache = (text_file.read().decode("utf-8"))
+
+                        # Free disk space on colab (G)
+                        free_colab = (shutil.disk_usage(self.colab_cache_path).free / 1024**3)
+
+                        # cache image and metadata.
+                        # Leave 50G on each disk
+                        required_gb = (len(image_bytes) / 1024**3)
+                        if (free_colab - required_gb > CACHE_RESERVE_GB):
+                            # file paths
+                            colab_image_path = self.colab_cache_path/f"{image_name}"
+                            self._atomic_write_bytes(colab_image_path, image_bytes_cache)
+                            if shard_type == "train":
+                                colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
+                                self._atomic_write_json(colab_meta_path, meta_data_cache)
+                            elif shard_type == "validation":
+                                colab_text_path = self.colab_cache_path/f"{text_data_name}"
+                                self._atomic_write_text(colab_text_path, text_data_cache)
+                            self.saved_samples_set.add(stem)
+                        else:
+                            # Free disk space on google drive (G)
+                            free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
+                            if (free_drive - required_gb > CACHE_RESERVE_GB):
+                                drive_image_path = self.drive_cache_path/f"{image_name}"
+                                self._atomic_write_bytes(drive_image_path, image_bytes_cache)
+                                if shard_type == "train":
+                                    drive_meta_path = self.drive_cache_path/f"{meta_data_name}"
+                                    self._atomic_write_json(drive_meta_path, meta_data_cache)
+                                elif shard_type == "validation":
+                                    drive_text_path = self.drive_cache_path/f"{text_data_name}"
+                                    self._atomic_write_text(drive_text_path, text_data_cache)
+                                self.saved_samples_set.add(stem)
 
         '''
             Read and patchfy image
@@ -305,16 +343,16 @@ class ImageDataset(Dataset):
                 return {
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
-                    "caption_ids": caption_ids[:-1],     # [len(all_tokens) - 1]
-                    "caption_ids_label": caption_ids[1:,],   # [len(all_tokens) - 1]
+                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                    "caption_ids_label": caption_ids,   # [len(all_tokens)]
                     "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
                 }
             elif shard_type == "validation":
                 return {
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
-                    "caption_ids": caption_ids[:-1],     # [len(all_tokens) - 1]
-                    "caption_ids_label": caption_ids[1:,],   # [len(all_tokens) - 1]
+                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                    "caption_ids_label": caption_ids,   # [len(all_tokens)]
                 }
 
         # if only image is needed

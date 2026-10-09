@@ -417,7 +417,7 @@ class ImageDatasetLocal(Dataset):
 
 
     def __len__(self):
-        return len(self.id_tar_pair)
+        return len(self.sample_ids)
 
     def __getitem__(self, key):
         assert 0 <= key < len(self.id_tar_pair), f"key {key} is out of range"

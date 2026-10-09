@@ -390,3 +390,157 @@ class ImageDataset(Dataset):
         pad_mask_text: [B, T_max]
         meta_data: list[B]
     """
+
+
+class ImageDatasetLocal(Dataset):
+    def __init__(self, data_dir = "/content/cache",  tokenizer = None, image_only = vit_config["data"]["image_only"], for_training=True):
+        self.data_dir = Path(data_dir)
+        if for_training:
+            self.index_path = self.data_dir/f"training"/f"index.json"
+        else:
+            self.index_path = self.data_dir/f"validation"/f"index.json"
+        self.transform = transforms.ToTensor()
+        self.image_only =  image_only
+        self.tokenizer = tokenizer
+        self.colab_cache_path = Path("/content/cache")
+        self.colab_cache_path.mkdir(parents=True, exist_ok=True)
+        self.for_training = for_training
+        assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)
+
+        '''
+        Load index dict:
+            key: sample name
+            value: address in google drive
+        '''
+        
+        self.sample_ids = set()
+
+        # initialize shared-set
+        self._load_cached_samples()
+
+    def _load_cached_samples(self):
+        for cache_dir in (self.colab_cache_path):
+            for image_path in cache_dir.glob("*.jpg"):
+                sample_id = image_path.stem
+                self.sample_ids.add(sample_id)
+
+
+    def _atomic_write_bytes(self,path, data):
+        tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
+        with open(tmp_path, "wb") as f:
+            f.write(data)
+        os.replace(tmp_path, path)
+
+
+    def _atomic_write_text(self, path, text, encoding="utf-8"):
+        tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
+        with open(tmp_path, "w", encoding=encoding) as f:
+            f.write(text)
+        os.replace(tmp_path, path)
+
+
+    def _atomic_write_json(self, path, data):
+        tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
+        with open(tmp_path, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp_path, path)
+
+    def __len__(self):
+        return len(self.id_tar_pair)
+
+    def __getitem__(self, key):
+        assert 0 <= key < len(self.id_tar_pair), f"key {key} is out of range"
+        sample_id = self.sample_ids[key]
+        shard_type = "validation"
+        if self.for_training:
+            shard_type = "train"
+        
+
+        image_name = f"{sample_id}.jpg"
+        if shard_type == "train":
+            meta_data_name = f"{sample_id}.json"
+        elif shard_type == "validation":
+            text_data_name = f"{sample_id}.txt"
+
+        '''
+            Load image and metadata with 3 options (only one will be applied):
+                1. check if image and metadata can be loaded from colab cache
+                2. check if image and metadata can be loaded from google drive cach
+                3. It not cached, extract them from .tar shard
+        '''
+ 
+        # Option 1: check if image and metadata can be loaded from colab cache
+        colab_image_path = self.colab_cache_path/f"{image_name}"
+        if shard_type == "train":
+            colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
+        elif shard_type == "validation":
+            colab_text_path = self.colab_cache_path/f"{text_data_name}"
+
+
+        # -------------------------------------------------
+        # Load from Colab cache
+        # -------------------------------------------------
+        with open(colab_image_path, "rb") as f:
+            image = Image.open(f).convert("RGB")
+        if shard_type == "train":
+            with open(colab_meta_path, "r") as f:
+                    meta_data = json.load(f)
+        elif shard_type == "validation":
+            with open(colab_text_path, "r", encoding="utf-8") as f:
+                text_data = f.read()
+       
+
+        '''
+            Read and patchfy image
+            Process text caption
+        '''
+        image = self.transform(image)
+        # pachify
+        patchify_res = patchify(image = image) 
+        patches = patchify_res["patches"]          # [N,  C * patch_size * patch_size]
+        patch_positions = patchify_res["positions"]   # [N, 2]
+                                
+        # process text
+        if not self.image_only:
+            if shard_type == "train":
+                text = meta_data["caption"]
+            elif shard_type == "validation":
+                text = text_data
+            encoded_tokens = self.tokenizer.encode(text)
+            caption_ids = torch.tensor(encoded_tokens,dtype=torch.int64)
+            # if caption_ids has less than 2 tokens, causal LLM can't work
+            if len(caption_ids) < 2:
+                raise ValueError(f"Sample {sample_id} has fewer than 2 tokens")
+            if shard_type == "train":
+                return {
+                    "patches": patches,            # [N, C * patch_size * patch_size]
+                    "patch_positions": patch_positions,    # [N, 2]
+                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                    "caption_ids_label": caption_ids,   # [len(all_tokens)]
+                    "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
+                }
+            elif shard_type == "validation":
+                return {
+                    "patches": patches,            # [N, C * patch_size * patch_size]
+                    "patch_positions": patch_positions,    # [N, 2]
+                    "caption_ids": caption_ids,     # [len(all_tokens)]
+                    "caption_ids_label": caption_ids,   # [len(all_tokens)]
+                }
+
+        # if only image is needed
+        return {
+            "patches": patches, #[N,C * patch_size * patch_size]
+            "patch_positions": patch_positions, # [N, 2]
+        } 
+    def get_length(self):
+        return len(self.sample_ids)
+    
+    """
+    these are the data shape before going to the model:
+        patched_input: [B, N_max, C*P*P]
+        patch_positions: [B, N_max, 2]
+        pad_mask_patch: [B, N_max]
+        caption_ids: [B, T_max]
+        pad_mask_text: [B, T_max]
+        meta_data: list[B]
+    """

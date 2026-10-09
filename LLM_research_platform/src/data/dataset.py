@@ -410,10 +410,9 @@ class ImageDatasetLocal(Dataset):
         self._load_cached_samples()
 
     def _load_cached_samples(self):
-        for cache_dir in (self.colab_cache_path):
-            for image_path in cache_dir.glob("*.jpg"):
-                sample_id = image_path.stem
-                self.sample_ids.add(sample_id)
+        for image_path in self.colab_cache_path.glob("*.jpg"):
+            sample_id = image_path.stem
+            self.sample_ids.add(sample_id)
 
 
     def __len__(self):

@@ -252,7 +252,6 @@ def test_num_workers(tokenizer,shared_set):
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
-        saved_samples_set=shared_set,
     )
 
     collator = VitCollator(
@@ -342,12 +341,11 @@ def test_image_dataset_basic(tokenizer,shared_set):
     )
 
 def test_image_dataset_sample_single_sample(tokenizer,shared_set):
-    dataset = ImageDataset(
+    dataset = ImageDatasetLocal(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
-        saved_samples_set=shared_set,
     )
 
     assert len(dataset) > 0
@@ -384,12 +382,11 @@ def test_image_dataset_sample_single_sample(tokenizer,shared_set):
         assert len(sample["caption_ids"]) > 0
             
 def test_image_dataset_batch_sampler(tokenizer,shared_set):
-    dataset = ImageDataset(
+    dataset = ImageDatasetLocal(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
-        saved_samples_set=shared_set,
     )
 
     batch_size = vit_config["data"]["batch_size"]
@@ -411,12 +408,11 @@ def test_image_dataset_batch_sampler(tokenizer,shared_set):
         assert 0 <= idx < len(dataset)
 
 def test_vit_collator(tokenizer,shared_set):
-    dataset = ImageDataset(
+    dataset = ImageDatasetLocal(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
-        saved_samples_set=shared_set,
     )
 
     collator = VitCollator(
@@ -541,12 +537,11 @@ def test_vit_collator(tokenizer,shared_set):
     assert len(batch["meta_data"]) == B
 
 def test_image_dataloader(tokenizer,shared_set):
-    dataset = ImageDataset(
+    dataset = ImageDatasetLocal(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
-        saved_samples_set=shared_set,
     )
 
     batch_sampler = ImageDatasetBatchSampler(

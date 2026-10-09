@@ -148,7 +148,15 @@ class ImageDataset(Dataset):
     def _load_cached_samples(self):
         for cache_dir in (self.colab_cache_path, self.drive_cache_path):
             for image_path in cache_dir.glob("*.jpg"):
-                self.saved_samples_set.add(image_path.stem)
+                sample_id = image_path.stem
+                
+                if self.for_training:
+                    companion_path = cache_dir / f"{sample_id}.json"
+                else:
+                    companion_path = cache_dir / f"{sample_id}.txt"
+
+                if companion_path.is_file():
+                    self.saved_samples_set.add(sample_id)
          
     def _atomic_write_bytes(self,path, data):
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
@@ -270,61 +278,63 @@ class ImageDataset(Dataset):
 
                 # cache files
                 # everytime opening a tar, try to go through all the files that have not been cached.
-                
-                for member in tar:
-                    if member.isfile() and member.name.endswith(".jpg"):
-                        stem = Path(member.name).stem
-                        if stem in self.saved_samples_set:
-                            continue
+                free_colab = (shutil.disk_usage(self.colab_cache_path).free / 1024**3)
+                free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
+                if free_colab < CACHE_RESERVE_GB or free_drive < CACHE_RESERVE_GB:          
+                    for member in tar:
+                        if member.isfile() and member.name.endswith(".jpg"):
+                            stem = Path(member.name).stem
+                            if stem in self.saved_samples_set:
+                                continue
 
-                        image_name = f"{stem}.jpg"
-                        image_file = tar.extractfile(image_name)
-                        if image_file is None:
-                            raise FileNotFoundError(f"{image_name} not found in {tar_path}")
-                        image_bytes_cache = image_file.read()
-                        if shard_type == "train":
-                            meta_data_name = f"{stem}.json"
-                            meta_file = tar.extractfile(meta_data_name)
-                            if meta_file is None:
-                                raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
-                            meta_data_cache = json.load(meta_file)
-                        elif shard_type == "validation":
-                            text_data_name = f"{stem}.txt"
-                            text_file = tar.extractfile(text_data_name)
-                            if text_file is None:
-                                raise FileNotFoundError(f"{text_data_name} not found in {tar_path}")
-                            text_data_cache = (text_file.read().decode("utf-8"))
-
-                        # Free disk space on colab (G)
-                        free_colab = (shutil.disk_usage(self.colab_cache_path).free / 1024**3)
-
-                        # cache image and metadata.
-                        # Leave 50G on each disk
-                        required_gb = (len(image_bytes_cache) / 1024**3)
-                        if (free_colab - required_gb > CACHE_RESERVE_GB):
-                            # file paths
-                            colab_image_path = self.colab_cache_path/f"{image_name}"
-                            self._atomic_write_bytes(colab_image_path, image_bytes_cache)
+                            image_name = f"{stem}.jpg"
+                            image_file = tar.extractfile(image_name)
+                            if image_file is None:
+                                raise FileNotFoundError(f"{image_name} not found in {tar_path}")
+                            image_bytes_cache = image_file.read()
                             if shard_type == "train":
-                                colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
-                                self._atomic_write_json(colab_meta_path, meta_data_cache)
+                                meta_data_name = f"{stem}.json"
+                                meta_file = tar.extractfile(meta_data_name)
+                                if meta_file is None:
+                                    raise FileNotFoundError(f"{meta_data_name} not found in {tar_path}")
+                                meta_data_cache = json.load(meta_file)
                             elif shard_type == "validation":
-                                colab_text_path = self.colab_cache_path/f"{text_data_name}"
-                                self._atomic_write_text(colab_text_path, text_data_cache)
-                            self.saved_samples_set.add(stem)
-                        else:
-                            # Free disk space on google drive (G)
-                            free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
-                            if (free_drive - required_gb > CACHE_RESERVE_GB):
-                                drive_image_path = self.drive_cache_path/f"{image_name}"
-                                self._atomic_write_bytes(drive_image_path, image_bytes_cache)
+                                text_data_name = f"{stem}.txt"
+                                text_file = tar.extractfile(text_data_name)
+                                if text_file is None:
+                                    raise FileNotFoundError(f"{text_data_name} not found in {tar_path}")
+                                text_data_cache = (text_file.read().decode("utf-8"))
+
+                            # Free disk space on colab (G)
+                            free_colab = (shutil.disk_usage(self.colab_cache_path).free / 1024**3)
+
+                            # cache image and metadata.
+                            # Leave 50G on each disk
+                            required_gb = (len(image_bytes_cache) / 1024**3)
+                            if (free_colab - required_gb > CACHE_RESERVE_GB):
+                                # file paths
+                                colab_image_path = self.colab_cache_path/f"{image_name}"
+                                self._atomic_write_bytes(colab_image_path, image_bytes_cache)
                                 if shard_type == "train":
-                                    drive_meta_path = self.drive_cache_path/f"{meta_data_name}"
-                                    self._atomic_write_json(drive_meta_path, meta_data_cache)
+                                    colab_meta_path = self.colab_cache_path/f"{meta_data_name}"
+                                    self._atomic_write_json(colab_meta_path, meta_data_cache)
                                 elif shard_type == "validation":
-                                    drive_text_path = self.drive_cache_path/f"{text_data_name}"
-                                    self._atomic_write_text(drive_text_path, text_data_cache)
+                                    colab_text_path = self.colab_cache_path/f"{text_data_name}"
+                                    self._atomic_write_text(colab_text_path, text_data_cache)
                                 self.saved_samples_set.add(stem)
+                            else:
+                                # Free disk space on google drive (G)
+                                free_drive = (shutil.disk_usage(self.drive_cache_path).free / 1024**3)
+                                if (free_drive - required_gb > CACHE_RESERVE_GB):
+                                    drive_image_path = self.drive_cache_path/f"{image_name}"
+                                    self._atomic_write_bytes(drive_image_path, image_bytes_cache)
+                                    if shard_type == "train":
+                                        drive_meta_path = self.drive_cache_path/f"{meta_data_name}"
+                                        self._atomic_write_json(drive_meta_path, meta_data_cache)
+                                    elif shard_type == "validation":
+                                        drive_text_path = self.drive_cache_path/f"{text_data_name}"
+                                        self._atomic_write_text(drive_text_path, text_data_cache)
+                                    self.saved_samples_set.add(stem)
 
         '''
             Read and patchfy image

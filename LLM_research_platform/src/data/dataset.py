@@ -395,14 +395,12 @@ class ImageDataset(Dataset):
 class ImageDatasetLocal(Dataset):
     def __init__(self, data_dir = "/content/cache",  tokenizer = None, image_only = vit_config["data"]["image_only"], for_training=True):
         self.data_dir = Path(data_dir)
-        if for_training:
-            self.index_path = self.data_dir/f"training"/f"index.json"
-        else:
-            self.index_path = self.data_dir/f"validation"/f"index.json"
         self.transform = transforms.ToTensor()
-        self.image_only =  image_only
+        self.image_only = image_only
         self.tokenizer = tokenizer
-        self.colab_cache_path = Path("/content/cache")
+        self.colab_cache_path = self.data_dir/f"validation/"
+        if for_training:
+            self.colab_cache_path = self.data_dir/f"training/"
         self.colab_cache_path.mkdir(parents=True, exist_ok=True)
         self.for_training = for_training
         assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)

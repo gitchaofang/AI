@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from src.data.regex_tokenizer_with_lib import RegexTokenizer
 from src.data.all_in_one import TextDecodeDataset
 from src.data.dataset import ImageDataset
+from src.data.dataset import ImageDatasetLocal
 from src.data.image_dataset_sampler import ImageDatasetBatchSampler
 from src.data.all_in_one import TokenBatchSampler
 from src.data.all_in_one import PaddingCollator
@@ -246,8 +247,8 @@ def shared_set():
 
 def test_num_workers(tokenizer,shared_set):
 
-    dataset = ImageDataset(
-        data_dir=vit_config["data"]["data_path"],
+    dataset = ImageDatasetLocal(
+        data_dir=vit_config["data"]["data_path_local"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
@@ -286,7 +287,7 @@ def test_num_workers(tokenizer,shared_set):
 
 def test_image_dataset_basic(tokenizer,shared_set):
     print(f"image test starts")
-    dataset = ImageDataset(data_dir = vit_config["data"]["data_path"],
+    dataset = ImageDatasetLocal(data_dir = vit_config["data"]["data_path_local"],
                           tokenizer=tokenizer,
                           image_only = vit_config["data"]["image_only"],
                           for_training=True,

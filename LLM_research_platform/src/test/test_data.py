@@ -223,12 +223,17 @@ def test_text_dataset(tokenizer):
 
 #----------ViT------------------------
 import time
+
+class SetManager(BaseManager):
+    pass
+SetManager.register("SharedSet", set)
 @pytest.fixture
 def shared_set():
-    print(f"build shared_set")
-    manager = mp.Manager()
-    saved_samples_set = manager.set()
-    return saved_samples_set
+    print("build shared_set")
+
+    with SetManager() as manager:
+        saved_samples_set = manager.SharedSet()
+        yield saved_samples_set
 
 def test_num_workers(tokenizer,shared_set):
 

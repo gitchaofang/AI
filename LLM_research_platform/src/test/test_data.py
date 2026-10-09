@@ -226,7 +226,7 @@ import time
 @pytest.fixture
 def shared_set():
     print(f"build shared_set")
-    manager = mp.Magener()
+    manager = mp.Magager()
     saved_samples_set = manager.set()
     return saved_samples_set
 

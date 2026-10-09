@@ -419,7 +419,7 @@ class ImageDatasetLocal(Dataset):
         return len(self.sample_ids)
 
     def __getitem__(self, key):
-        assert 0 <= key < len(self.id_tar_pair), f"key {key} is out of range"
+        assert 0 <= key < len(self.sample_ids), f"key {key} is out of range"
         sample_id = self.sample_ids[key]
         shard_type = "validation"
         if self.for_training:

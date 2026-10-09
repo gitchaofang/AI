@@ -142,6 +142,14 @@ class ImageDataset(Dataset):
         # build a list of tuples(file_name ("00015"), tar_file_name("cc3m-train_0565"))
         self.id_tar_pair = list(index.items())
 
+        # initialize shared-set
+        self._load_cached_samples()
+
+    def _load_cached_samples(self):
+        for cache_dir in (self.colab_cache_path, self.drive_cache_path):
+            for image_path in cache_dir.glob("*.jpg"):
+                self.saved_samples_set.add(image_path.stem)
+         
     def _atomic_write_bytes(self,path, data):
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
         with open(tmp_path, "wb") as f:
@@ -292,7 +300,7 @@ class ImageDataset(Dataset):
 
                         # cache image and metadata.
                         # Leave 50G on each disk
-                        required_gb = (len(image_bytes) / 1024**3)
+                        required_gb = (len(image_bytes_cache) / 1024**3)
                         if (free_colab - required_gb > CACHE_RESERVE_GB):
                             # file paths
                             colab_image_path = self.colab_cache_path/f"{image_name}"

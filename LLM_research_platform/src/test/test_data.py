@@ -4,6 +4,8 @@ import os
 import regex as re
 import yaml
 import time
+import multiprocessing as mp
+from multiprocessing.managers import BaseManager
 from pathlib import Path
 from torch.utils.data import DataLoader
 #from src.data.regex_tokenizer import RegexTokenizer
@@ -220,16 +222,22 @@ def test_text_dataset(tokenizer):
                 assert torch.equal(x[i, 1:valid_len],y[i,:valid_len - 1])
 
 #----------ViT------------------------
-
 import time
+@pytest.fixture
+def shared_set():
+    print(f"build shared_set")
+    manager = mp.Magener()
+    saved_samples_set = manager.set()
+    return saved_samples_set
 
-def test_num_workers(tokenizer):
+def test_num_workers(tokenizer,shared_set):
 
     dataset = ImageDataset(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
+        saved_samples_set=shared_set,
     )
 
     collator = VitCollator(
@@ -251,6 +259,7 @@ def test_num_workers(tokenizer):
             batch_sampler=batch_sampler,
             collate_fn=collator,
             num_workers=num_workers,
+            num_workers = 4,
         )
         start = time.perf_counter()
         for i, batch in enumerate(loader):
@@ -262,12 +271,13 @@ def test_num_workers(tokenizer):
             f"{elapsed:.2f} seconds"
         )
 
-def test_image_dataset_basic(tokenizer):
+def test_image_dataset_basic(tokenizer,shared_set):
     print(f"image test starts")
     dataset = ImageDataset(data_dir = vit_config["data"]["data_path"],
                           tokenizer=tokenizer,
                           image_only = vit_config["data"]["image_only"],
-                          for_training=True)
+                          for_training=True,
+                          saved_samples_set=shared_set,)
     print(f"dataset done")
     batch_sampler = ImageDatasetBatchSampler(dataset = dataset,
                                        batch_size=vit_config["data"]["batch_size"],
@@ -283,7 +293,8 @@ def test_image_dataset_basic(tokenizer):
     loader = DataLoader(dataset=dataset,
                         collate_fn = collator,
                         batch_sampler = batch_sampler,
-                        pin_memory = True
+                        pin_memory = True,
+                        num_workers = 4,
                         )
     print(f"iteration starts")
     epochs = vit_config["training"]["epochs"]
@@ -316,12 +327,13 @@ def test_image_dataset_basic(tokenizer):
         f"({epoch_time / 60:.2f} min)"
     )
 
-def test_image_dataset_sample_single_sample(tokenizer):
+def test_image_dataset_sample_single_sample(tokenizer,shared_set):
     dataset = ImageDataset(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
+        saved_samples_set=shared_set,
     )
 
     assert len(dataset) > 0
@@ -357,12 +369,13 @@ def test_image_dataset_sample_single_sample(tokenizer):
         assert "caption_ids" in sample
         assert len(sample["caption_ids"]) > 0
             
-def test_image_dataset_batch_sampler(tokenizer):
+def test_image_dataset_batch_sampler(tokenizer,shared_set):
     dataset = ImageDataset(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
+        saved_samples_set=shared_set,
     )
 
     batch_size = vit_config["data"]["batch_size"]
@@ -383,12 +396,13 @@ def test_image_dataset_batch_sampler(tokenizer):
         assert isinstance(idx, int)
         assert 0 <= idx < len(dataset)
 
-def test_vit_collator(tokenizer):
+def test_vit_collator(tokenizer,shared_set):
     dataset = ImageDataset(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
+        saved_samples_set=shared_set,
     )
 
     collator = VitCollator(
@@ -512,12 +526,13 @@ def test_vit_collator(tokenizer):
 
     assert len(batch["meta_data"]) == B
 
-def test_image_dataloader(tokenizer):
+def test_image_dataloader(tokenizer,shared_set):
     dataset = ImageDataset(
         data_dir=vit_config["data"]["data_path"],
         tokenizer=tokenizer,
         image_only=vit_config["data"]["image_only"],
         for_training=True,
+        saved_samples_set=shared_set,
     )
 
     batch_sampler = ImageDatasetBatchSampler(
@@ -538,6 +553,7 @@ def test_image_dataloader(tokenizer):
         batch_sampler=batch_sampler,
         collate_fn=collator,
         pin_memory=True,
+        num_workers = 4,
     )
 
     batch = next(iter(loader))

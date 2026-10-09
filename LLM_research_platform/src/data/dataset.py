@@ -404,15 +404,16 @@ class ImageDatasetLocal(Dataset):
         self.colab_cache_path.mkdir(parents=True, exist_ok=True)
         self.for_training = for_training
         assert (self.tokenizer is None and self.image_only) or (self.tokenizer is not None and not self.image_only)        
-        self.sample_ids = set()
+        self.sample_ids = []
 
         # initialize shared-set
         self._load_cached_samples()
 
     def _load_cached_samples(self):
+        id_set = set()
         for image_path in self.colab_cache_path.glob("*.jpg"):
-            sample_id = image_path.stem
-            self.sample_ids.add(sample_id)
+            id_set.add(image_path.stem)
+        self.sample_ids = sorted(id_set)
 
 
     def __len__(self):

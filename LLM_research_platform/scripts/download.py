@@ -15,7 +15,7 @@ VALIDATION_PATH.mkdir(parents=True, exist_ok=True)
 PATCH_SIZE = 16
 
 # step 1: download all ".tar" shards
-if True:
+if False:
     snapshot_download(
         repo_id="pixparse/cc3m-wds",
         repo_type="dataset",
@@ -100,7 +100,7 @@ if True:
                                 
 
 
-            if True:
+            if False:
                 # copy **-train-**.tar to training dir and **-validation-**.tar to validation dir 
                 if shard_type == "train":
                     shutil.copy2(file_path, TRAIN_PATH)

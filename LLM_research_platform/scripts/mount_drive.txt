@@ -5,3 +5,17 @@ from google.colab import drive
 
 !rm -rf /content/drive
 drive.mount("/content/drive")
+
+
+# down file and extract
+#download: 
+snapshot_download(
+        repo_id="pixparse/cc3m-wds",
+        repo_type="dataset",
+        local_dir="/content/cache/training",
+        allow_patterns=[
+            "cc3m-train-00[0-9][0-9].tar",
+        ]
+    )
+# extract:
+!for f in cc3m-train-00[0-9][0-9].tar; do tar -xf "$f"; done

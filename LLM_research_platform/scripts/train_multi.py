@@ -99,29 +99,18 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Device:", device)
 
-vocab_size=10000,
-        d_model=384,
-        max_seq_len=512,
-        n_layers=6,
-        n_heads=6,
-        rope_dims=[64],
-        RoPE=True,
-        cross_attention= False,
-        causal = True,
-        dropout = 0.2,
-        cls_enabled = False,
 gpt = GPT(
-    vocab_size = vocab_size,
-    d_model = config_gpt["model"]["d_model"],
-    max_seq_len = config_gpt["data"]["max_len"],
-    n_layers = config_gpt["model"]["n_layers"],
-    n_heads = config_gpt["model"]["n_heads"],
+    vocab_size=vocab_size,
+    d_model=config_gpt["model"]["d_model"],
+    max_seq_len=config_gpt["data"]["max_len"],
+    n_layers=config_gpt["model"]["n_layers"],
+    n_heads=config_gpt["model"]["n_heads"],
     cross_attention=config_gpt["model"]["cross_attention"],
-    causal=config_gpt["model"]["causal"]
-    rope_dims=config_gpt["model"]["rope_dims"],
-    dropout = config_gpt["model"]["dropout"]
-    cls_enabled= = config_gpt["model"]["cls]
+    causal=config_gpt["model"]["causal"],
     RoPE=config_gpt["model"]["rope"],
+    rope_dims=config_gpt["model"]["rope_dims"],
+    dropout=config_gpt["model"]["dropout"],
+    cls_enabled=config_gpt["model"]["cls"],
 ).to(device)
 
 vit = ViT(d_model=config_vit["model"]["d_model"], 
@@ -139,6 +128,8 @@ vit = ViT(d_model=config_vit["model"]["d_model"],
           causal=False,
           cross_attention_enabled=False)
 
+model = MultimodalGPT(vit = vit, gpt = gpt)
+
 optimizer = torch.optim.AdamW(
     model.parameters(),
     lr = config_vit["training"]["training_rate"],
@@ -151,39 +142,67 @@ trainer = Trainer(
     device,
 )
 
-epoches = config["training"]["epochs"]
-accumulation_steps = config["training"]["accumulation_steps"]
+epoches = config_vit["training"]["epochs"]
+accumulation_steps = config_vit["training"]["accumulation_steps"]
 for epoch in range(epoches):
     model.train()
     optimizer.zero_grad()
     loss_accu = 0.0
     cnt = 0.0
     epoch_tokens = 0
+    
+    '''
+    patch_items,        #vit
+    text_x,             #gpt
+    text_pad_mask,      #gpt
+    text_positions,     #gpt
+    is_prefill=False,   #gpt
+    is_generate=False): #gpt
+    '''
     #train
     for i, batch in enumerate(loader_train):
-        x = batch["input_ids"].to(device)
-        y = batch["labels"].to(device)
-        pad_mask = batch["pad_mask"].to(device)
-        positions = batch["positions"].to(device)
+        patched_items = {"patched_input": batch["patched_input"],
+                       "pad_mask_patch": batch["pad_mask_patch"],
+                       "patched_positions": batch["patch_positions"]}.to(device)
+        text_x = batch["caption_ids"].to(device)
+        text_pad_mask = batch["pad_mask_text"].to(device)
+        text_positions = batch["positions_text"].to(device)
+        y = batch[ "caption_ids_label"].to(device)
 
-        num_tokens = pad_mask.sum().item()
+        num_tokens = text_pad_mask.sum().item()
         epoch_tokens += num_tokens
 
-        loss = trainer.train_step(x, y, pad_mask, positions) / accumulation_steps
+        '''
+       "patched_items, text_x, text_pad_mask,text_positions, is_prefill, is_generate, y,"
+        text_x: [B, T_q]
+        text_pad_mask: [B, T_q]
+        patch_items:
+                "patched_input": [B, T_kv, in_channel * patch_size * patch_size]
+                "pad_mask_patch": [B, T_kv]
+                "patched_positions"
+        encoder_out:
+                "patch_seq": patch_out: [B, T_kv, d_model_ca]
+                "pad_mask": pad_mask_out: [B, T_kv]
+        '''
+        loss = trainer.train_step(patched_items = patched_items, 
+                                  text_x = text_x, 
+                                  text_pad_mask = text_pad_mask,
+                                  text_positions = text_positions, 
+                                  is_prefill = False, 
+                                  is_generate = False, 
+                                  y=y,) / accumulation_steps
         loss.backward()
 
         loss_accu += (loss.item() * accumulation_steps)
 
         if(i % 100 == 0):
-            batch_size = x.size(0)
-            seq_len = x.size(1)
-
-           
+            batch_size = text_x.size(0)
+            text_seq_len = text_x.size(1)
 
             wandb.log({
                 "train/batch_loss": loss.item(),
                 "train/batch_size": batch_size,
-                "train/seq_len": seq_len,
+                "train/seq_len": text_seq_len,
                 "train/tokens": num_tokens,
                 "epoch": epoch,
                 "batch": i,
@@ -194,7 +213,7 @@ for epoch in range(epoches):
                             f"epoch {epoch} | "
                             f"batch {i} | "
                             f"batch_size {batch_size} | "
-                            f"seq_len {seq_len} | "
+                            f"seq_len {text_seq_len} | "
                             f"tokens {num_tokens} | "
                             f"loss {loss.item() * accumulation_steps:.4f}"
                         )

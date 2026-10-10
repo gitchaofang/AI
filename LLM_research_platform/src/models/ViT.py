@@ -113,7 +113,7 @@ class ViT(nn.Module):
 
         pad_mask = patch_items["pad_mask_patch"] #[B, T]
         if self.RoPE:
-            patch_positions = patch_items["patch_positions"] # [B,T,2]
+            patch_positions = patch_items["patched_positions"] # [B,T,2]
         else:
             patch_positions = None
 

@@ -7,25 +7,27 @@ class MultimodalGPT(nn.Module):
         super().__init__()
         self.vit = vit
         self.gpt = gpt
-        self.encoder_out = None
+        self.encoder_out = None # most recent encoder out from vit. 
+                                # It is usually used for generation 
 
     def reset_cache(self):
         self.encoder_out = None
         self.gpt.reset_cache()
 
     def forward(self, 
-                patch_items, 
-                text_x, 
-                text_pad_mask, 
-                text_positions,
-                is_prefill=False, 
-                is_generate=False):
+                patch_items,        #vit
+                text_x,             #gpt
+                text_pad_mask,      #gpt
+                text_positions,     #gpt
+                is_prefill=False,   #gpt
+                is_generate=False): #gpt
         '''
         text_x: [B, T_q]
         text_pad_mask: [B, T_q]
         patch_items:
             "patched_input": [B, T_kv, in_channel * patch_size * patch_size]
             "pad_mask_patch": [B, T_kv]
+            "patched_positions": [B, T_kv, 2]
         encoder_out:
             "patch_seq": patch_out: [B, T_kv, d_model_ca]
             "pad_mask": pad_mask_out: [B, T_kv]

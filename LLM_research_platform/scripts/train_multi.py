@@ -172,25 +172,13 @@ for epoch in range(epoches):
         num_tokens = text_pad_mask.sum().item()
         epoch_tokens += num_tokens
 
-        '''
-       "patched_items, text_x, text_pad_mask,text_positions, is_prefill, is_generate, y,"
-        text_x: [B, T_q]
-        text_pad_mask: [B, T_q]
-        patch_items:
-                "patched_input": [B, T_kv, in_channel * patch_size * patch_size]
-                "pad_mask_patch": [B, T_kv]
-                "patched_positions"
-        encoder_out:
-                "patch_seq": patch_out: [B, T_kv, d_model_ca]
-                "pad_mask": pad_mask_out: [B, T_kv]
-        '''
         loss = trainer.train_step(patched_items = patched_items, 
                                   text_x = text_x, 
                                   text_pad_mask = text_pad_mask,
                                   text_positions = text_positions, 
                                   is_prefill = False, 
                                   is_generate = False, 
-                                  y=y,) / accumulation_steps
+                                  y=y,).item() / accumulation_steps
         loss.backward()
 
         loss_accu += (loss.item() * accumulation_steps)
@@ -238,15 +226,24 @@ for epoch in range(epoches):
     eval_tokens = 0
     with torch.no_grad():
         for i, batch in enumerate(loader_eval):
-            x = batch["input_ids"].to(device)
-            y = batch["labels"].to(device)
-            pad_mask = batch["pad_mask"].to(device)
-            positions = batch["positions"].to(device)
+            patched_items = {"patched_input": batch["patched_input"],
+                             "pad_mask_patch": batch["pad_mask_patch"],
+                             "patched_positions": batch["patch_positions"]}.to(device)
+            text_x = batch["caption_ids"].to(device)
+            text_pad_mask = batch["pad_mask_text"].to(device)
+            text_positions = batch["positions_text"].to(device)
+            y = batch[ "caption_ids_label"].to(device)
 
-            num_tokens = pad_mask.sum().item()
+            num_tokens = text_x.sum().item()
             eval_tokens += num_tokens
 
-            eval_loss_accu += trainer.train_step(x, y, pad_mask,positions,).item()
+            eval_loss_accu += trainer.train_step(patched_items = patched_items, 
+                                  text_x = text_x, 
+                                  text_pad_mask = text_pad_mask,
+                                  text_positions = text_positions, 
+                                  is_prefill = False, 
+                                  is_generate = False, 
+                                  y=y,).item()
             eval_cnt += 1
     avg_eval_loss = eval_loss_accu / eval_cnt
     print(f"epoch | {epoch} | eval error: {avg_eval_loss}")

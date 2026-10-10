@@ -19,3 +19,10 @@ snapshot_download(
     )
 # extract:
 !for f in cc3m-train-00[0-9][0-9].tar; do tar -xf "$f"; done
+
+# download token zip:
+!curl -L -o ./wikitext-103-raw-v1.zip \
+    https://wikitext.smerity.com/wikitext-103-raw-v1.zip
+# unzip:
+    !unzip -q ./wikitext-103-raw-v1.zip -d ./
+

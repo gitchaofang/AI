@@ -12,7 +12,7 @@ from src.data.image_dataset_sampler import ImageDatasetBatchSampler
 from src.models.GPT import GPT
 from src.models.ViT import ViT
 from src.models.multimodalGPT import MultimodalGPT
-from src.training.trainer_multimodal import Trainer
+from src.training.trainer_multimodalGPT import Trainer
 
 
 LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")

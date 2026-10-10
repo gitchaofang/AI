@@ -7,7 +7,7 @@ data:
   local_index_path:  "/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/src/data/input_data/data/index_files/"
   colab_file_path: "/content/AI/LLM_research_platform/src/data/input_data/data/"
   colab_index_path: "/content/AI/LLM_research_platform/src/data/input_data/data/index_files/"
-  max_len: 256
+  max_len: 100
   batch_size: 8
   validation_batch_size: 128
   shuffle: true
@@ -25,7 +25,7 @@ model:
   rope_dims: [64]
   dropout: 0.2
   mlp_ratio: 4
-  cross_attention: False
+  cross_attention: True
   causal: True
   cls: False
 

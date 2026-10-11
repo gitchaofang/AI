@@ -87,7 +87,6 @@ if True:
                             patch_seq_len = (width//PATCH_SIZE) * (height // PATCH_SIZE)
                             text_len = (len(caption) + 4) // 4
                             max_len_text = max(text_len,max_len_text)
-                            max_len_patch = max(max_len_patch,patch_seq_len)
                             if patch_seq_len > 5000:
                                 max_len_patch[5000] += 1
                             elif patch_seq_len > 3000:

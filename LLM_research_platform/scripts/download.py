@@ -43,8 +43,8 @@ metadata:
 max_len_patch: longest patchified sequence 
 max_len_text: longggest tokenized text sequence
 '''
-max_len_patch = 0
-max_len_text = {
+max_len_text = 0
+max_len_patch = {
     5000: 0,
     3000: 0,
     2000: 0,
@@ -86,17 +86,18 @@ if True:
                             caption = str(data["caption"])
                             patch_seq_len = (width//PATCH_SIZE) * (height // PATCH_SIZE)
                             text_len = (len(caption) + 4) // 4
+                            max_len_text = max(text_len,max_len_text)
                             max_len_patch = max(max_len_patch,patch_seq_len)
-                            if text_len > 5000:
-                                max_len_text[5000] += 1
-                            elif text_len > 3000:
-                                max_len_text[3000] += 1
-                            elif text_len > 2000:
-                                max_len_text[2000] += 1
-                            elif text_len > 1000:
-                                max_len_text[1000] += 1
+                            if patch_seq_len > 5000:
+                                max_len_patch[5000] += 1
+                            elif patch_seq_len > 3000:
+                                max_len_patch[3000] += 1
+                            elif patch_seq_len > 2000:
+                                max_len_patch[2000] += 1
+                            elif patch_seq_len > 1000:
+                                max_len_patch[1000] += 1
                             else:
-                                max_len_text[0] += 1
+                                max_len_patch[0] += 1
                                 
 
 
@@ -134,12 +135,13 @@ if True:
     if True:
         meta_dict = {
             "total samples": cnt,
+            "max_len_text": max_len_text,
             "max_len_patch": max_len_patch,
-            "max_len_text: >5000": max_len_text[5000],
-            "max_len_text: >3000": max_len_text[3000],
-            "max_len_text: >2000": max_len_text[2000],
-            "max_len_text: >1000": max_len_text[1000],
-            "max_len_text: <5000": max_len_text[0],
+            "max_len_patch: >5000": max_len_patch[5000],
+            "max_len_patch: >3000": max_len_patch[3000],
+            "max_len_patch: >2000": max_len_patch[2000],
+            "max_len_patch: >1000": max_len_patch[1000],
+            "max_len_patch: <5000": max_len_patch[0],
 
         }
         meta_dict_path = INDEX_PATH/"metadata.json"

@@ -140,7 +140,7 @@ if True:
             "max_len_patch: >3000": max_len_patch[3000],
             "max_len_patch: >2000": max_len_patch[2000],
             "max_len_patch: >1000": max_len_patch[1000],
-            "max_len_patch: <5000": max_len_patch[0],
+            "max_len_patch: <1000": max_len_patch[0],
 
         }
         meta_dict_path = INDEX_PATH/"metadata.json"

@@ -162,9 +162,11 @@ for epoch in range(epoches):
     '''
     #train
     for i, batch in enumerate(loader_train):
-        patched_items = {"patched_input": batch["patched_input"],
-                       "pad_mask_patch": batch["pad_mask_patch"],
-                       "patched_positions": batch["patch_positions"]}.to(device)
+        patched_items = {
+            "patched_input": batch["patched_input"],
+            "pad_mask_patch": batch["pad_mask_patch"],
+            "patched_positions": batch["patch_positions"]
+        }.to(device)
         text_x = batch["caption_ids"].to(device)
         text_pad_mask = batch["pad_mask_text"].to(device)
         text_positions = batch["positions_text"].to(device)
@@ -173,13 +175,15 @@ for epoch in range(epoches):
         num_tokens = text_pad_mask.sum().item()
         epoch_tokens += num_tokens
 
-        loss = trainer.train_step(patched_items = patched_items, 
-                                  text_x = text_x, 
-                                  text_pad_mask = text_pad_mask,
-                                  text_positions = text_positions, 
-                                  is_prefill = False, 
-                                  is_generate = False, 
-                                  y=y,).item() / accumulation_steps
+        loss = trainer.train_step(
+            patched_items = patched_items, 
+            text_x = text_x, 
+            text_pad_mask = text_pad_mask,
+            text_positions = text_positions, 
+            is_prefill = False, 
+            is_generate = False, 
+            y=y,
+        ).item() / accumulation_steps
         loss.backward()
 
         loss_accu += (loss.item() * accumulation_steps)

@@ -113,20 +113,22 @@ gpt = GPT(
     cls_enabled=config_gpt["model"]["cls"],
 ).to(device)
 
-vit = ViT(d_model=config_vit["model"]["d_model"], 
-          n_heads=config_vit["model"]["n_heads"], 
-          in_channels=config_vit["model"]["in_channel"], 
-          max_seq_len=config_vit["data"]["max_len"],
-          patch_size=config_vit["model"]["patch_size"],
-          n_layers=config_vit["model"]["patch_size"],
-          mlp_ratio=config_vit["model"]["mlp_ratio"],
-          dropout=config_vit["model"]["dropout"],
-          RoPE=config_vit["model"]["rope"],
-          num_class=None,
-          rope_dims=["model"]["rope_dim"], 
-          cls_enabled=True,
-          causal=False,
-          cross_attention_enabled=False)
+vit = ViT(
+    d_model=config_vit["model"]["d_model"], 
+    n_heads=config_vit["model"]["n_heads"],
+    n_layers=config_vit["model"]["n_layers"], 
+    in_channels=config_vit["data"]["in_channel"], 
+    max_seq_len=config_vit["data"]["max_len"],
+    patch_size=config_vit["data"]["patch_size"],
+    mlp_ratio=config_vit["model"]["mlp_ratio"],
+    dropout=config_vit["model"]["dropout"],
+    RoPE=config_vit["model"]["rope"],
+    rope_dims=["model"]["rope_dim"],
+    num_class=config_vit["model"]["num_class"], 
+    cls_enabled=config_vit["model"]["cls"],
+    causal=False,
+    cross_attention_enabled=False,
+)
 
 model = MultimodalGPT(vit = vit, gpt = gpt)
 

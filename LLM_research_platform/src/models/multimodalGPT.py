@@ -32,15 +32,20 @@ class MultimodalGPT(nn.Module):
             "patch_seq": patch_out: [B, T_kv, d_model_ca]
             "pad_mask": pad_mask_out: [B, T_kv]
         '''
-        if is_generate and self.encoder_out is not None:
-            # Reuse visual features for the same generation session.
+        if is_prefill and is_generate:
+            raise ValueError(
+                "Prefill and incremental generation must be separate phases."
+            )
+
+        if is_generate:
+            assert self.encoder_out is not None, (
+                "Generation requires cached vision features from prefill."
+            )
             encoder_out = self.encoder_out
+
         else:
-            if is_generate:
-                assert self.encoder_out, "generate without vision input"
-            # Compute fresh visual features.
             encoder_out = self.vit(patch_items=patch_items)
-            # Cache for subsequent generation calls.
+
             if is_prefill:
                 self.encoder_out = encoder_out
 
@@ -55,5 +60,5 @@ class MultimodalGPT(nn.Module):
             positions=text_positions,
             content=content,
             is_prefill=is_prefill,
-            is_generate=is_generate
+            is_generate=is_generate,
         )

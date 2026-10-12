@@ -116,7 +116,7 @@ gpt = GPT(
 vit = ViT(d_model=config_vit["model"]["d_model"], 
           n_heads=config_vit["model"]["n_heads"], 
           in_channels=config_vit["model"]["in_channel"], 
-          max_len=config_vit["model"]["max"],
+          max_seq_len=config_vit["data"]["max_len"],
           patch_size=config_vit["model"]["patch_size"],
           n_layers=config_vit["model"]["patch_size"],
           mlp_ratio=config_vit["model"]["mlp_ratio"],

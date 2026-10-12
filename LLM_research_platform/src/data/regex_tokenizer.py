@@ -29,7 +29,7 @@ PAD_ID = 0
 EOS_ID = 1 
 TOKEN_OFFSET = 2
 class RegexTokenizer:
-    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = config["tokenizer"]["vocab_size"]): 
+    def __init__(self, file_dir = FILE_DIR, pattern = None, vocab_size = 10000): 
         self.file_dir = Path(file_dir)
         self.file_dir.mkdir(parents=True, exist_ok=True)
         self.merge_dict_path = self.file_dir / "merge.json"

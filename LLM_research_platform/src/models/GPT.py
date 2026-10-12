@@ -39,7 +39,7 @@ class GPT(nn.Module):
         self.n_heads = n_heads
         self.n_layers = n_layers
 
-        self.token_embedding = nn.Embedding(self.vocab_size + 2 ,self.d_model,) # "+2" becasue 0 is for padding and 1 is for EOS
+        self.token_embedding = nn.Embedding(self.vocab_size,self.d_model,) # vocab_size already includes EOS_ID and PAD_ID
         # if not using RoPE, we use learnable positional embedding
         if not self.RoPE:
             self.position_embedding = nn.Embedding(self.max_seq_len,self.d_model,)
@@ -62,7 +62,7 @@ class GPT(nn.Module):
         )
 
         self.norm = nn.LayerNorm(self.d_model,)
-        self.lm_linear = nn.Linear(self.d_model, self.vocab_size + 2,)
+        self.lm_linear = nn.Linear(self.d_model, self.vocab_size,)
         self.position_offset = None
 
         self.apply(self._init_weights)

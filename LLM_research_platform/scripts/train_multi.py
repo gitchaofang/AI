@@ -164,12 +164,12 @@ for epoch in range(epoches):
     for i, batch in enumerate(loader_train):
         patched_items = {
             "patched_input": batch["patched_input"],
-            "pad_mask_patch": batch["pad_mask_patch"],
-            "patched_positions": batch["patch_positions"]
+            "patched_pad_mask": batch["patched_pad_mask"],
+            "patched_positions": batch["patched_positions"]
         }.to(device)
         text_x = batch["caption_ids"].to(device)
-        text_pad_mask = batch["pad_mask_text"].to(device)
-        text_positions = batch["positions_text"].to(device)
+        text_pad_mask = batch["text_pad_mask"].to(device)
+        text_positions = batch["text_positions"].to(device)
         y = batch[ "caption_ids_label"].to(device)
 
         num_tokens = text_pad_mask.sum().item()
@@ -232,11 +232,11 @@ for epoch in range(epoches):
     with torch.no_grad():
         for i, batch in enumerate(loader_eval):
             patched_items = {"patched_input": batch["patched_input"],
-                             "pad_mask_patch": batch["pad_mask_patch"],
-                             "patched_positions": batch["patch_positions"]}.to(device)
+                             "patched_pad_mask": batch["patched_pad_mask"],
+                             "patched_positions": batch["patched_positions"]}.to(device)
             text_x = batch["caption_ids"].to(device)
-            text_pad_mask = batch["pad_mask_text"].to(device)
-            text_positions = batch["positions_text"].to(device)
+            text_pad_mask = batch["text_pad_mask"].to(device)
+            text_positions = batch["text_positions"].to(device)
             y = batch[ "caption_ids_label"].to(device)
 
             num_tokens = text_x.sum().item()

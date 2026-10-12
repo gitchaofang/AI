@@ -121,11 +121,11 @@ class VitCollator:
             res_dict = {
                 "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
                 "patched_positions": patch_positions, # [B, max_len_patch, 2]
-                "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
+                "patched_pad_mask": pad_mask_patch,# [B, max_len_patch]
                 "caption_ids": caption_ids, # [B, max_len_text]
                 "caption_ids_label": caption_ids_label, #[B, max_len_text]
-                "pad_mask_text": pad_mask_text, # [B, max_len_text]
-                "positions_text": positions, #[B, max_len_text,1]
+                "text_pad_mask": pad_mask_text, # [B, max_len_text]
+                "text_positions": positions, #[B, max_len_text,1]
             }
             if self.for_training:
                 res_dict["meta_data"] = meta_data # list of dict. B dicts
@@ -134,5 +134,5 @@ class VitCollator:
         return {
             "patched_input": patched_input, #[B, max_len_patch ,C * patch_size * patch_size]
             "patched_positions": patch_positions, # [B, max_len_patch, 2]
-            "pad_mask_patch": pad_mask_patch,# [B, max_len_patch]
+            "patched_pad_mask": pad_mask_patch,# [B, max_len_patch]
         } 

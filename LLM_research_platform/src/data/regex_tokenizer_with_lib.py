@@ -52,7 +52,8 @@ class RegexTokenizer:
         if self.tokenizer is None:
             return self.vocab_size
 
-        return self.tokenizer.get_vocab_size()
+        return self.tokenizer.get_vocab_size(
+            with_added_tokens=True)
 
     def train(self):
         # Load an existing tokenizer instead of retraining.

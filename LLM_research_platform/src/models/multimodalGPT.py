@@ -32,13 +32,22 @@ class MultimodalGPT(nn.Module):
             "patch_seq": patch_out: [B, T_kv, d_model_ca]
             "pad_mask": pad_mask_out: [B, T_kv]
         '''
-        if (not is_generate) or (self.encoder_out is None):
-            self.encoder_out = self.vit(
-                patch_items=patch_items
-            )
-        content = {"patches": self.encoder_out["patch_seq"],
-                   "mask": self.encoder_out["pad_mask"]}
-        logits = self.gpt(
+        if is_generate and self.encoder_out is not None:
+            # Reuse visual features for the same generation session.
+            encoder_out = self.encoder_out
+        else:
+            # Compute fresh visual features.
+            encoder_out = self.vit(patch_items=patch_items)
+            # Cache for subsequent generation calls.
+            if is_prefill or is_generate:
+                self.encoder_out = encoder_out
+
+        content = {
+            "patches": encoder_out["patch_seq"],
+            "mask": encoder_out["pad_mask"],
+        }
+
+        return self.gpt(
             x=text_x,
             pad_mask=text_pad_mask,
             positions=text_positions,
@@ -46,4 +55,3 @@ class MultimodalGPT(nn.Module):
             is_prefill=is_prefill,
             is_generate=is_generate
         )
-        return logits

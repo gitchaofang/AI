@@ -104,11 +104,10 @@ class GPT(nn.Module):
         assert T_q <= self.max_seq_len
         if self.RoPE:
             assert positions is not None
-            assert positions.ndim == 3, "positions must have shape [B, T, M]"
+            assert positions.ndim == 1, "positions must have shape [B, T, M]"
             assert positions.shape[0] == B
             assert positions.shape[1] == T_q
             assert positions.shape[2] == len(self.rope_dims)
-
         assert not (
             is_prefill and is_generate
         ), "is_prefill and is_generate cannot both be True"
@@ -145,12 +144,12 @@ class GPT(nn.Module):
         # ----------------------------------------- 
         for block in self.blocks:
             x = block(
-                x,
-                pad_mask,
-                positions,
+                x=x,
+                pad_mask=pad_mask,
+                positions=positions,
                 is_prefill=is_prefill,
                 is_generate=is_generate,
-                content = content,
+                content=content,
             )
         x = self.norm(x)
         logits = self.lm_linear(x)

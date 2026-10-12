@@ -48,6 +48,7 @@ max_len_patch = {
     5000: 0,
     3000: 0,
     2000: 0,
+    1500: 0,
     1000: 0,
     0:0,
 }# 5000, 3000, 1000
@@ -143,6 +144,7 @@ if True:
             "max_len_patch: >5000": max_len_patch[5000],
             "max_len_patch: >3000": max_len_patch[3000],
             "max_len_patch: >2000": max_len_patch[2000],
+            "max_len_patch: >1500": max_len_patch[1500],
             "max_len_patch: >1000": max_len_patch[1000],
             "max_len_patch: <1000": max_len_patch[0],
 

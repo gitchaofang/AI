@@ -19,12 +19,12 @@ class GPT(nn.Module):
         max_seq_len=512,
         n_layers=6,
         n_heads=6,
-        rope_dims=[64],
+        rope_dims=[32,32],
         RoPE=True,
         cross_attention= False,
         causal = True,
         dropout = 0.2,
-        cls_enabled = False,
+        cls_enabled = False, # This should always be turned off for GPT
     ):
         super().__init__()
         self.vocab_size = vocab_size

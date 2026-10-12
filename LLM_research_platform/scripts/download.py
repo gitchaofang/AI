@@ -91,8 +91,12 @@ if True:
                                 max_len_patch[5000] += 1
                             elif patch_seq_len > 3000:
                                 max_len_patch[3000] += 1
+                            elif patch_seq_len > 2500:
+                                max_len_patch[2500] += 1
                             elif patch_seq_len > 2000:
                                 max_len_patch[2000] += 1
+                            elif patch_seq_len > 1500:
+                                max_len_patch[1500] += 1
                             elif patch_seq_len > 1000:
                                 max_len_patch[1000] += 1
                             else:

@@ -10,9 +10,8 @@ class MultimodalGPT(nn.Module):
         self.encoder_out = None # most recent encoder out from vit. 
                                 # It is usually used for generation 
 
-    def reset_cache(self, clean_vision = False):
-        if clean_vision:
-            self.encoder_out = None
+    def reset_cache(self):
+        self.encoder_out = None
         self.gpt.reset_cache()
 
     def forward(self, 

@@ -44,7 +44,7 @@ class RegexTokenizer:
         self.vocab_dict = {}
         
     def get_vocab_size(self):
-        return len(self.vocab_dict)
+        return len(self.vocab_dict) + TOKEN_OFFSET
     
     def train(self): #this function should be called right after instantiating RegexTokenizer
         # check if tokenizer has already been trained:

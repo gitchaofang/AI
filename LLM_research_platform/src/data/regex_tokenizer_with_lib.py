@@ -16,7 +16,7 @@ EOS_ID = 1
 PAD_TOKEN = "<|pad|>"
 EOS_TOKEN = "<|eos|>"
 
-FILE_DIR = Path("/content/token_train")
+FILE_DIR = "/content/token_train"
 COLAB_YAML_PATH = Path(
     "/content/AI/LLM_research_platform/configs/gpt.yaml"
 )

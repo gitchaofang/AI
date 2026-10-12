@@ -36,7 +36,8 @@ class MultimodalGPT(nn.Module):
             # Reuse visual features for the same generation session.
             encoder_out = self.encoder_out
         else:
-            assert is_generate, "generate without vision input"
+            if is_generate:
+                assert self.encoder_out, "generate without vision input"
             # Compute fresh visual features.
             encoder_out = self.vit(patch_items=patch_items)
             # Cache for subsequent generation calls.

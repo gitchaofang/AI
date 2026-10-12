@@ -1,3 +1,4 @@
+        # mount
 # run this in colab cell first
 from google.colab import drive
 #Path("/content/drive").mkdir()
@@ -6,9 +7,9 @@ from google.colab import drive
 !rm -rf /content/drive
 drive.mount("/content/drive")
 
+    # download training/validation samples to local "/content/cache"
 
-# down file and extract
-#download: 
+
 snapshot_download(
         repo_id="pixparse/cc3m-wds",
         repo_type="dataset",
@@ -20,7 +21,7 @@ snapshot_download(
 # extract:
 !for f in cc3m-train-00[0-9][0-9].tar; do tar -xf "$f"; done
 
-# download token zip:
+        # download token zip "/content/token_train":
 !curl -L -o ./wikitext-103-raw-v1.zip \
     https://wikitext.smerity.com/wikitext-103-raw-v1.zip
 # unzip:

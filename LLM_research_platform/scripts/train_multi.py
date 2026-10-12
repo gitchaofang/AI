@@ -140,7 +140,6 @@ optimizer = torch.optim.AdamW(
 
 trainer = Trainer(
     model,
-    optimizer,
     device,
 )
 

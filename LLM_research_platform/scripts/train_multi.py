@@ -50,15 +50,16 @@ tokenizer = RegexTokenizer()
 tokenizer.train()
 vocab_size = tokenizer.get_vocab_size()
 print(f"tokenizer is trained. The vocab size is {vocab_size}")
-dataset_train = ImageDatasetBatchSampler(tokenizer=tokenizer,
-                                         data_dir=config_vit["data"]["data_path_local"], 
-                                         max_len=config_vit["data"]["max_len"],
-                                         image_only=config_vit["data"]["image_only"],
-                                         data=config_vit["training"]["data_path_local"],
-                                         for_training=True)
+dataset_train = ImageDatasetLocal(tokenizer=tokenizer,
+                                  data_dir=config_vit["data"]["data_path_local"], 
+                                  max_len=config_vit["data"]["max_len"],
+                                  image_only=config_vit["data"]["image_only"],
+                                  for_training=True)
+
 sampler_train = ImageDatasetBatchSampler(dataset = dataset_train,
                                          batch_size=config_vit["data"]["batch_size"],
                                          shuffle=config_vit["data"]["shuffle"])
+
 collator = VitCollator(token_pad = 0,
                        image_pad = 0.0,
                        label_pad = -100,

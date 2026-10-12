@@ -22,7 +22,7 @@ class ViT(nn.Module):
                 dropout: float = 0.2,
                 RoPE: bool = True,
                 num_class: int = None,
-                rope_dims = [32,32],
+                rope_dims = [=(32,32),
                 cls_enabled=True,
                 causal = False,
                 cross_attention_enabled=False):

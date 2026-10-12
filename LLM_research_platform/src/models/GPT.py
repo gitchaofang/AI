@@ -19,7 +19,7 @@ class GPT(nn.Module):
         max_seq_len=512,
         n_layers=6,
         n_heads=6,
-        rope_dims=[64],
+        rope_dims=(64,),
         RoPE=True,
         cross_attention= False,
         causal = True,

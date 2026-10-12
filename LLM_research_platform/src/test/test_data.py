@@ -314,12 +314,12 @@ def test_image_dataset_basic(tokenizer,shared_set):
         epoch_start = time.perf_counter()
         for i, batch in enumerate(loader):
             patched_input = batch["patched_input"]
-            patch_positions = batch["patch_positions"]
-            pad_mask_patch = batch["pad_mask_patch"]
+            patch_positions = batch["patched_positions"]
+            pad_mask_patch = batch["patched_pad_mask"]
             caption_ids = batch["caption_ids"]
             caption_ids_label = batch["caption_ids_label"]
-            pad_mask_text = batch["pad_mask_text"]
-            positions_text = batch["positions_text"]
+            pad_mask_text = batch["text_pad_mask"]
+            positions_text = batch["text_positions"]
             meta_data = batch["meta_data"]
 
             B = patched_input.shape[0]

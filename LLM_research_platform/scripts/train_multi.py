@@ -76,14 +76,13 @@ loader_train = DataLoader(
 )
 
 #evaluation dataset
-dataset_eval = ImageDatasetBatchSampler(tokenizer=tokenizer,
-                                        data_dir=config_vit["data"]["data_path_local"], 
-                                        max_len=config_vit["data"]["max_len"],
-                                        image_only=config_vit["data"]["image_only"],
-                                        dataset=config_vit["training"]["data_path_local"],
-                                        for_training=False,)
+dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
+                                 data_dir=config_vit["data"]["data_path_local"], 
+                                 max_len=config_vit["data"]["max_len"],
+                                 image_only=config_vit["data"]["image_only"],
+                                 for_training=False,)
 
-sampler_eval = ImageDatasetBatchSampler(dataset=dataset_train,
+sampler_eval = ImageDatasetBatchSampler(dataset=dataset_eval,
                                         batch_size=config_vit["data"]["validation_batch_size:"],
                                         shuffle=False,)
 

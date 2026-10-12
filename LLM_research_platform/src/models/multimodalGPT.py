@@ -36,16 +36,13 @@ class MultimodalGPT(nn.Module):
             raise ValueError(
                 "Prefill and incremental generation must be separate phases."
             )
-
         if is_generate:
             assert self.encoder_out is not None, (
                 "Generation requires cached vision features from prefill."
             )
             encoder_out = self.encoder_out
-
         else:
             encoder_out = self.vit(patch_items=patch_items)
-
             if is_prefill:
                 self.encoder_out = encoder_out
 

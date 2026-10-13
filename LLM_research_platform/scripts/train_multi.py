@@ -134,7 +134,7 @@ model = MultimodalGPT(vit = vit, gpt = gpt)
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
-    lr = config_vit["training"]["training_rate"],
+    lr = config_vit["training"]["learning_rate"],
 )
 
 

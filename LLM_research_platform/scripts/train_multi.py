@@ -104,6 +104,7 @@ gpt = GPT(
     n_layers=config_gpt["model"]["n_layers"],
     n_heads=config_gpt["model"]["n_heads"],
     cross_attention=config_gpt["model"]["cross_attention"],
+    d_model_ca=config_vit["model"]["d_model_ca"],
     causal=config_gpt["model"]["causal"],
     RoPE=config_gpt["model"]["rope"],
     rope_dims=config_gpt["model"]["rope_dims"],

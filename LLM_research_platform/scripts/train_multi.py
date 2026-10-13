@@ -19,14 +19,14 @@ LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/A
 COLAB_YAML_PATH_GPT = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
 
 # load yaml config
-with open(LOCAL_YAML_PATH_GPT,"r") as f:
+with open(COLAB_YAML_PATH_GPT,"r") as f:
     config_gpt = yaml.safe_load(f)
 
 LOCAL_YAML_PATH_VIT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
 COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 
 # load yaml config
-with open(LOCAL_YAML_PATH_VIT,"r") as f:
+with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
 
 # Training scripts

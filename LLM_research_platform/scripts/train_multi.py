@@ -183,7 +183,7 @@ for epoch in range(epoches):
             is_prefill = False, 
             is_generate = False, 
             y=y,
-        ).item() / accumulation_steps
+        )/ accumulation_steps
         loss.backward()
 
         loss_accu += (loss.item() * accumulation_steps)

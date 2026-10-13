@@ -76,6 +76,7 @@ class ViT(nn.Module):
                     n_heads=self.n_heads,
                     max_seq_len=self.max_seq_len,
                     rope_dims=self.rope_dims,
+                    d_model_ca = None,
                     RoPE=self.RoPE,
                     cross_attention_enabled=self.cross_attention_enabled,
                     dropout = self.dropout,

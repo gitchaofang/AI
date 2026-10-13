@@ -26,7 +26,7 @@ model:
   dropout: 0.2
   cross_attention: False
   causal: False
-  num_class: None
+  num_class: null
   cls: False
 
 training:

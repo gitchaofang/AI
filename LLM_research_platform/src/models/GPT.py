@@ -22,6 +22,7 @@ class GPT(nn.Module):
         rope_dims=(64,),
         RoPE=True,
         cross_attention= False,
+        d_model_ca = 384,
         causal = True,
         dropout = 0.2,
         cls_enabled = False, # This should always be turned off for GPT
@@ -34,6 +35,7 @@ class GPT(nn.Module):
         self.rope_dims = rope_dims
         self.dropout = dropout
         self.cross_attention = cross_attention
+        self.d_model_ca = d_model_ca
         self.causal = causal
         self.cls_enabled = cls_enabled
         self.n_heads = n_heads
@@ -53,6 +55,7 @@ class GPT(nn.Module):
                     rope_dims=self.rope_dims,
                     RoPE=self.RoPE,
                     cross_attention_enabled=self.cross_attention,
+                    d_model_ca = self.d_model_ca,
                     dropout = self.dropout,
                     causal = self.causal,
                     cls_enabled = self.cls_enabled,

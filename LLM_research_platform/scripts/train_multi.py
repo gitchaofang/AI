@@ -97,20 +97,6 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Device:", device)
 
-gpt = GPT(
-    vocab_size=vocab_size,
-    d_model=config_gpt["model"]["d_model"],
-    max_seq_len=config_gpt["data"]["max_len"],
-    n_layers=config_gpt["model"]["n_layers"],
-    n_heads=config_gpt["model"]["n_heads"],
-    cross_attention=config_gpt["model"]["cross_attention"],
-    d_model_ca=config_vit["model"]["d_model_ca"],
-    causal=config_gpt["model"]["causal"],
-    RoPE=config_gpt["model"]["rope"],
-    rope_dims=config_gpt["model"]["rope_dims"],
-    dropout=config_gpt["model"]["dropout"],
-    cls_enabled=config_gpt["model"]["cls"],
-).to(device)
 
 vit = ViT(
     d_model=config_vit["model"]["d_model"], 
@@ -128,6 +114,21 @@ vit = ViT(
     causal=False,
     cross_attention_enabled=False,
 )
+
+gpt = GPT(
+    vocab_size=vocab_size,
+    d_model=config_gpt["model"]["d_model"],
+    max_seq_len=config_gpt["data"]["max_len"],
+    n_layers=config_gpt["model"]["n_layers"],
+    n_heads=config_gpt["model"]["n_heads"],
+    cross_attention=config_gpt["model"]["cross_attention"],
+    d_model_ca=config_vit["model"]["d_model"],
+    causal=config_gpt["model"]["causal"],
+    RoPE=config_gpt["model"]["rope"],
+    rope_dims=config_gpt["model"]["rope_dims"],
+    dropout=config_gpt["model"]["dropout"],
+    cls_enabled=config_gpt["model"]["cls"],
+).to(device)
 
 model = MultimodalGPT(vit = vit, gpt = gpt)
 

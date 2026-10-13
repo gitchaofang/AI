@@ -81,7 +81,7 @@ dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
                                  for_training=False,)
 
 sampler_eval = ImageDatasetBatchSampler(dataset=dataset_eval,
-                                        batch_size=config_vit["data"]["validation_batch_size:"],
+                                        batch_size=config_vit["data"]["validation_batch_size"],
                                         shuffle=False,)
 
 loader_eval = DataLoader(

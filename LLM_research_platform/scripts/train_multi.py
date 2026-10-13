@@ -163,10 +163,10 @@ for epoch in range(epoches):
     #train
     for i, batch in enumerate(loader_train):
         patched_items = {
-            "patched_input": batch["patched_input"],
-            "patched_pad_mask": batch["patched_pad_mask"],
-            "patched_positions": batch["patched_positions"]
-        }.to(device)
+            "patched_input": batch["patched_input"].to(device),
+            "patched_pad_mask": batch["patched_pad_mask"].to(device),
+            "patched_positions": batch["patched_positions"].to(device)
+        }
         text_x = batch["caption_ids"].to(device)
         text_pad_mask = batch["text_pad_mask"].to(device)
         text_positions = batch["text_positions"].to(device)

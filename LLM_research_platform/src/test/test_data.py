@@ -305,7 +305,7 @@ def test_image_dataset_basic(tokenizer,shared_set):
     loader = DataLoader(dataset=dataset,
                         collate_fn = collator,
                         batch_sampler = batch_sampler,
-                        pin_memory = True,
+                        pin_memory = False,
                         num_workers = 4,
                         )
     print(f"iteration starts")

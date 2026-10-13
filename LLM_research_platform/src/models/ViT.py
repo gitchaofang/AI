@@ -112,7 +112,7 @@ class ViT(nn.Module):
 
         assert self.patch_dim == patch_dim, "Patch dimension mismatch"
 
-        pad_mask = patched_items["pad_mask_patch"] #[B, T]
+        pad_mask = patched_items["patched_pad_mask"] #[B, T]
         if self.RoPE:
             patch_positions = patched_items["patched_positions"] # [B,T,2]
         else:

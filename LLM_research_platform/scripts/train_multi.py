@@ -113,7 +113,7 @@ vit = ViT(
     cls_enabled=config_vit["model"]["cls"],
     causal=False,
     cross_attention_enabled=False,
-)
+).to(device)
 
 gpt = GPT(
     vocab_size=vocab_size,

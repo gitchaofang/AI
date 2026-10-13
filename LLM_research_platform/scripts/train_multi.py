@@ -52,7 +52,6 @@ vocab_size = tokenizer.get_vocab_size()
 print(f"tokenizer is trained. The vocab size is {vocab_size}")
 dataset_train = ImageDatasetLocal(tokenizer=tokenizer,
                                   data_dir=config_vit["data"]["data_path_local"], 
-                                  max_len=config_vit["data"]["max_len"],
                                   image_only=config_vit["data"]["image_only"],
                                   for_training=True)
 
@@ -78,7 +77,6 @@ loader_train = DataLoader(
 #evaluation dataset
 dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
                                  data_dir=config_vit["data"]["data_path_local"], 
-                                 max_len=config_vit["data"]["max_len"],
                                  image_only=config_vit["data"]["image_only"],
                                  for_training=False,)
 

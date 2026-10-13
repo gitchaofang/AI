@@ -105,16 +105,16 @@ class ViT(nn.Module):
             )
 
 
-    def forward(self, patch_items):
+    def forward(self, patched_items):
         # inputs
-        patch_input = patch_items["patched_input"] # [B, T, in_channel * patch_size * patch_size]
+        patch_input = patched_items["patched_input"] # [B, T, in_channel * patch_size * patch_size]
         B, T, patch_dim = patch_input.shape #B: batch_siae, T: patch numbers, D: patchify dimention
 
         assert self.patch_dim == patch_dim, "Patch dimension mismatch"
 
-        pad_mask = patch_items["pad_mask_patch"] #[B, T]
+        pad_mask = patched_items["pad_mask_patch"] #[B, T]
         if self.RoPE:
-            patch_positions = patch_items["patched_positions"] # [B,T,2]
+            patch_positions = patched_items["patched_positions"] # [B,T,2]
         else:
             patch_positions = None
 

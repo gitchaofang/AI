@@ -14,8 +14,9 @@ class MultimodalGPT(nn.Module):
         self.encoder_out = None
         self.gpt.reset_cache()
 
+
     def forward(self, 
-                patch_items,        #vit
+                patched_items,      #vit
                 text_x,             #gpt
                 text_pad_mask,      #gpt
                 text_positions,     #gpt
@@ -42,7 +43,7 @@ class MultimodalGPT(nn.Module):
             )
             encoder_out = self.encoder_out
         else:
-            encoder_out = self.vit(patch_items=patch_items)
+            encoder_out = self.vit(patched_items=patched_items)
             if is_prefill:
                 self.encoder_out = encoder_out
 

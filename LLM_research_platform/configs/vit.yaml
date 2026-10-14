@@ -30,7 +30,7 @@ model:
   cls: False
 
 training:
-  epochs: 3
+  epochs: 20
   learning_rate: 0.0003
   weight_decay: 0.01
   accumulation_steps: 8

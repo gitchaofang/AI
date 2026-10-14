@@ -161,6 +161,7 @@ for epoch in range(epoches):
     is_generate=False): #gpt
     '''
     #train
+    print(f"{len(loader_train)}")
     for i, batch in enumerate(loader_train):
         patched_items = {
             "patched_input": batch["patched_input"].to(device),

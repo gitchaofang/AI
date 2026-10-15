@@ -62,11 +62,11 @@ def eval(loader_eval, trainer, epoch):
                 eval_cnt += 1
         avg_eval_loss = eval_loss_accu / eval_cnt
         print(f"epoch | {epoch} | eval error: {avg_eval_loss}")
-         wandb.log({
-                    "eval/loss": avg_eval_loss,
-                    "eval/tokens": eval_tokens,
-                    "epoch": epoch,
-                })
+        wandb.log({
+                "eval/loss": avg_eval_loss,
+                "eval/tokens": eval_tokens,
+                "epoch": epoch,
+            })
         
 # Training scripts
 # weight and bias setup 

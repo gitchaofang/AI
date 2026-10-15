@@ -361,16 +361,16 @@ class ImageDataset(Dataset):
                 return {
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
-                    "caption_ids": caption_ids,     # [len(all_tokens)]
-                    "caption_ids_label": caption_ids,   # [len(all_tokens)]
+                    "caption_ids": caption_ids[:-1],     # [len(all_tokens)]
+                    "caption_ids_label": caption_ids[1:],   # [len(all_tokens)]
                     "meta_data": meta_data,        # "caption", "url", "key", "status", "error_message", "width", "height", "exif", "original_width", "original_height"
                 }
             elif shard_type == "validation":
                 return {
                     "patches": patches,            # [N, C * patch_size * patch_size]
                     "patch_positions": patch_positions,    # [N, 2]
-                    "caption_ids": caption_ids,     # [len(all_tokens)]
-                    "caption_ids_label": caption_ids,   # [len(all_tokens)]
+                    "caption_ids": caption_ids[:-1],     # [len(all_tokens)]
+                    "caption_ids_label": caption_ids[1:],   # [len(all_tokens)]
                 }
 
         # if only image is needed

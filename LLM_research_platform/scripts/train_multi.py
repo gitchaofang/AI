@@ -122,7 +122,6 @@ dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
 
 sampler_eval = ImageDatasetBatchSampler(dataset=dataset_eval,
                                         batch_size=config_vit["data"]["validation_batch_size"],
-                                        
                                         shuffle=False,)
 
 collator_eval = VitCollator(token_pad = 0,

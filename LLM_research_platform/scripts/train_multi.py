@@ -62,15 +62,8 @@ def eval(loader_eval, trainer):
                 eval_cnt += 1
         avg_eval_loss = eval_loss_accu / eval_cnt
         print(f"epoch | {epoch} | eval error: {avg_eval_loss}")
-        wandb.log({
-            "eval/loss": avg_eval_loss,
-            "train/epoch_loss": avg_train_loss,
-            "epoch": epoch,
-        })
-        wandb.log({
-                "eval/tokens": eval_tokens,
-                "epoch": epoch,
-            })
+        return [avg_eval_loss, eval_tokens]
+        
 # Training scripts
 # weight and bias setup 
 import wandb
@@ -265,10 +258,19 @@ for epoch in range(epoches):
 
         # eval
         if(i % 250 == 0):
-             eval(trainer=trainer,loader_eval = loader_eval)
+             eval_res = eval(trainer=trainer,loader_eval = loader_eval)
     avg_train_loss = loss_accu / cnt
     current_lr = optimizer.param_groups[0]["lr"]
     print(f"epoch {epoch} | ave_loss: {avg_train_loss}")
+    wandb.log({
+                "eval/loss": eval_res[0],
+                "train/epoch_loss": avg_train_loss,
+                "epoch": epoch,
+            })
+    wandb.log({
+                "eval/tokens": eval_res[1],
+                "epoch": epoch,
+            })
     wandb.log({
         "train/epoch_tokens": epoch_tokens,
         "train/learning_rate": current_lr,

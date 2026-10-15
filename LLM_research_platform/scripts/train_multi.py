@@ -172,7 +172,7 @@ gpt = GPT(
     cls_enabled=config_gpt["model"]["cls"],
 ).to(device)
 
-model = MultimodalGPT(vit = vit, gpt = gpt)
+model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
 
 optimizer = torch.optim.AdamW(
     model.parameters(),

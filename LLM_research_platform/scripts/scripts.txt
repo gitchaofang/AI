@@ -47,7 +47,7 @@ PATCH_SIZE = 16  # Replace with your actual patch size
 MAX_PATCHES = 2000
 
 source_dir = Path("/content/cache/training")
-target_dir = Path("/content/cache/large_images")
+target_dir = Path("/content/cache/training/large_images")
 
 # Create destination directory if it doesn't exist.
 target_dir.mkdir(parents=True, exist_ok=True)
@@ -112,7 +112,7 @@ from pathlib import Path
 PATCH_SIZE = 16  # Replace with your actual patch size
 MAX_PATCHES = 1000
 source_dir = Path("/content/cache/validation/")
-target_dir = Path("/content/cache/large_images/")
+target_dir = Path("/content/cache/validation/large_images/")
 
 # Create destination directory if it doesn't exist.
 target_dir.mkdir(parents=True, exist_ok=True)

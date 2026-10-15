@@ -2,6 +2,8 @@ import torch
 import os
 from pathlib import Path
 import yaml
+import random
+import numpy as np
 from torch.utils.data import DataLoader
 from src.data.regex_tokenizer_with_lib import RegexTokenizer
 
@@ -13,6 +15,41 @@ from src.models.GPT import GPT
 from src.models.ViT import ViT
 from src.models.multimodalGPT import MultimodalGPT
 from src.training.trainer_multimodalGPT import Trainer
+
+# Set this before importing torch or initializing CUDA.
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
+
+def set_seed(seed: int = 42, deterministic: bool = False):
+    """Set random seeds for reproducible training."""
+
+    # Python random
+    random.seed(seed)
+
+    # NumPy
+    np.random.seed(seed)
+
+    # PyTorch CPU
+    torch.manual_seed(seed)
+
+    # PyTorch CUDA
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+    # cuDNN behavior
+    torch.backends.cudnn.deterministic = deterministic
+    torch.backends.cudnn.benchmark = not deterministic
+
+    # Optionally enforce deterministic algorithms
+    torch.use_deterministic_algorithms(deterministic)
+
+    print(f"Random seed: {seed}")
+    print(f"Deterministic algorithms: {deterministic}")
+
+
+SEED = 42
+set_seed(SEED, deterministic=False)
+
 
 
 LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")

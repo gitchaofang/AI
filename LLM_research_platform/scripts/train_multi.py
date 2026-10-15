@@ -51,6 +51,18 @@ SEED = 42
 set_seed(SEED, deterministic=False)
 
 
+# for dataloader
+def seed_worker(worker_id):
+    # PyTorch assigns each worker a seed derived from
+    # the DataLoader generator.
+    worker_seed = torch.initial_seed() % (2**32)
+
+    random.seed(worker_seed)
+    np.random.seed(worker_seed)
+loader_generator = torch.Generator()
+loader_generator.manual_seed(SEED)
+
+
 
 LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
 COLAB_YAML_PATH_GPT = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
@@ -146,8 +158,10 @@ loader_train = DataLoader(
     collate_fn = collator_train,
     batch_sampler = sampler_train,
     shuffle = False,
-    pin_memory = False,
     num_workers=4,
+    pin_memory=(device == "cuda"),
+    worker_init_fn=seed_worker,
+    generator=loader_generator,
 )
 
 #evaluation dataset
@@ -172,8 +186,10 @@ loader_eval = DataLoader(
     collate_fn = collator_eval,
     batch_sampler = sampler_eval,
     shuffle = False,
-    pin_memory = False,
     num_workers=4,
+    pin_memory=(device == "cuda"),
+    worker_init_fn=seed_worker,
+    generator=loader_generator,
 )
 
 

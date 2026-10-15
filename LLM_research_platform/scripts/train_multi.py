@@ -29,6 +29,45 @@ COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
 
+
+def eval(loader_eval, trainer):
+    #eval:
+        model.eval()
+        eval_loss_accu = 0.0
+        eval_cnt = 0.0
+        eval_tokens = 0
+        with torch.no_grad():
+            for i, batch in enumerate(loader_eval):
+                patched_items = {"patched_input": batch["patched_input"],
+                                 "patched_pad_mask": batch["patched_pad_mask"],
+                                 "patched_positions": batch["patched_positions"]}.to(device)
+                text_x = batch["caption_ids"].to(device)
+                text_pad_mask = batch["text_pad_mask"].to(device)
+                text_positions = batch["text_positions"].to(device)
+                y = batch[ "caption_ids_label"].to(device)
+    
+                num_tokens = text_x.sum().item()
+                eval_tokens += num_tokens
+    
+                eval_loss_accu += trainer.train_step(patched_items = patched_items, 
+                                      text_x = text_x, 
+                                      text_pad_mask = text_pad_mask,
+                                      text_positions = text_positions, 
+                                      is_prefill = False, 
+                                      is_generate = False, 
+                                      y=y,).item()
+                eval_cnt += 1
+        avg_eval_loss = eval_loss_accu / eval_cnt
+        print(f"epoch | {epoch} | eval error: {avg_eval_loss}")
+        wandb.log({
+            "eval/loss": avg_eval_loss,
+            "train/epoch_loss": avg_train_loss,
+            "epoch": epoch,
+        })
+        wandb.log({
+                "eval/tokens": eval_tokens,
+                "epoch": epoch,
+            })
 # Training scripts
 # weight and bias setup 
 import wandb
@@ -59,7 +98,7 @@ sampler_train = ImageDatasetBatchSampler(dataset = dataset_train,
                                          batch_size=config_vit["data"]["batch_size"],
                                          shuffle=config_vit["data"]["shuffle"])
 
-collator = VitCollator(token_pad = 0,
+collator_train = VitCollator(token_pad = 0,
                        image_pad = 0.0,
                        label_pad = -100,
                        image_only = config_vit["data"]["image_only"], 
@@ -67,7 +106,7 @@ collator = VitCollator(token_pad = 0,
 
 loader_train = DataLoader(
     dataset=dataset_train,
-    collate_fn = collator,
+    collate_fn = collator_train,
     batch_sampler = sampler_train,
     shuffle = False,
     pin_memory = False,
@@ -75,6 +114,7 @@ loader_train = DataLoader(
 )
 
 #evaluation dataset
+
 dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
                                  data_dir=config_vit["data"]["data_path_local"], 
                                  image_only=config_vit["data"]["image_only"],
@@ -82,11 +122,18 @@ dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
 
 sampler_eval = ImageDatasetBatchSampler(dataset=dataset_eval,
                                         batch_size=config_vit["data"]["validation_batch_size"],
+                                        
                                         shuffle=False,)
+
+collator_eval = VitCollator(token_pad = 0,
+                       image_pad = 0.0,
+                       label_pad = -100,
+                       image_only = config_vit["data"]["image_only"], 
+                       for_training = False)
 
 loader_eval = DataLoader(
     dataset=dataset_eval,
-    collate_fn = collator,
+    collate_fn = collator_eval,
     batch_sampler = sampler_eval,
     shuffle = False,
     pin_memory = False,
@@ -216,6 +263,10 @@ for epoch in range(epoches):
             optimizer.step()
             optimizer.zero_grad()
         cnt += 1
+
+        # eval
+        if(cnt % 100 == 0):
+             eval(model = model,loader_eval = loader_eval)
     avg_train_loss = loss_accu / cnt
     current_lr = optimizer.param_groups[0]["lr"]
     print(f"epoch {epoch} | ave_loss: {avg_train_loss}")
@@ -224,43 +275,5 @@ for epoch in range(epoches):
         "train/learning_rate": current_lr,
         "epoch": epoch,
     })
-
-    #eval:
-    model.eval()
-    eval_loss_accu = 0.0
-    eval_cnt = 0.0
-    eval_tokens = 0
-    with torch.no_grad():
-        for i, batch in enumerate(loader_eval):
-            patched_items = {"patched_input": batch["patched_input"],
-                             "patched_pad_mask": batch["patched_pad_mask"],
-                             "patched_positions": batch["patched_positions"]}.to(device)
-            text_x = batch["caption_ids"].to(device)
-            text_pad_mask = batch["text_pad_mask"].to(device)
-            text_positions = batch["text_positions"].to(device)
-            y = batch[ "caption_ids_label"].to(device)
-
-            num_tokens = text_x.sum().item()
-            eval_tokens += num_tokens
-
-            eval_loss_accu += trainer.train_step(patched_items = patched_items, 
-                                  text_x = text_x, 
-                                  text_pad_mask = text_pad_mask,
-                                  text_positions = text_positions, 
-                                  is_prefill = False, 
-                                  is_generate = False, 
-                                  y=y,).item()
-            eval_cnt += 1
-    avg_eval_loss = eval_loss_accu / eval_cnt
-    print(f"epoch | {epoch} | eval error: {avg_eval_loss}")
-    wandb.log({
-        "eval/loss": avg_eval_loss,
-        "train/epoch_loss": avg_train_loss,
-        "epoch": epoch,
-    })
-    wandb.log({
-            "eval/tokens": eval_tokens,
-            "epoch": epoch,
-        })
 
 wandb.finish()

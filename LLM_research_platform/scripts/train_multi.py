@@ -256,7 +256,7 @@ for epoch in range(epoches):
 
         if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:
             optimizer.step()
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
         cnt += 1
 
         # eval

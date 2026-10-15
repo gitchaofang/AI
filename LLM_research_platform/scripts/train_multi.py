@@ -261,6 +261,7 @@ for epoch in range(epoches):
              eval_res = eval(trainer=trainer,loader_eval = loader_eval)
              wandb.log({
                         "eval/loss": eval_res[0],
+                        "eval/tokens": eval_res[1],
                         "epoch": epoch,
                     })
     avg_train_loss = loss_accu / cnt
@@ -268,10 +269,6 @@ for epoch in range(epoches):
     print(f"epoch {epoch} | ave_loss: {avg_train_loss}")
     wandb.log({
                 "train/epoch_loss": avg_train_loss,
-                "epoch": epoch,
-            })
-    wandb.log({
-                "eval/tokens": eval_res[1],
                 "epoch": epoch,
             })
     wandb.log({

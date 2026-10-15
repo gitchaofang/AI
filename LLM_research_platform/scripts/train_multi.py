@@ -29,6 +29,9 @@ COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+print("Device:", device)
 
 def eval(loader_eval, trainer):
     #eval:
@@ -139,10 +142,6 @@ loader_eval = DataLoader(
     pin_memory = False,
     num_workers=4,
 )
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-print("Device:", device)
 
 
 vit = ViT(

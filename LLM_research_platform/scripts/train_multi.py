@@ -265,7 +265,7 @@ for epoch in range(epoches):
         cnt += 1
 
         # eval
-        if(cnt % 100 == 0):
+        if(i % 250 == 0):
              eval(model = model,loader_eval = loader_eval)
     avg_train_loss = loss_accu / cnt
     current_lr = optimizer.param_groups[0]["lr"]

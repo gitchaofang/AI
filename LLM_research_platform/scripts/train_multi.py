@@ -117,6 +117,7 @@ def eval(loader_eval, trainer, epoch):
             "eval/tokens": eval_tokens,
             "epoch": epoch,
         })
+    model.train()
         
 # Training scripts
 # weight and bias setup 

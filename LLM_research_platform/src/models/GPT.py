@@ -3,6 +3,7 @@ import yaml
 from pathlib import Path
 import torch.nn as nn
 from src.base.transformer import TransformerBlock
+from torch.utils.checkpoint import checkpoint
 
 # load config file
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
@@ -40,6 +41,7 @@ class GPT(nn.Module):
         self.cls_enabled = cls_enabled
         self.n_heads = n_heads
         self.n_layers = n_layers
+        self.layers_to_checkpointed = config["training"]["layers_to_checkpointed"]
 
         self.token_embedding = nn.Embedding(self.vocab_size,self.d_model,) # vocab_size already includes EOS_ID and PAD_ID
         # if not using RoPE, we use learnable positional embedding
@@ -145,15 +147,27 @@ class GPT(nn.Module):
         # -----------------------------------------
         # Transformer blocks
         # ----------------------------------------- 
-        for block in self.blocks:
-            x = block(
-                x=x,
-                pad_mask=pad_mask,
-                positions=positions,
-                is_prefill=is_prefill,
-                is_generate=is_generate,
-                content=content,
-            )
+        for i, block in enumerate(self.blocks):
+            if i < self.layers_to_checkpointed:
+                x = checkpoint(
+                    block,
+                    x=x,
+                    pad_mask=pad_mask,
+                    positions=positions,
+                    is_prefill=is_prefill,
+                    is_generate=is_generate,
+                    content=content,
+                    use_reentrant=False,
+                )
+            else:
+                x = block(
+                    x=x,
+                    pad_mask=pad_mask,
+                    positions=positions,
+                    is_prefill=is_prefill,
+                    is_generate=is_generate,
+                    content=content,
+                )
         x = self.norm(x)
         logits = self.lm_linear(x)
 

@@ -3,6 +3,7 @@ import yaml
 from pathlib import Path
 from torch import nn
 from src.base.transformer import TransformerBlock
+from torch.utils.checkpoint import checkpoint
 
 # load config file
 LOCAL_YAML_PATH = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
@@ -43,6 +44,7 @@ class ViT(nn.Module):
         self.causal=causal
         self.dropout=dropout
         self.cross_attention_enabled=cross_attention_enabled
+        self.layers_to_checkpointed = vit_config["training"]["layers_to_checkpointed"]
 
         assert self.d_model % self.n_heads == 0
         if self.RoPE:
@@ -152,15 +154,27 @@ class ViT(nn.Module):
             patched_seq = (patched_seq + self.position_embedding(position_ids))
 
         # Transformer blocks
-        for block in self.blocks:
-            patched_seq = block(
-                x=patched_seq,
-                pad_mask=pad_mask,
-                positions=patch_positions,
-                is_prefill=False,
-                is_generate=False,
-                content = None,
-            )
+        for i, block in enumerate(self.blocks):
+            if i < self.layers_to_checkpointed:
+                patched_seq = checkpoint(
+                    block,
+                    x=patched_seq,
+                    pad_mask=pad_mask,
+                    positions=patch_positions,
+                    is_prefill=False,
+                    is_generate=False,
+                    content = None,
+                    use_reentrant=False,
+                )
+            else:
+                patched_seq = block(
+                    x=patched_seq,
+                    pad_mask=pad_mask,
+                    positions=patch_positions,
+                    is_prefill=False,
+                    is_generate=False,
+                    content = None,
+                )
         out = self.norm(patched_seq)
 
         # Separate CLS and patches

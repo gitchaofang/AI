@@ -194,7 +194,8 @@ loader_eval = DataLoader(
     generator=loader_generator,
 )
 
-
+if config_vit["model"]["sdpa"] and config_gpt["model"]["sdpa"]:
+    print(f"using sdpa")
 vit = ViT(
     d_model=config_vit["model"]["d_model"], 
     n_heads=config_vit["model"]["n_heads"],

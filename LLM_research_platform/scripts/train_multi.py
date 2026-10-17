@@ -84,6 +84,7 @@ print("Device:", device)
 
 def eval(loader_eval, trainer, epoch):
     #eval:
+    print(f"eval loader size: {len(loader_eval)}")
     model.eval()
     eval_loss_accu = 0.0
     eval_cnt = 0.0

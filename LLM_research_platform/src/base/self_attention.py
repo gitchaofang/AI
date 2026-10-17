@@ -47,10 +47,10 @@ class SelfAttention(nn.Module):
         self.out_dropout = nn.Dropout(dropout)
         if causal:
             mask = torch.tril(
-                torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
+                torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.bool)
             )
         else:
-            mask =  torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.int64)
+            mask =  torch.ones((self.max_seq_len, self.max_seq_len), dtype=torch.bool)
 
         self.register_buffer(
             "causal_mask",
@@ -152,7 +152,7 @@ class SelfAttention(nn.Module):
         
         scores = q @ k.transpose(-1, -2) #[B,H,T_q,T_kv]
         scores = scores / math.sqrt(self.head_dim)
-        scores = scores.masked_fill(combined_mask == 0, -1e10)
+        scores = scores.masked_fill(~combined_mask, -1e10)
 
         attention = torch.softmax(scores, dim=-1)
         # dropout on attention
@@ -169,7 +169,7 @@ class SelfAttention(nn.Module):
 
     def forward(self, x, pad_mask, positions, is_prefill=False, is_generate=False):# For normal self-attention, k_positions and v_positions are the same
         B, T_q, _ = x.shape
-        pad_mask = pad_mask.to(device=x.device, dtype=torch.float32)
+        pad_mask = pad_mask.to(device=x.device, dtype=torch.bool)
 
         # q,k,v: [B,H,T,D_h]
         q = self.q_proj(x).view(B, T_q, self.n_heads, self.head_dim).transpose(1, 2)
@@ -201,11 +201,11 @@ class SelfAttention(nn.Module):
             T_k = k_full.shape[2]
             assert T_k <= self.max_seq_len, ( "KV cache exceeds max_seq_len")
 
-            valid_mask = self.kv_mask.unsqueeze(-1) @ self.kv_mask.unsqueeze(-2)
+            valid_mask = self.kv_mask.unsqueeze(-1) & self.kv_mask.unsqueeze(-2)
             valid_mask = valid_mask.unsqueeze(1)
 
-            causal_mask = self.causal_mask[:, :, :T_k, :T_k].to(x.device).float()
-            combined_mask = causal_mask * valid_mask
+            causal_mask = self.causal_mask[:, :, :T_k, :T_k].to(x.device)
+            combined_mask = causal_mask & valid_mask
             combined_mask = combined_mask[:, :, -T_q:, :]
 
             return self._attention(q, k_full, v_full, combined_mask)
@@ -221,8 +221,7 @@ class SelfAttention(nn.Module):
         # ---------------------------------
         # Normal training / prefill attention
         # ---------------------------------
-        pad_mask = pad_mask.unsqueeze(-1)
-        pad_mask = pad_mask @ pad_mask.transpose(-1, -2)
-        combined_mask = self.causal_mask[:, :, :T_q, :T_q].to(x.device).float() * pad_mask.unsqueeze(1)
+        pad_mask = pad_mask.unsqueeze(-1) & pad_mask.unsqueeze(-2)
+        combined_mask = (self.causal_mask[:, :, :T_q, :T_q] & pad_mask.unsqueeze(1)).to(x.device)
 
         return self._attention(q, k, v, combined_mask)

@@ -26,7 +26,7 @@ class PaddingCollator:
         pad_mask = torch.zeros(
             batch_size,
             max_len,
-            dtype = torch.int64,
+            dtype = torch.bool,
         )
 
         # create 1d positions for text
@@ -37,7 +37,7 @@ class PaddingCollator:
             length = len(item["input_ids"])
             input_ids[i,:length] = batch[i]["input_ids"]
             label_ids[i,:length] = batch[i]["labels"]
-            pad_mask[i,:length] = 1
+            pad_mask[i,:length] = True
 
         return {
             "input_ids": input_ids,
@@ -80,7 +80,7 @@ class VitCollator:
             pad_mask_text = torch.zeros(
                 batch_size,
                 max_len_text,
-                dtype = torch.int64,
+                dtype = torch.bool,
             )
 
         patch_positions = torch.zeros(
@@ -93,7 +93,7 @@ class VitCollator:
         pad_mask_patch = torch.zeros(
             batch_size,
             max_len_patch,
-            dtype = torch.int64,
+            dtype = torch.bool,
         )
 
         if self.for_training:
@@ -106,14 +106,14 @@ class VitCollator:
             length_patches = len(item["patches"]) 
             patched_input[i,:length_patches] = item["patches"] # patched input
             patch_positions[i,:length_patches] = item["patch_positions"] # patch coordinates for RoPE
-            pad_mask_patch[i,:length_patches] = 1 # pad maskes for patched input
+            pad_mask_patch[i,:length_patches] = True # pad maskes for patched input
 
             # text
             if not self.image_only:
                 length_text = len(item["caption_ids"])
                 caption_ids[i,:length_text] = item["caption_ids"]
                 caption_ids_label[i, :length_text] = item["caption_ids_label"]
-                pad_mask_text[i,:length_text] = 1
+                pad_mask_text[i,:length_text] = True
           
         if not self.image_only:
             # create 1d positions for text

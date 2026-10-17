@@ -40,7 +40,7 @@ class CrossAttention(nn.Module):
         # scores
         scores = q_x @ k_x.transpose(-1,-2) #[B, H, T_q, D_h] @ [B, H, D_h, T_kv] -> [B, H, T_q, T_kv]
         scores = scores / math.sqrt(self.head_dim)
-        scores = scores.masked_fill(~combined_mask == 0,-1e10)
+        scores = scores.masked_fill(~combined_mask,-1e10)
 
         attention = torch.softmax(scores, dim = -1)
         attention = self.attn_dropout(attention)
@@ -57,8 +57,8 @@ class CrossAttention(nn.Module):
     def forward(self, content, q_x, kv_mask,q_mask): # usually k and va come from the same encode so we only use one input "content"
         # content: [B_kv, T_kv, d_kv]
         # q_x: [B_q, T_q, d_q]
-        # kv_mask: [B_kv, T_kv]
-        # q_mask: [B_q, T_q]
+        # kv_mask: [B_kv, T_kv] dtype = bool
+        # q_mask: [B_q, T_q] dtype = bool
         B_kv, _, D_kv = content.shape
         B_q, _, D_q = q_x.shape
         assert B_kv == B_q and D_kv == self.d_kv and D_q == self.d_q # B_kv = B_q == B
@@ -73,6 +73,9 @@ class CrossAttention(nn.Module):
         pad_mask = q_mask.unsqueeze(-1) @ kv_mask.unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
         combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
         '''
-        pad_mask = q_mask.bool().unsqueeze(-1) & kv_mask.bool().unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
+        kv_mask = kv_mask.to(device=content.device, dtype=torch.bool)
+        q_mask = q_mask.to(device=q_x.device, dtype=torch.bool)
+        
+        pad_mask = q_mask.unsqueeze(-1) & kv_mask.unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
         combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
         return self._dot_product(k_x, v_x, q_x, combined_mask)

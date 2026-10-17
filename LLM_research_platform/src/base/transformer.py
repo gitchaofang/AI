@@ -43,6 +43,7 @@ class TransformerBlock(nn.Module):
                  d_model_ca, 
                  RoPE=True, 
                  cross_attention_enabled=True,
+                 sdpa = True,
                  dropout = 0.2,
                  causal = True,
                  cls_enabled = False,
@@ -54,6 +55,7 @@ class TransformerBlock(nn.Module):
         self.RoPE = RoPE
         self.cross_attention_enabled = cross_attention_enabled
         self.d_model_ca = d_model_ca
+        self.sdpa=sdpa
         self.dropout = dropout
         self.causal = causal
         self.cls_enabled = cls_enabled
@@ -65,6 +67,7 @@ class TransformerBlock(nn.Module):
                                        max_seq_len=self.max_seq_len, 
                                        rope_dims=self.rope_dims, 
                                        RoPE=self.RoPE,
+                                       sdpa=self.sdpa,
                                        dropout=self.dropout,
                                        causal=self.causal,
                                        cls_enabled=self.cls_enabled)
@@ -77,7 +80,8 @@ class TransformerBlock(nn.Module):
                 d_q=self.d_model,
                 d_model=self.d_model,
                 n_head=self.n_heads,
-                dropout=self.dropout
+                sdpa=self.sdpa,
+                dropout=self.dropout,
             )
         self.norm3 = nn.LayerNorm(self.d_model)     
         self.ffn = FeedForward(d_model=self.d_model,

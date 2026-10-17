@@ -315,13 +315,13 @@ for epoch in range(epoches):
         cnt += 1
 
         # eval
-        if(i % 5000 == 0):
-            eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
+     #   if(i % 5000 == 0):
+     #       eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
             
     avg_train_loss = loss_accu / cnt
     current_lr = optimizer.param_groups[0]["lr"]
     print(f"epoch {epoch} | ave_loss: {avg_train_loss}")
- #   eval_res = eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
+
     wandb.log({
                 "train/epoch_loss": avg_train_loss,
                 "epoch": epoch,

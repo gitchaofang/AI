@@ -40,7 +40,7 @@ class CrossAttention(nn.Module):
         # scores
         scores = q_x @ k_x.transpose(-1,-2) #[B, H, T_q, D_h] @ [B, H, D_h, T_kv] -> [B, H, T_q, T_kv]
         scores = scores / math.sqrt(self.head_dim)
-        scores = scores.masked_fill(combined_mask == 0,-1e10)
+        scores = scores.masked_fill(~combined_mask == 0,-1e10)
 
         attention = torch.softmax(scores, dim = -1)
         attention = self.attn_dropout(attention)
@@ -73,6 +73,6 @@ class CrossAttention(nn.Module):
         pad_mask = q_mask.unsqueeze(-1) @ kv_mask.unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
         combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
         '''
-        pad_mask = q_mask.bool().unsqueeze(-1) & kv_mask.unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
+        pad_mask = q_mask.bool().unsqueeze(-1) & kv_mask.bool().unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
         combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
         return self._dot_product(k_x, v_x, q_x, combined_mask)

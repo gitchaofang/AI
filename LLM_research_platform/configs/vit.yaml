@@ -23,6 +23,7 @@ model:
   mlp_ratio: 4.0
   rope: True
   rope_dims: [32,32]
+  sdpa: True
   dropout: 0.2
   cross_attention: False
   causal: False

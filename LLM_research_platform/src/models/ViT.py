@@ -20,6 +20,7 @@ class ViT(nn.Module):
                 patch_size = 16,
                 n_layers: int = 5,
                 mlp_ratio = 4.0,
+                sdpa = True,
                 dropout: float = 0.2,
                 RoPE: bool = True,
                 num_class: int = None,
@@ -42,6 +43,7 @@ class ViT(nn.Module):
         self.num_class=num_class
         self.cls_enabled=cls_enabled
         self.causal=causal
+        self.sdpa=sdpa
         self.dropout=dropout
         self.cross_attention_enabled=cross_attention_enabled
         self.layers_to_checkpointed = vit_config["training"]["layers_to_checkpointed"]
@@ -81,6 +83,7 @@ class ViT(nn.Module):
                     d_model_ca = None,
                     RoPE=self.RoPE,
                     cross_attention_enabled=self.cross_attention_enabled,
+                    sdpa=self.sdpa,
                     dropout = self.dropout,
                     causal = self.causal,
                     cls_enabled = self.cls_enabled,

@@ -21,6 +21,7 @@ class GPT(nn.Module):
         n_layers=6,
         n_heads=6,
         rope_dims=(64,),
+        sdpa = True,
         RoPE=True,
         cross_attention= False,
         d_model_ca = 384,
@@ -34,6 +35,7 @@ class GPT(nn.Module):
         self.max_seq_len = max_seq_len
         self.RoPE = RoPE
         self.rope_dims = rope_dims
+        self.sdpa = sdpa
         self.dropout = dropout
         self.cross_attention = cross_attention
         self.d_model_ca = d_model_ca
@@ -58,6 +60,7 @@ class GPT(nn.Module):
                     RoPE=self.RoPE,
                     cross_attention_enabled=self.cross_attention,
                     d_model_ca = self.d_model_ca,
+                    sdpa=self.sdpa,
                     dropout = self.dropout,
                     causal = self.causal,
                     cls_enabled = self.cls_enabled,

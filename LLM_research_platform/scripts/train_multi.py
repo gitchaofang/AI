@@ -208,6 +208,7 @@ vit = ViT(
     rope_dims=config_vit["model"]["rope_dims"],
     num_class=config_vit["model"]["num_class"], 
     cls_enabled=config_vit["model"]["cls"],
+    sdpa=config_gpt["model"]["sdpa"],
     causal=False,
     cross_attention_enabled=False,
 ).to(device)
@@ -225,6 +226,7 @@ gpt = GPT(
     rope_dims=config_gpt["model"]["rope_dims"],
     dropout=config_gpt["model"]["dropout"],
     cls_enabled=config_gpt["model"]["cls"],
+    sdpa=config_gpt["model"]["sdpa"],
 ).to(device)
 
 model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))

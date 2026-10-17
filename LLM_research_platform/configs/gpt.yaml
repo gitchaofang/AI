@@ -23,6 +23,7 @@ model:
   n_heads: 6
   rope: True
   rope_dims: [64]
+  sdpa: True
   dropout: 0.2
   mlp_ratio: 4
   cross_attention: True

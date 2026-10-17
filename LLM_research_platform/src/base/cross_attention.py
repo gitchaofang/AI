@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 import math
 
 class CrossAttention(nn.Module):
@@ -8,7 +9,8 @@ class CrossAttention(nn.Module):
         d_q: int, 
         d_model: int, 
         n_head: int, 
-        dropout = 0.2
+        sdpa=True,
+        dropout=0.2,
     ): # For cross_attention k and v have the same dimension
         super().__init__()
         assert d_model % n_head == 0
@@ -17,6 +19,8 @@ class CrossAttention(nn.Module):
         self.d_q = d_q
         self.n_head = n_head
         self.head_dim = d_model // n_head
+        self.sdpa = sdpa
+        self.dropout=dropout
 
         # projections
         self.k_proj = nn.Linear(d_kv, d_model)
@@ -37,15 +41,27 @@ class CrossAttention(nn.Module):
         v_x = v_x.view(B, T_kv, self.n_head, self.head_dim).transpose(1,2)
         q_x = q_x.view(B, T_q, self.n_head, self.head_dim).transpose(1,2)
 
-        # scores
-        scores = q_x @ k_x.transpose(-1,-2) #[B, H, T_q, D_h] @ [B, H, D_h, T_kv] -> [B, H, T_q, T_kv]
-        scores = scores / math.sqrt(self.head_dim)
-        scores = scores.masked_fill(~combined_mask,-1e10)
+        if self.sdpa:
+            out = F.scaled_dot_product_attention(
+                query=q_x,
+                key=k_x,
+                value=v_x,
+                attn_mask=combined_mask,
+                dropout_p=(
+                    self.dropout if self.training else 0.0
+                ),
+                is_causal=False,
+            )
+        else: 
+            # scores
+            scores = q_x @ k_x.transpose(-1,-2) #[B, H, T_q, D_h] @ [B, H, D_h, T_kv] -> [B, H, T_q, T_kv]
+            scores = scores / math.sqrt(self.head_dim)
+            scores = scores.masked_fill(~combined_mask,-1e10)
 
-        attention = torch.softmax(scores, dim = -1)
-        attention = self.attn_dropout(attention)
-
-        out = attention @ v_x # [B, H, T_q, head_dim]
+            attention = torch.softmax(scores, dim = -1)
+            attention = self.attn_dropout(attention)
+            out = attention @ v_x # [B, H, T_q, head_dim]
+        
         out = out.transpose(1,2).contiguous().view(B, T_q, self.d_model)
         out = self.out_proj(out)
 
@@ -75,7 +91,7 @@ class CrossAttention(nn.Module):
         '''
         kv_mask = kv_mask.to(device=content.device, dtype=torch.bool)
         q_mask = q_mask.to(device=q_x.device, dtype=torch.bool)
-        
+
         pad_mask = q_mask.unsqueeze(-1) & kv_mask.unsqueeze(-2) #[B, T_q] @ [B, T_kv] -> [B, T_q, T_kv]
         combined_mask = pad_mask.unsqueeze(1) # [B_q, T_q, T_kv] -> [B_q, 1, T_q, T_kv]
         return self._dot_product(k_x, v_x, q_x, combined_mask)

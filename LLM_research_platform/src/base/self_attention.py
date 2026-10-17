@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import math
 import numpy as np
 #B batch sizae
@@ -17,6 +18,7 @@ class SelfAttention(nn.Module):
         rope_dims, 
         RoPE=True, 
         pad_token=0, 
+        sdpa=True,
         dropout=0.2, 
         causal=True,
         cls_enabled = False,
@@ -29,6 +31,8 @@ class SelfAttention(nn.Module):
         self.max_seq_len = max_seq_len
         self.head_dim = d_model // n_heads
         self.cls_enabled = cls_enabled
+        self.sdpa = sdpa
+        self.dropout=dropout
 
         # M-rope config
         self.rope_dims = rope_dims
@@ -149,18 +153,30 @@ class SelfAttention(nn.Module):
     
     def _attention(self, q, k, v, combined_mask): #combined_mask: [B,H,T_q,T_kv]
         B, _, T_q, _ = q.shape
-        
-        scores = q @ k.transpose(-1, -2) #[B,H,T_q,T_kv]
-        scores = scores / math.sqrt(self.head_dim)
-        scores = scores.masked_fill(~combined_mask, -1e10)
 
-        attention = torch.softmax(scores, dim=-1)
-        # dropout on attention
-        attention = self.atten_dropout(attention)
+        if self.sdpa:
+             out = output = F.scaled_dot_product_attention(
+                query=q,
+                key=k,
+                value=v,
+                attn_mask=combined_mask,
+                dropout_p=(
+                    self.dropout if self.training else 0.0
+                ),
+                is_causal=False, # it should always be false if passing a customed mask
+            )
+        else:
+            scores = q @ k.transpose(-1, -2) #[B,H,T_q,T_kv]
+            scores = scores / math.sqrt(self.head_dim)
+            scores = scores.masked_fill(~combined_mask, -1e10)
 
-        out = attention @ v #[B,H,T_q,head_dim]
+            attention = torch.softmax(scores, dim=-1)
+            # dropout on attention
+            attention = self.atten_dropout(attention)
+
+            out = attention @ v #[B,H,T_q,head_dim]
+
         out = out.transpose(1, 2).contiguous().view(B, T_q, self.d_model)
-
         out = self.out_proj(out)
         # dropout on out project
         out  = self.out_dropout(out)

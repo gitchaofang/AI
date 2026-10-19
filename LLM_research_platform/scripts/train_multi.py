@@ -303,7 +303,7 @@ for epoch in range(epoches):
                 "batch": i,
             })
 
-        if(i % 500 == 0):
+        if(i % 1000 == 0):
              print(
                             f"epoch {epoch} | "
                             f"batch {i} | "

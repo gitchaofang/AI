@@ -1,6 +1,8 @@
 import torch
+import math
 import os
 from pathlib import Path
+from torch.optim.lr_scheduler import LambdaLR
 import yaml
 import random
 import numpy as np
@@ -195,8 +197,10 @@ loader_eval = DataLoader(
     generator=loader_generator,
 )
 
-if config_vit["model"]["sdpa"] and config_gpt["model"]["sdpa"]:
-    print(f"using sdpa")
+if config_vit["model"]["sdpa"]:
+    print(f"using sdpa for Vit")
+if  config_gpt["model"]["sdpa"]:
+    print(f"using sdpa for GPT")
 vit = ViT(
     d_model=config_vit["model"]["d_model"], 
     n_heads=config_vit["model"]["n_heads"],
@@ -244,14 +248,42 @@ trainer = Trainer(
     device,
 )
 
-epoches = config_vit["training"]["epochs"]
+epochs = config_vit["training"]["epochs"]
 accumulation_steps = config_vit["training"]["accumulation_steps"]
-for epoch in range(epoches):
+
+# ----------set up for learning-scheduler-------
+updates_per_epoch = math.ceil(
+    len(loader_train) / accumulation_steps
+)
+total_steps = epochs * updates_per_epoch
+
+warmup_ratio = 0.01
+warmup_steps = int(total_steps * warmup_ratio)
+
+min_lr_ratio = 0.10
+def lr_lambda(step):
+    # Linear warmup.
+    if warmup_steps > 0 and step < warmup_steps:
+        return (step + 1) / warmup_steps
+
+    # Cosine decay after warmup.
+    decay_steps = max(1, total_steps - warmup_steps)
+    progress = min(1.0,max(0.0,(step - warmup_steps) / decay_steps,),)
+    cosine = 0.5 * (1.0 + math.cos(math.pi * progress))
+    return min_lr_ratio + (
+        1.0 - min_lr_ratio
+    ) * cosine
+
+scheduler = LambdaLR(optimizer, lr_lambda)
+
+global_step = 0
+for epoch in range(epochs):
     model.train()
     optimizer.zero_grad()
     loss_accu = 0.0
     cnt = 0.0
     epoch_tokens = 0
+    num_batches = len(loader_train)
     
     '''
     patch_items,        #vit
@@ -277,7 +309,17 @@ for epoch in range(epoches):
         num_tokens = text_pad_mask.sum().item()
         epoch_tokens += num_tokens
 
-        loss = trainer.train_step(
+        # calculate the accumulation step size to avoid the shortage of last a few batchs
+        window_start = (
+            i // accumulation_steps
+        ) * accumulation_steps
+
+        window_size = min(
+            accumulation_steps,
+            num_batches - window_start,
+        )
+
+        raw_loss = trainer.train_step(
             patched_items = patched_items, 
             text_x = text_x, 
             text_pad_mask = text_pad_mask,
@@ -285,17 +327,19 @@ for epoch in range(epoches):
             is_prefill = False, 
             is_generate = False, 
             y=y,
-        )/ accumulation_steps
-        loss.backward()
+        )
 
-        loss_accu += (loss.item() * accumulation_steps)
+        (raw_loss / window_size).backward()
 
+        loss_accu += raw_loss.item()
+        cnt += 1
+        
         if(i % 100 == 0):
             batch_size = text_x.size(0)
             text_seq_len = text_x.size(1)
 
             wandb.log({
-                "train/batch_loss": loss.item(),
+                "train/batch_loss": raw_loss.item(),
                 "train/batch_size": batch_size,
                 "train/seq_len": text_seq_len,
                 "train/tokens": num_tokens,
@@ -310,13 +354,31 @@ for epoch in range(epoches):
                             f"batch_size {batch_size} | "
                             f"seq_len {text_seq_len} | "
                             f"tokens {num_tokens} | "
-                            f"loss {loss.item() * accumulation_steps:.4f}"
+                            f"loss {raw_loss.item() :.4f}"
                         )
 
         if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:
+            #----add gradient clipping
+            grad_norm = torch.nn.utils.clip_grad_norm_(
+                model.parameters(),
+                max_norm=1.0,
+            )
+
             optimizer.step()
+            scheduler.step()
             optimizer.zero_grad(set_to_none=True)
-        cnt += 1
+
+            global_step += 1
+
+            wandb.log({
+                "train/grad_norm": grad_norm.item(),
+                "train/learning_rate": (
+                    optimizer.param_groups[0]["lr"]
+                ),
+                "train/global_step": global_step,
+                "epoch": epoch,
+            })
+        
 
         # eval
      #   if(i % 5000 == 0):
@@ -324,7 +386,11 @@ for epoch in range(epoches):
             
     avg_train_loss = loss_accu / cnt
     current_lr = optimizer.param_groups[0]["lr"]
-    print(f"epoch {epoch} | ave_loss: {avg_train_loss}")
+    print(
+        f"epoch {epoch} | "
+        f"train_loss={avg_train_loss:.4f} | "
+        f"lr={optimizer.param_groups[0]['lr']:.2e}"
+    )
     eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
 
     wandb.log({

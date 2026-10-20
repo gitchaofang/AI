@@ -319,15 +319,30 @@ for epoch in range(epochs):
             num_batches - window_start,
         )
 
-        raw_loss = trainer.train_step(
-            patched_items = patched_items, 
-            text_x = text_x, 
-            text_pad_mask = text_pad_mask,
-            text_positions = text_positions, 
-            is_prefill = False, 
-            is_generate = False, 
-            y=y,
-        )
+        if config_vit["training"]["bp16"]:
+            with torch.autocast(
+                device_type="cuda",
+                dtype=torch.bfloat16,
+            ):
+                raw_loss = trainer.train_step(
+                    patched_items = patched_items, 
+                    text_x = text_x, 
+                    text_pad_mask = text_pad_mask,
+                    text_positions = text_positions, 
+                    is_prefill = False, 
+                    is_generate = False, 
+                    y=y,
+                )
+        else:
+            raw_loss = trainer.train_step(
+                patched_items = patched_items, 
+                text_x = text_x, 
+                text_pad_mask = text_pad_mask,
+                text_positions = text_positions, 
+                is_prefill = False, 
+                is_generate = False, 
+                y=y,
+            )
 
         (raw_loss / window_size).backward()
 

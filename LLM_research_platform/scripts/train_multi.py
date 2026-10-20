@@ -52,6 +52,92 @@ def set_seed(seed: int = 42, deterministic: bool = False):
 SEED = 42
 set_seed(SEED, deterministic=False)
 
+# ---------- Checkpoint save/load ----------
+#CHECKPOINT_DIR = Path("content/drive/MyDrive/protected/data/cc3m/checkpoints")
+CHECKPOINT_DIR = Path("content/checkpoints")
+CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+
+def get_model_to_save(model):
+    """Return the original model when wrapped by torch.compile."""
+    return getattr(model, "_orig_mod", model)
+
+def save_checkpoint(
+    path,
+    model,
+    optimizer,
+    scheduler,
+    epoch,
+    global_step,
+    loader_generator,
+    best_val_loss=float("inf"),
+):
+    checkpoint = {
+        "epoch": epoch,
+        "global_step": global_step,
+        "best_val_loss": best_val_loss,
+        "model_state_dict": get_model_to_save(model).state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "scheduler_state_dict": scheduler.state_dict(),
+        "python_rng_state": random.getstate(),
+        "numpy_rng_state": np.random.get_state(),
+        "torch_rng_state": torch.get_rng_state(),
+        "cuda_rng_state_all": (
+            torch.cuda.get_rng_state_all()
+            if torch.cuda.is_available()
+            else None
+        ),
+        "loader_generator_state": loader_generator.get_state(),
+    }
+
+    path = Path(path)
+    temp_path = Path(str(path) + ".tmp")
+    torch.save(checkpoint, temp_path)
+    temp_path.replace(path)
+    print(f"Checkpoint saved: {path}")
+
+
+def load_checkpoint(
+    path,
+    model,
+    optimizer,
+    scheduler,
+    loader_generator,
+    device,
+):
+    checkpoint = torch.load(
+        path,
+        map_location=device,
+        weights_only=False,
+    )
+
+    get_model_to_save(model).load_state_dict(
+        checkpoint["model_state_dict"]
+    )
+    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+    scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+    loader_generator.set_state(checkpoint["loader_generator_state"])
+
+    # Restore RNG states last, after constructing/loading all objects.
+    random.setstate(checkpoint["python_rng_state"])
+    np.random.set_state(checkpoint["numpy_rng_state"])
+    torch.set_rng_state(checkpoint["torch_rng_state"])
+
+    if (
+        torch.cuda.is_available()
+        and checkpoint["cuda_rng_state_all"] is not None
+    ):
+        torch.cuda.set_rng_state_all(checkpoint["cuda_rng_state_all"])
+
+    start_epoch = checkpoint["epoch"] + 1
+    global_step = checkpoint["global_step"]
+    best_val_loss = checkpoint["best_val_loss"]
+
+    print(
+        f"Resuming from epoch {start_epoch}, "
+        f"global_step {global_step}"
+    )
+    return start_epoch, global_step, best_val_loss
+
 
 # for dataloader
 def seed_worker(worker_id):
@@ -121,6 +207,7 @@ def eval(loader_eval, trainer, epoch):
             "epoch": epoch,
         })
     model.train()
+    return avg_eval_loss
         
 # Training scripts
 # weight and bias setup 
@@ -276,8 +363,25 @@ def lr_lambda(step):
 
 scheduler = LambdaLR(optimizer, lr_lambda)
 
+# ---------- Resume from latest checkpoint, if available ----------
+checkpoint_path = CHECKPOINT_DIR / "latest.pt"
+start_epoch = 0
 global_step = 0
-for epoch in range(epochs):
+best_val_loss = float("inf")
+
+if checkpoint_path.exists():
+    start_epoch, global_step, best_val_loss = load_checkpoint(
+        path=checkpoint_path,
+        model=model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        loader_generator=loader_generator,
+        device=device,
+    )
+else:
+    print("No checkpoint found. Starting training from scratch.")
+
+for epoch in range(start_epoch, epochs):
     model.train()
     optimizer.zero_grad()
     loss_accu = 0.0
@@ -406,7 +510,13 @@ for epoch in range(epochs):
         f"train_loss={avg_train_loss:.4f} | "
         f"lr={optimizer.param_groups[0]['lr']:.2e}"
     )
-    eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
+
+    # Validate at the end of the epoch.
+    val_loss = eval(
+        trainer=trainer,
+        loader_eval = loader_eval,
+        epoch = epoch
+    )
 
     wandb.log({
                 "train/epoch_loss": avg_train_loss,
@@ -418,4 +528,30 @@ for epoch in range(epochs):
         "epoch": epoch,
     })
 
+    # Save the best checkpoint when validation loss improves.
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        save_checkpoint(
+            path=CHECKPOINT_DIR / "best.pt",
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            epoch=epoch,
+            global_step=global_step,
+            loader_generator=loader_generator,
+            best_val_loss=best_val_loss,
+        )
+        print(f"New best validation loss: {best_val_loss:.4f}")
+
+    # Always save the most recently completed epoch for resuming.
+    save_checkpoint(
+        path=CHECKPOINT_DIR / "latest.pt",
+        model=model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        epoch=epoch,
+        global_step=global_step,
+        loader_generator=loader_generator,
+        best_val_loss=best_val_loss,
+    )
 wandb.finish()

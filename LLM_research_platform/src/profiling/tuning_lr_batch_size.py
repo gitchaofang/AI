@@ -24,7 +24,7 @@ from src.data.all_in_one import PaddingCollator
 from src.data.collator import VitCollator
 from src.base.self_attention import SelfAttention
 from src.models.ViT import ViT
-from src.models import GPT
+from src.models.GPT import GPT
 from src.models.multimodalGPT import MultimodalGPT
 from src.training.trainer_multimodalGPT import Trainer
 from scripts.helper import eval

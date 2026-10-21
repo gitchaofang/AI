@@ -166,9 +166,7 @@ if __name__ == "__main__":
         for lr in learning_rates:
             for batch_size, accumulation_steps in batch_sizes_accumulation_staps:
                 for min_lr_ratio in min_lr_ratios:
-                    set_seed(SEED)
-                    model = build_model(device=device, vocab_size=vocab_size)  
-                    
+                    set_seed(SEED)  
                     sampler_train = ImageDatasetBatchSampler(dataset = dataset_train,
                                                             batch_size=batch_size,
                                                             shuffle=False)

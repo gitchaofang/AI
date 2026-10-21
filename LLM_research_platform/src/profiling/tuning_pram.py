@@ -96,9 +96,12 @@ def build_model(device,vocab_size):
 # learning rate
 def learning_rate():
     #testing parameters setup:
-    learning_rates = [5e-5, 1e-4, 3e-4, 1e-3]
-    batch_sizes_accumulation_staps = [(8,8),(16,4),(8,16),(16,8)]
+    #learning_rates = [5e-5, 1e-4, 3e-4, 1e-3]
+    learning_rates = [1e-4, 3e-4, 1e-3]
+    #batch_sizes_accumulation_staps = [(8,8),(16,4),(8,16),(16,8)]
+    batch_sizes_accumulation_staps = [(8,8),(16,4)]
     min_lr_ratios = [0.1,0.05]
+    epochs = 3
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Device:", device)
@@ -142,7 +145,6 @@ def learning_rate():
                              num_workers=4,
                              pin_memory=(device == "cuda"),)
      
-    epochs = 15
 
     # best record
     best_val_loss = float("inf")

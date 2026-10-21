@@ -171,6 +171,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Device:", device)
 
+'''
 def eval(loader_eval, trainer, epoch, model, device):
     #eval:
     print(f"eval loader size: {len(loader_eval)}")
@@ -209,6 +210,7 @@ def eval(loader_eval, trainer, epoch, model, device):
         })
     model.train()
     return avg_eval_loss
+'''
 
 # Training scripts
 # weight and bias setup 
@@ -524,10 +526,12 @@ for epoch in range(start_epoch, epochs):
     )
 
     wandb.log({
-                "train/epoch_loss": avg_train_loss,
-                "epoch": epoch,
-            })
+            "eval/loss": val_loss,
+            "epoch": epoch,
+        })
+
     wandb.log({
+        "train/epoch_loss": avg_train_loss,
         "train/epoch_tokens": epoch_tokens,
         "train/learning_rate": current_lr,
         "epoch": epoch,

@@ -328,7 +328,7 @@ if __name__ == "__main__":
             print(f"{lr}   {min_lr_ratio}   {batch_size}   {accumulation_steps}   {best_epoch}   {best_loss}\n")
         print(f"------------optimal setups-----------")
         print(f"lr: {best_val_lr}\nepoch: {best_val_epoch}\nmin_lr_ratio: {best_val_min_lr_ratio}\nbatch_size: {best_batch_size}\nbest_accumation_steps: {best_accumulation_steps}/nbest loss: {best_val_loss}")
-
+    learning_rate()
 
 
                         

@@ -30,7 +30,6 @@ from src.training.trainer_multimodalGPT import Trainer
 from scripts.train_multi import eval
 from scripts.train_multi import lr_lambda
 
-SEED = 42
 LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
 COLAB_YAML_PATH_GPT = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
 
@@ -44,7 +43,7 @@ COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 # load yaml config
 with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
-
+SEED = 42
 def set_seed(seed=42):
     random.seed(seed)
     np.random.seed(seed)

@@ -227,7 +227,7 @@ if __name__ == "__main__":
                         num_batches = len(loader_train)
 
                         #train
-                        print(f"starting to train {len(loader_train)} samples in epoch {epoch + 1}")
+                        print(f"starting to train {len(loader_train)} batches in epoch {epoch + 1}")
 
                         for i, batch in enumerate(loader_train):
                             patched_items = {

@@ -126,7 +126,7 @@ def load_checkpoint(
         torch.cuda.is_available()
         and checkpoint["cuda_rng_state_all"] is not None
     ):
-        torch.cuda.set_rng_state_all(checkpoint["cuda_rng_state_all"].cpu())
+        torch.cuda.set_rng_state_all(checkpoint["cuda_rng_state_all"])
 
     start_epoch = checkpoint["epoch"] + 1
     global_step = checkpoint["global_step"]

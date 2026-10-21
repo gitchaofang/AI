@@ -328,6 +328,7 @@ optimizer = torch.optim.AdamW(
     model.parameters(),
     lr = config_vit["training"]["learning_rate"],
     weight_decay = 0.01,
+    betas=(0.9, 0.95),
 )
 
 

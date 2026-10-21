@@ -65,6 +65,38 @@ def learning_rate():
     print(f"tokenizer is trained. The vocab size is {vocab_size}")
 
     print(f"tokenizer is trained. The vocab size is {vocab_size}")
+    # training dataloader
+    dataset_train = ImageDatasetLocal(tokenizer=tokenizer,
+                                      data_dir=config_vit["data"]["data_path_local"], 
+                                      image_only=config_vit["data"]["image_only"],
+                                      for_training=True)
+    collator_train = VitCollator(token_pad = 0,
+                                 image_pad = 0.0,
+                                 label_pad = -100,
+                                 image_only = config_vit["data"]["image_only"], 
+                                 for_training = True)
+    dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
+                                     data_dir=config_vit["data"]["data_path_local"], 
+                                     image_only=config_vit["data"]["image_only"],
+                                     for_training=False,)
+    #evaluation dataset
+    sampler_eval = ImageDatasetBatchSampler(dataset=dataset_eval,
+                                            batch_size=config_vit["data"]["validation_batch_size"],
+                                            shuffle=False,)
+                    
+    collator_eval = VitCollator(token_pad = 0,
+                                image_pad = 0.0,
+                                label_pad = -100,
+                                image_only = config_vit["data"]["image_only"], 
+                                for_training = False)
+                    
+    loader_eval = DataLoader(dataset=dataset_eval,
+                             collate_fn = collator_eval,
+                             batch_sampler = sampler_eval,
+                             shuffle = False,
+                             num_workers=4,
+                             pin_memory=(device == "cuda"),)
+    
     vit = ViT(
         d_model=config_vit["model"]["d_model"], 
         n_heads=config_vit["model"]["n_heads"],
@@ -106,7 +138,6 @@ def learning_rate():
     )
 
     epochs = 15
-    accumulation_steps = config_vit["training"]["accumulation_steps"]
 
     # best record
     best_val_loss = float("inf")
@@ -125,58 +156,17 @@ def learning_rate():
     for lr in learning_rates:
         for batch_size, accumulation_steps in batch_sizes_accumulation_staps:
             for min_lr_ratio in min_lr_ratios:
-
-                # build models and dataloader
-                dataset_train = ImageDatasetLocal(tokenizer=tokenizer,
-                                                    data_dir=config_vit["data"]["data_path_local"], 
-                                                    image_only=config_vit["data"]["image_only"],
-                                                    for_training=True)
                 
                 sampler_train = ImageDatasetBatchSampler(dataset = dataset_train,
-                                                        batch_size=config_vit["data"]["batch_size"],
+                                                        batch_size=batch_size,
                                                         shuffle=False)
                 
-                collator_train = VitCollator(token_pad = 0,
-                                        image_pad = 0.0,
-                                        label_pad = -100,
-                                        image_only = config_vit["data"]["image_only"], 
-                                        for_training = True)
-                
-                loader_train = DataLoader(
-                        dataset=dataset_train,
-                        collate_fn = collator_train,
-                        batch_sampler = sampler_train,
-                        shuffle = False,
-                        num_workers=4,
-                        pin_memory=(device == "cuda"),
-                    )
-                
-                    #evaluation dataset
-                
-                dataset_eval = ImageDatasetLocal(tokenizer=tokenizer,
-                                                    data_dir=config_vit["data"]["data_path_local"], 
-                                                    image_only=config_vit["data"]["image_only"],
-                                                    for_training=False,)
-                
-                sampler_eval = ImageDatasetBatchSampler(dataset=dataset_eval,
-                                                            batch_size=config_vit["data"]["validation_batch_size"],
-                                                            shuffle=False,)
-                
-                collator_eval = VitCollator(token_pad = 0,
-                                        image_pad = 0.0,
-                                        label_pad = -100,
-                                        image_only = config_vit["data"]["image_only"], 
-                                        for_training = False)
-                
-                loader_eval = DataLoader(
-                        dataset=dataset_eval,
-                        collate_fn = collator_eval,
-                        batch_sampler = sampler_eval,
-                        shuffle = False,
-                        num_workers=4,
-                        pin_memory=(device == "cuda"),
-                    )
-                
+                loader_train = DataLoader(dataset=dataset_train,
+                                          collate_fn = collator_train,
+                                          batch_sampler = sampler_train,
+                                          shuffle = False,
+                                          num_workers=4,
+                                          pin_memory=(device == "cuda"),)
                 
 
                 optimizer = torch.optim.AdamW(

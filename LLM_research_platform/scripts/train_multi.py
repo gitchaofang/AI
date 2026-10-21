@@ -17,7 +17,7 @@ from src.models.GPT import GPT
 from src.models.ViT import ViT
 from src.models.multimodalGPT import MultimodalGPT
 from src.training.trainer_multimodalGPT import Trainer
-from .helper import eval
+from scripts.helper import eval
 
 # Set this before importing torch or initializing CUDA.
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"

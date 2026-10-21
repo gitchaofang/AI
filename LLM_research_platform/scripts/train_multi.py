@@ -327,6 +327,7 @@ model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
 optimizer = torch.optim.AdamW(
     model.parameters(),
     lr = config_vit["training"]["learning_rate"],
+    weight_decay = 0.01,
 )
 
 

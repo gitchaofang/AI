@@ -53,7 +53,7 @@ SEED = 42
 set_seed(SEED, deterministic=False)
 
 # ---------- Checkpoint save/load ----------
-CHECKPOINT_DIR = Path("content/drive/MyDrive/protected/data/cc3m/checkpoints")
+CHECKPOINT_DIR = Path("/content/drive/MyDrive/protected/data/cc3m/checkpoints")
 #CHECKPOINT_DIR = Path("content/checkpoints")
 CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 

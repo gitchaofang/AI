@@ -27,8 +27,7 @@ from src.models.ViT import ViT
 from src.models import GPT
 from src.models.multimodalGPT import MultimodalGPT
 from src.training.trainer_multimodalGPT import Trainer
-from scripts.train_multi import eval
-from scripts.train_multi import lr_lambda
+from scripts.helper import eval
 
 LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
 COLAB_YAML_PATH_GPT = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
@@ -294,7 +293,7 @@ if __name__ == "__main__":
                         total_token += epoch_tokens
 
                         # Validate at the end of the epoch.
-                        val_loss = eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
+                        val_loss = eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch,model=model,device=device)
                         # Save the best checkpoint when validation loss improves.
                         if val_loss < best_loss:
                             best_epoch = epoch

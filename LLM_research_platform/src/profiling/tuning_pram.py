@@ -99,12 +99,12 @@ def learning_rate():
         sdpa=True,
     ).to(device)
                 
-    model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
+    model = torch.compile(MultimodalGPT(vit = vit, gpt = gpt))
     trainer = Trainer(
         model,
         device,
     )
-    
+
     epochs = 15
     accumulation_steps = config_vit["training"]["accumulation_steps"]
 

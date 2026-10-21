@@ -115,12 +115,12 @@ def load_checkpoint(
     )
     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
     scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-    loader_generator.set_state(checkpoint["loader_generator_state"])
+    loader_generator.set_state(checkpoint["loader_generator_state"].cpu())
 
     # Restore RNG states last, after constructing/loading all objects.
     random.setstate(checkpoint["python_rng_state"])
     np.random.set_state(checkpoint["numpy_rng_state"])
-    torch.set_rng_state(checkpoint["torch_rng_state"])
+    torch.set_rng_state(checkpoint["torch_rng_state"].cpu())
 
     if (
         torch.cuda.is_available()

@@ -46,6 +46,44 @@ with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
 
 
+def build_model(device,vocab_size):
+    vit = ViT(
+            d_model=config_vit["model"]["d_model"], 
+            n_heads=config_vit["model"]["n_heads"],
+            n_layers=config_vit["model"]["n_layers"], 
+            in_channels=config_vit["data"]["in_channels"], 
+            max_seq_len=config_vit["data"]["max_len"],
+            patch_size=config_vit["data"]["patch_size"],
+            mlp_ratio=config_vit["model"]["mlp_ratio"],
+            dropout=config_vit["model"]["dropout"],
+            RoPE=config_vit["model"]["rope"],
+            rope_dims=config_vit["model"]["rope_dims"],
+            num_class=config_vit["model"]["num_class"], 
+            cls_enabled=config_vit["model"]["cls"],
+            sdpa=True,
+            causal=False,
+            cross_attention_enabled=False,
+        ).to(device)
+                    
+    gpt = GPT(
+            vocab_size=vocab_size,
+            d_model=config_gpt["model"]["d_model"],
+            max_seq_len=config_gpt["data"]["max_len"],
+            n_layers=config_gpt["model"]["n_layers"],
+            n_heads=config_gpt["model"]["n_heads"],
+            cross_attention=config_gpt["model"]["cross_attention"],
+            d_model_ca=config_vit["model"]["d_model"],
+            causal=config_gpt["model"]["causal"],
+            RoPE=config_gpt["model"]["rope"],
+            rope_dims=config_gpt["model"]["rope_dims"],
+            dropout=config_gpt["model"]["dropout"],
+            cls_enabled=config_gpt["model"]["cls"],
+            sdpa=True,
+        ).to(device)
+                    
+    model = torch.compile(MultimodalGPT(vit = vit, gpt = gpt))
+    return model
+
 
 #--------tuning for vit-gpt model------------------
 # learning rate
@@ -96,51 +134,13 @@ def learning_rate():
                              shuffle = False,
                              num_workers=4,
                              pin_memory=(device == "cuda"),)
-    
-    vit = ViT(
-        d_model=config_vit["model"]["d_model"], 
-        n_heads=config_vit["model"]["n_heads"],
-        n_layers=config_vit["model"]["n_layers"], 
-        in_channels=config_vit["data"]["in_channels"], 
-        max_seq_len=config_vit["data"]["max_len"],
-        patch_size=config_vit["data"]["patch_size"],
-        mlp_ratio=config_vit["model"]["mlp_ratio"],
-        dropout=config_vit["model"]["dropout"],
-        RoPE=config_vit["model"]["rope"],
-        rope_dims=config_vit["model"]["rope_dims"],
-        num_class=config_vit["model"]["num_class"], 
-        cls_enabled=config_vit["model"]["cls"],
-        sdpa=True,
-        causal=False,
-        cross_attention_enabled=False,
-    ).to(device)
-                
-    gpt = GPT(
-        vocab_size=vocab_size,
-        d_model=config_gpt["model"]["d_model"],
-        max_seq_len=config_gpt["data"]["max_len"],
-        n_layers=config_gpt["model"]["n_layers"],
-        n_heads=config_gpt["model"]["n_heads"],
-        cross_attention=config_gpt["model"]["cross_attention"],
-        d_model_ca=config_vit["model"]["d_model"],
-        causal=config_gpt["model"]["causal"],
-        RoPE=config_gpt["model"]["rope"],
-        rope_dims=config_gpt["model"]["rope_dims"],
-        dropout=config_gpt["model"]["dropout"],
-        cls_enabled=config_gpt["model"]["cls"],
-        sdpa=True,
-    ).to(device)
-                
-    model = torch.compile(MultimodalGPT(vit = vit, gpt = gpt))
-    trainer = Trainer(
-        model,
-        device,
-    )
-
+     
     epochs = 15
 
     # best record
     best_val_loss = float("inf")
+    best_batch_size = 0;
+    best_accumulation_steps = 0
     best_val_lr = 0.0
     best_val_epoch = 0
     best_val_min_lr_ratio = 1.0
@@ -169,11 +169,16 @@ def learning_rate():
                                           pin_memory=(device == "cuda"),)
                 
 
+                model = build_model(device=device, vocab_size=vocab_size,)
                 optimizer = torch.optim.AdamW(
                     model.parameters(),
                     lr = lr,
                     weight_decay = 0.01,
                     betas=(0.9, 0.95),
+                )
+                trainer = Trainer(
+                    model,
+                    device,
                 )
 
                 # ----------set up for learning-scheduler-------    
@@ -290,6 +295,8 @@ def learning_rate():
                     best_val_lr = lr
                     best_val_epoch = best_epoch
                     best_val_min_lr_ratio = min_lr_ratio
+                    best_batch_size = batch_size
+                    best_accumulation_steps = accumulation_steps
                 # update records
                 record_lr.append(lr)
                 record_min_lr_ratio.append(min_lr_ratio)
@@ -311,7 +318,7 @@ def learning_rate():
         best_loss = record_best_loss[i]
         print(f"{lr}   {min_lr_ratio}   {batch_size}   {accumulation_steps}   {best_epoch}   {best_loss}\n")
     print(f"------------optimal setups-----------")
-    print(f"lr: {best_val_lr}\n epoch: {best_val_epoch}\n min_lr_ratio: {best_val_min_lr_ratio}\n best loss: {best_val_loss}")
+    print(f"lr: {best_val_lr}\nepoch: {best_val_epoch}\nmin_lr_ratio: {best_val_min_lr_ratio}\nbatch_size: {best_batch_size}\nbest_accumation_steps: {best_epoch}/nbest loss: {best_val_loss}")
 
 
 

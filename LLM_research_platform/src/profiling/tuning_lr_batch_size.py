@@ -164,7 +164,7 @@ if __name__ == "__main__":
         for lr in learning_rates:
             for batch_size, accumulation_steps in batch_sizes_accumulation_staps:
                 for min_lr_ratio in min_lr_ratios:
-                    print(f"Testing: lr={lr}| batch_size{batch_size} | accumulation_steps={accumulation_steps} | min_lr_ratio={min_lr_ratio}")
+                    print(f"Testing: lr={lr}| batch_size={batch_size} | accumulation_steps={accumulation_steps} | min_lr_ratio={min_lr_ratio}")
                     set_seed(SEED)  
                     sampler_train = ImageDatasetBatchSampler(dataset = dataset_train,
                                                             batch_size=batch_size,

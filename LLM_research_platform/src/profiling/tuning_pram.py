@@ -43,6 +43,7 @@ COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 # load yaml config
 with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
+    
 SEED = 42
 def set_seed(seed=42):
     random.seed(seed)

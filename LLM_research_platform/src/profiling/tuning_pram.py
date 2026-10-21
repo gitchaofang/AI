@@ -43,7 +43,7 @@ COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 # load yaml config
 with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
-    
+
 SEED = 42
 def set_seed(seed=42):
     random.seed(seed)
@@ -289,7 +289,7 @@ def learning_rate():
                             f"epoch {epoch} | "
                             f"train_loss={avg_train_loss:.4f} | "
                             f"lr={optimizer.param_groups[0]['lr']:.2e}"
-
+                        )
                     total_token += epoch_tokens
 
                     # Validate at the end of the epoch.

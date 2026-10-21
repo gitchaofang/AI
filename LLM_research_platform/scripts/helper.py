@@ -18,13 +18,12 @@ from src.models.ViT import ViT
 from src.models.multimodalGPT import MultimodalGPT
 from src.training.trainer_multimodalGPT import Trainer
 
-def eval(loader_eval, trainer, epoch):
+def eval(loader_eval, trainer, epoch, model, device):
     #eval:
     print(f"eval loader size: {len(loader_eval)}")
     model.eval()
     eval_loss_accu = 0.0
     eval_cnt = 0.0
-    eval_tokens = 0
     with torch.no_grad():
         for i, batch in enumerate(loader_eval):
             patched_items = {"patched_input": batch["patched_input"].to(device,non_blocking=True),
@@ -34,9 +33,6 @@ def eval(loader_eval, trainer, epoch):
             text_pad_mask = batch["text_pad_mask"].to(device,non_blocking=True)
             text_positions = batch["text_positions"].to(device,non_blocking=True)
             y = batch[ "caption_ids_label"].to(device,non_blocking=True)
-    
-            num_tokens = text_x.sum().item()
-            eval_tokens += num_tokens
     
             eval_loss_accu += trainer.train_step(
                 patched_items = patched_items, 
@@ -49,11 +45,5 @@ def eval(loader_eval, trainer, epoch):
             eval_cnt += 1
     avg_eval_loss = eval_loss_accu / eval_cnt
     print(f"epoch | {epoch} | eval error: {avg_eval_loss}")
-    wandb.log({
-            "eval/loss": avg_eval_loss,
-            "eval/tokens": eval_tokens,
-            "epoch": epoch,
-        })
     model.train()
     return avg_eval_loss
-

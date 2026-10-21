@@ -519,10 +519,10 @@ for epoch in range(start_epoch, epochs):
     # Validate at the end of the epoch.
     val_loss = eval(
         trainer=trainer,
-        loader_eval = loader_eval,
-        epoch = epoch,
+        loader_eval=loader_eval,
+        epoch=epoch,
         model=model,
-        device = device
+        device=device,
     )
 
     wandb.log({

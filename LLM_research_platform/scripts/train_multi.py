@@ -17,6 +17,7 @@ from src.models.GPT import GPT
 from src.models.ViT import ViT
 from src.models.multimodalGPT import MultimodalGPT
 from src.training.trainer_multimodalGPT import Trainer
+from .helper import eval
 
 # Set this before importing torch or initializing CUDA.
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
@@ -170,6 +171,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 #device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Device:", device)
 
+'''
 def eval(loader_eval, trainer, epoch):
     #eval:
     print(f"eval loader size: {len(loader_eval)}")
@@ -208,7 +210,7 @@ def eval(loader_eval, trainer, epoch):
         })
     model.train()
     return avg_eval_loss
-        
+'''
 # Training scripts
 # weight and bias setup 
 import wandb

@@ -261,14 +261,15 @@ if __name__ == "__main__":
                             cnt += 1
 
                             text_seq_len = text_x.size(1)
-                            print(
-                                f"epoch {epoch} | "
-                                f"batch {i} | "
-                                f"batch_size {batch_size} | "
-                                f"seq_len {text_seq_len} | "
-                                f"tokens {num_tokens} | "
-                                f"loss {raw_loss.item() :.4f}"
-                            )
+                            if(i % 500 == 0):
+                                print(
+                                    f"epoch {epoch} | "
+                                    f"batch {i} | "
+                                    f"batch_size {batch_size} | "
+                                    f"seq_len {text_seq_len} | "
+                                    f"tokens {num_tokens} | "
+                                    f"loss {raw_loss.item() :.4f}"
+                                )
 
                             if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:
                                 #----add gradient clipping
@@ -284,14 +285,14 @@ if __name__ == "__main__":
                                 global_step += 1
 
                             avg_train_loss = loss_accu / cnt
-                            current_lr = optimizer.param_groups[0]["lr"]
-                            print(
-                                f"epoch {epoch} | "
-                                f"train_loss={avg_train_loss:.4f} | "
-                                f"lr={optimizer.param_groups[0]['lr']:.2e}"
-                            )
+
                         total_token += epoch_tokens
 
+                        print(
+                            f"epoch {epoch} | "
+                            f"train_loss={avg_train_loss:.4f} | "
+                            f"lr={optimizer.param_groups[0]['lr']:.2e}"
+                        )
                         # Validate at the end of the epoch.
                         val_loss = eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch,model=model,device=device)
                         # Save the best checkpoint when validation loss improves.

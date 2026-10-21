@@ -45,6 +45,13 @@ COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
 with open(COLAB_YAML_PATH_VIT,"r") as f:
     config_vit = yaml.safe_load(f)
 
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 def build_model(device,vocab_size):
     vit = ViT(
@@ -156,6 +163,8 @@ def learning_rate():
     for lr in learning_rates:
         for batch_size, accumulation_steps in batch_sizes_accumulation_staps:
             for min_lr_ratio in min_lr_ratios:
+                set_seed(SEED)
+                model = build_model(device=device, vocab_size=vocab_size)  
                 
                 sampler_train = ImageDatasetBatchSampler(dataset = dataset_train,
                                                         batch_size=batch_size,

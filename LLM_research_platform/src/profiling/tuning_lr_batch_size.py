@@ -323,18 +323,28 @@ if __name__ == "__main__":
                     
                 
         # output
-        print(f"lr   min_lr_ratio   batch_size    accumulation_steps   best_epoch   epalsed_time. best loss")
+        print( "lr   min_lr_ratio   batch_size   accumulation_steps   "
+              "best_epoch   epoch_time_sec   best_val_loss")
+
         for i in range(len(record_best_epoch)):
-            lr = record_lr[i]
-            min_lr_ratio = record_min_lr_ratio[i]
-            batch_size = record_batch_size[i]
-            accumulation_steps = record_accumulation_steps[i]
-            best_epoch = record_best_epoch[i]
-            best_loss = record_best_loss[i]
-            epoch_elapsed_time = record_elapsed_time[i]
-            print(f"{lr}   {min_lr_ratio}   {batch_size}   {accumulation_steps}   {best_epoch}   {epoch_elapsed_time}  {best_loss}\n")
-        print(f"------------optimal setups-----------")
-        print(f"lr: {best_val_lr}\nepoch: {best_val_epoch}\nmin_lr_ratio: {best_val_min_lr_ratio}\nbatch_size: {best_batch_size}\nbest_accumation_steps: {best_accumulation_steps}\nepoch_elapsed_time: {best_epoch_elapsed_time}best loss: {best_val_loss}")
+            print(
+                f"{record_lr[i]:.2e}   "
+                f"{record_min_lr_ratio[i]}   "
+                f"{record_batch_size[i]}   "
+                f"{record_accumulation_steps[i]}   "
+                f"{record_best_epoch[i] + 1}   "
+                f"{record_elapsed_time[i]:.2f}   "
+                f"{record_best_loss[i]:.4f}"
+            )
+
+        print("------------ optimal setup -----------")
+        print(f"Learning rate: {best_val_lr:.2e}")
+        print(f"Best epoch: {best_val_epoch + 1}")
+        print(f"Minimum LR ratio: {best_val_min_lr_ratio}")
+        print(f"Batch size: {best_batch_size}")
+        print(f"Accumulation steps: {best_accumulation_steps}")
+        print(f"Best epoch training time: {best_epoch_elapsed_time:.2f} seconds")
+        print(f"Best validation loss: {best_val_loss:.4f}")
     learning_rate()
 
 

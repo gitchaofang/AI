@@ -225,10 +225,7 @@ if __name__ == "__main__":
                         cnt = 0.0
                         epoch_tokens = 0
                         num_batches = len(loader_train)
-
-                        #train
-                        print(f"starting to train {len(loader_train)} batches in epoch {epoch + 1}")
-
+                        
                         for i, batch in enumerate(loader_train):
                             patched_items = {
                                 "patched_input": batch["patched_input"].to(device,non_blocking=True),

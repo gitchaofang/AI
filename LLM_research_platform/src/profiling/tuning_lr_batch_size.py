@@ -101,7 +101,7 @@ if __name__ == "__main__":
         batch_sizes_accumulation_staps = [(8,8),(16,4),(8,16),(16,8)]
         #batch_sizes_accumulation_staps = [(8,8),(16,4)]
         min_lr_ratios = [0.1,0.05]
-        epochs = 12
+        epochs = 2
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print("Device:", device)

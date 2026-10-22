@@ -163,7 +163,7 @@ if __name__ == "__main__":
         record_min_lr_ratio = []
         record_elapsed_time = [] 
 
-        print(f"{len(dataset_train)} training batches. {len(dataset_eval)} validation batches")
+        print(f"{len(dataset_train)} samples. {len(dataset_eval)} samples")
         for lr in learning_rates:
             for batch_size, accumulation_steps in batch_sizes_accumulation_staps:
                 for min_lr_ratio in min_lr_ratios:

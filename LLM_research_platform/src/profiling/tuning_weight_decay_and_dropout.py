@@ -224,6 +224,8 @@ if __name__ == "__main__":
                         epoch_tokens = 0
                         num_batches = len(loader_train)
                         # start elaped time
+                        if device == "cuda":
+                            torch.cuda.synchronize()
                         epoch_time_start = time.perf_counter()
                         for i, batch in enumerate(loader_train):
                             patched_items = {
@@ -282,6 +284,8 @@ if __name__ == "__main__":
 
                             avg_train_loss = loss_accu / cnt
                         # epoch time
+                        if device == "cuda":
+                            torch.cuda.synchronize()
                         epoch_elapsed_time = time.perf_counter() - epoch_time_start
                         total_token += epoch_tokens
 

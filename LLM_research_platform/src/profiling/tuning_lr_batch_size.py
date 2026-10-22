@@ -152,6 +152,7 @@ if __name__ == "__main__":
         best_val_lr = 0.0
         best_val_epoch = 0
         best_val_min_lr_ratio = 1.0
+        best_epoch_elapsed_time = 0.0
 
         # record from each test
         record_best_loss = []
@@ -159,7 +160,8 @@ if __name__ == "__main__":
         record_batch_size = []
         record_accumulation_steps = []
         record_best_epoch = []
-        record_min_lr_ratio = [] 
+        record_min_lr_ratio = []
+        record_elapsed_time = [] 
         
         for lr in learning_rates:
             for batch_size, accumulation_steps in batch_sizes_accumulation_staps:
@@ -218,6 +220,7 @@ if __name__ == "__main__":
                     # training loop:
                     best_epoch = 0
                     best_loss = float("inf")
+                    best_recorded_elapsed_time = 0.0
                     for epoch in range(epochs):
                         model.train()
                         optimizer.zero_grad()
@@ -225,7 +228,8 @@ if __name__ == "__main__":
                         cnt = 0.0
                         epoch_tokens = 0
                         num_batches = len(loader_train)
-                        
+                        # start elaped time
+                        epoch_time_start = time.perf_counter()
                         for i, batch in enumerate(loader_train):
                             patched_items = {
                                 "patched_input": batch["patched_input"].to(device,non_blocking=True),
@@ -282,7 +286,8 @@ if __name__ == "__main__":
                                 global_step += 1
 
                             avg_train_loss = loss_accu / cnt
-
+                        # epoch time
+                        epoch_elapsed_time = time.perf_counter() - epoch_time_start
                         total_token += epoch_tokens
 
                         print(
@@ -296,6 +301,7 @@ if __name__ == "__main__":
                         if val_loss < best_loss:
                             best_epoch = epoch
                             best_loss = val_loss
+                            best_recorded_elapsed_time = epoch_elapsed_time
                         
                     if best_loss < best_val_loss:
                         best_val_loss = best_loss
@@ -304,6 +310,7 @@ if __name__ == "__main__":
                         best_val_min_lr_ratio = min_lr_ratio
                         best_batch_size = batch_size
                         best_accumulation_steps = accumulation_steps
+                        best_epoch_elapsed_time = best_recorded_elapsed_time
                     # update records
                     record_lr.append(lr)
                     record_min_lr_ratio.append(min_lr_ratio)
@@ -311,11 +318,11 @@ if __name__ == "__main__":
                     record_accumulation_steps.append(accumulation_steps)
                     record_best_epoch.append(best_epoch)
                     record_best_loss.append(best_loss)
+                    record_elapsed_time.append(best_recorded_elapsed_time)
                     
-
                 
         # output
-        print(f"lr   min_lr_ratio   batch_size    accumulation_steps   best epoch   best loss")
+        print(f"lr   min_lr_ratio   batch_size    accumulation_steps   best_epoch   epalsed_time. best loss")
         for i in range(len(record_best_epoch)):
             lr = record_lr[i]
             min_lr_ratio = record_min_lr_ratio[i]
@@ -323,9 +330,10 @@ if __name__ == "__main__":
             accumulation_steps = record_accumulation_steps[i]
             best_epoch = record_best_epoch[i]
             best_loss = record_best_loss[i]
-            print(f"{lr}   {min_lr_ratio}   {batch_size}   {accumulation_steps}   {best_epoch}   {best_loss}\n")
+            epoch_elapsed_time = record_elapsed_time[i]
+            print(f"{lr}   {min_lr_ratio}   {batch_size}   {accumulation_steps}   {best_epoch}   {epoch_elapsed_time}  {best_loss}\n")
         print(f"------------optimal setups-----------")
-        print(f"lr: {best_val_lr}\nepoch: {best_val_epoch}\nmin_lr_ratio: {best_val_min_lr_ratio}\nbatch_size: {best_batch_size}\nbest_accumation_steps: {best_accumulation_steps}/nbest loss: {best_val_loss}")
+        print(f"lr: {best_val_lr}\nepoch: {best_val_epoch}\nmin_lr_ratio: {best_val_min_lr_ratio}\nbatch_size: {best_batch_size}\nbest_accumation_steps: {best_accumulation_steps}\nepoch_elapsed_time: {best_epoch_elapsed_time}best loss: {best_val_loss}")
     learning_rate()
 
 

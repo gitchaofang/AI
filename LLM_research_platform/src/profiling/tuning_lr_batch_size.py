@@ -96,12 +96,12 @@ def build_model(device,vocab_size):
 if __name__ == "__main__":
     def learning_rate():
         #testing parameters setup:
-        learning_rates = [5e-5, 1e-4, 3e-4, 1e-3]
-        #learning_rates = [1e-4, 3e-4, 1e-3]
-        batch_sizes_accumulation_staps = [(8,8),(16,4),(8,16),(16,8)]
-        #batch_sizes_accumulation_staps = [(8,8),(16,4)]
+        #learning_rates = [5e-5, 1e-4, 3e-4, 1e-3]
+        learning_rates = [1e-4, 3e-4,]
+        #batch_sizes_accumulation_staps = [(8,8),(16,4),(8,16),(16,8)]
+        batch_sizes_accumulation_staps = [(8,8),(8,4)]
         min_lr_ratios = [0.1,0.05]
-        epochs = 2
+        epochs = 1
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print("Device:", device)

@@ -166,7 +166,7 @@ if __name__ == "__main__":
         print(f"{len(dataset_train)} samples. {len(dataset_eval)} samples")
         for weight_decay in weight_decays:
             for dropout in dropouts:
-                    print(f"Testing: weight_decay={weight_decay} | dropout={dropout}")
+                    print(f"Testing: weight_decay={weight_decay} | dropout={dropout} | learning rate = {optimizer.param_groups[0]["lr"]} | batch_size = {config_vit["data"]["batch_size"]} | min_lr_ratio = {min_lr_ratio} | accumulation_steps = {accumulation_steps} \n")
                     set_seed(SEED) 
                     model = build_model(device=device, vocab_size=vocab_size,dropout=dropout)
                     loader_train = DataLoader(dataset=dataset_train,

@@ -168,7 +168,7 @@ if __name__ == "__main__":
         print(f"{len(dataset_train)} samples. {len(dataset_eval)} samples")
         for weight_decay in weight_decays:
             for dropout in dropouts:
-                    print(f"Testing: weight_decay={weight_decay} | dropout={dropout} | learning rate = {lr} | batch_size = {batch_size} | min_lr_ratio = {min_lr_ratio} | accumulation_steps = {accumulation_steps} \n")
+                    print(f"Testing: weight_decay={weight_decay} | dropout={dropout} | learning rate = {lr} | batch_size = {batch_size} | accumulation_steps = {accumulation_steps} | min_lr_ratio = {min_lr_ratio} \n")
                     set_seed(SEED) 
                     model = build_model(device=device, vocab_size=vocab_size,dropout=dropout)
                     loader_train = DataLoader(dataset=dataset_train,
@@ -335,15 +335,3 @@ if __name__ == "__main__":
         print(f"Best epoch training time: {best_epoch_elapsed_time:.2f} seconds")
         print(f"Best validation loss: {best_val_loss:.4f}")
     decay_and_dropout()
-
-
-                        
-                    
-
-
-
-
-            
-
-
-

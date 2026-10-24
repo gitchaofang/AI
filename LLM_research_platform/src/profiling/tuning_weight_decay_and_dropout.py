@@ -97,7 +97,7 @@ if __name__ == "__main__":
     def decay_and_dropout():
         #testing parameters setup:
         weight_decays = [0.0, 0.01, 0.1]
-        dropouts = [0.0, 0.1]
+        dropouts = [0.0, 0.1,0.2]
         epochs = 15
 
         # set up constants

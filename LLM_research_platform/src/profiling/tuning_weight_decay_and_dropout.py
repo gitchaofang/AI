@@ -100,6 +100,12 @@ if __name__ == "__main__":
         dropouts = [0.0, 0.1]
         epochs = 15
 
+        # set up constants
+        batch_size = 8
+        accumulation_steps = 8
+        min_lr_ratio = 0.05
+        lr=3e-4
+
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print("Device:", device)
 
@@ -120,7 +126,7 @@ if __name__ == "__main__":
                                     image_only = config_vit["data"]["image_only"], 
                                     for_training = True)
         sampler_train = ImageDatasetBatchSampler(dataset = dataset_train,
-                                                 batch_size=config_vit["data"]["batch_size"],
+                                                 batch_size=batch_size,
                                                  shuffle=False)
         
         #evaluation dataset
@@ -146,10 +152,6 @@ if __name__ == "__main__":
                                 num_workers=4,
                                 pin_memory=(device == "cuda"),)
 
-        # set up constants
-        accumulation_steps = 8
-        min_lr_ratio = 0.05
-        lr=3e-4
 
         # best record
         best_val_loss = float("inf")
@@ -166,7 +168,7 @@ if __name__ == "__main__":
         print(f"{len(dataset_train)} samples. {len(dataset_eval)} samples")
         for weight_decay in weight_decays:
             for dropout in dropouts:
-                    print(f"Testing: weight_decay={weight_decay} | dropout={dropout} | learning rate = {optimizer.param_groups[0]["lr"]} | batch_size = {config_vit["data"]["batch_size"]} | min_lr_ratio = {min_lr_ratio} | accumulation_steps = {accumulation_steps} \n")
+                    print(f"Testing: weight_decay={weight_decay} | dropout={dropout} | learning rate = {lr} | batch_size = {batch_size} | min_lr_ratio = {min_lr_ratio} | accumulation_steps = {accumulation_steps} \n")
                     set_seed(SEED) 
                     model = build_model(device=device, vocab_size=vocab_size,dropout=dropout)
                     loader_train = DataLoader(dataset=dataset_train,

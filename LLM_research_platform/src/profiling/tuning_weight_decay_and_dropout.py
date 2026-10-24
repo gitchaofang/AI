@@ -147,8 +147,8 @@ if __name__ == "__main__":
                                 pin_memory=(device == "cuda"),)
 
         # set up constants
-        accumulation_steps = config_vit["training"]["accumulation_steps"]
-        min_lr_ratio = 0.10
+        accumulation_steps = 8
+        min_lr_ratio = 0.05
 
         # best record
         best_val_loss = float("inf")
@@ -282,7 +282,7 @@ if __name__ == "__main__":
 
                                 global_step += 1
 
-                            avg_train_loss = loss_accu / cnt
+                        avg_train_loss = loss_accu / cnt
                         # epoch time
                         if device == "cuda":
                             torch.cuda.synchronize()

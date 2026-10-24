@@ -24,16 +24,17 @@ model:
   rope: True
   rope_dims: [32,32]
   sdpa: True
-  dropout: 0.2
+  dropout: 0.1
   cross_attention: False
   causal: False
   num_class: null
   cls: False
 
 training:
-  epochs: 15
-  learning_rate: 0.0001
-  weight_decay: 0.01
+  epochs: 20
+  learning_rate: 0.0003
+  weight_decay: 0.1
+  min_lr_ratio: 0.05
   accumulation_steps: 8
   max_grad_norm: 1.0
   bp16: False

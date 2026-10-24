@@ -289,7 +289,7 @@ model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
 optimizer = torch.optim.AdamW(
     model.parameters(),
     lr = config_vit["training"]["learning_rate"],
-    weight_decay = 0.01,
+    weight_decay = config_vit["training"]["weight_decay"],
     betas=(0.9, 0.95),
 )
 
@@ -311,7 +311,7 @@ total_steps = epochs * updates_per_epoch
 warmup_ratio = 0.01
 warmup_steps = int(total_steps * warmup_ratio)
 
-min_lr_ratio = 0.10
+min_lr_ratio = config_vit["training"]["min_lr_ratio"]
 def lr_lambda(step):
     # Linear warmup.
     if warmup_steps > 0 and step < warmup_steps:

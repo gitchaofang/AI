@@ -98,7 +98,7 @@ if __name__ == "__main__":
         #testing parameters setup:
         weight_decays = [0.0, 0.01, 0.1]
         dropouts = [0.0, 0.1,0.2]
-        epochs = 10
+        epochs = 11
 
         # set up constants
         batch_size = 8

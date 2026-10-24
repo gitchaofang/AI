@@ -176,7 +176,6 @@ if __name__ == "__main__":
                                             num_workers=4,
                                             pin_memory=(device == "cuda"),)
                     
-    
                     optimizer = torch.optim.AdamW(
                         model.parameters(),
                         lr = lr,

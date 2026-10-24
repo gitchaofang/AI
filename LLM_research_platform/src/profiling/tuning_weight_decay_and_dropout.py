@@ -97,9 +97,8 @@ if __name__ == "__main__":
     def decay_and_dropout():
         #testing parameters setup:
         weight_decays = [0.0, 0.01, 0.1]
-        weight_decays = [0.0,]
         dropouts = [0.0, 0.1]
-        epochs = 1
+        epochs = 15
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print("Device:", device)
@@ -150,6 +149,7 @@ if __name__ == "__main__":
         # set up constants
         accumulation_steps = 8
         min_lr_ratio = 0.05
+        lr=3e-4
 
         # best record
         best_val_loss = float("inf")
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     
                     optimizer = torch.optim.AdamW(
                         model.parameters(),
-                        lr = config_vit["training"]["learning_rate"],
+                        lr = lr,
                         weight_decay = weight_decay,
                         betas=(0.9, 0.95),
                     )

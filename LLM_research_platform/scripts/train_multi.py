@@ -177,6 +177,9 @@ import wandb
 wandb.login()
 wandb.init(
     project="my-image-text-multimodal",
+    entity="fangchao118-personal",
+    id="xpauqgdg",
+    resume="must",
     config={
         "d_model": config_vit["model"]["d_model"],
         "n_layers": config_vit["model"]["n_layers"],

@@ -5,6 +5,6 @@ snapshot_download(
         local_dir="/content/cache/training",
         allow_patterns=[
             "cc3m-tain-0[0-1][0-9][0-9].tar",
-	    "cc3m-tain-02[0-4][0-9].tar",
+	        "cc3m-tain-02[0-4][0-9].tar",
         ]
     )

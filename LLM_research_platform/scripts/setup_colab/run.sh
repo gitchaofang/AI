@@ -27,5 +27,6 @@ for f in cc3m-0[0-9][0-9][0-9].tar; do
 done
 
 # 5. Run the final processing script
+cd /content/AI/LLM_research_platform/scripts/setup_colab
 python3 pick_patches.py
 

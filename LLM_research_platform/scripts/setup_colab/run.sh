@@ -21,7 +21,7 @@ done
 # 4. Navigate to the training cache and process
 cd /content/cache/training
 python3 download_training_samples.py
-for f in cc3m-0[0-9][0-9][0-9].tar; do
+for f in cc3m-train-0[0-9][0-9][0-9].tar; do
     echo "Extracting $f"
     tar -xf "$f" && rm "$f" || break
 done

@@ -1,7 +1,7 @@
 # 1. Create the necessary directory structure properly
-mkdir -p /cache/training
-mkdir -p /cache/validation
-mkdir -p /token_train
+mkdir -p /content/cache/training
+mkdir -p /content/cache/validation
+mkdir -p /content/token_train
 
 # 2. Download and extract the WikiText dataset
 cd /content/token_train

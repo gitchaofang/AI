@@ -1,10 +1,10 @@
 # 1. Create the necessary directory structure properly
-mkdir -p ./cache/training
-mkdir -p ./cache/validation
-mkdir -p ./token_train
+mkdir -p /cache/training
+mkdir -p /cache/validation
+mkdir -p /token_train
 
 # 2. Download and extract the WikiText dataset
-cd ./token_train
+cd /content/token_train
 curl -L -o ./wikitext-103-raw-v1.zip https://wikitext.smerity.com/wikitext-103-raw-v1.zip
 unzip -q ./wikitext-103-raw-v1.zip -d ./
 cp ./wikitext-103-raw/wiki.train.raw train.txt

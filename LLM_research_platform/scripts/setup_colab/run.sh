@@ -12,7 +12,7 @@ cp ./wikitext-103-raw/wiki.train.raw train.txt
 # 3. Navigate back out to the validation cache and run scripts
 # (Using absolute paths ensures you don't get lost in relative directories)
 cd /content/cache/validation
-python3 download_validation_samples.py
+python3 /content/AI/LLM_research_platform/scripts/setup_colab/download_validation_samples.py
 for f in cc3m-validation-0[0-9][0-9][0-9].tar; do
     echo "Extracting $f"
     tar -xf "$f" && rm "$f" || break
@@ -20,7 +20,7 @@ done
 
 # 4. Navigate to the training cache and process
 cd /content/cache/training
-python3 download_training_samples.py
+python3 /content/AI/LLM_research_platform/scripts/setup_colab/download_training_samples.py
 for f in cc3m-train-0[0-9][0-9][0-9].tar; do
     echo "Extracting $f"
     tar -xf "$f" && rm "$f" || break

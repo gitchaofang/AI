@@ -9,14 +9,6 @@ curl -L -o ./wikitext-103-raw-v1.zip https://wikitext.smerity.com/wikitext-103-r
 unzip -q ./wikitext-103-raw-v1.zip -d ./
 cp ./wikitext-103-raw/wiki.train.raw train.txt
 
-# 4. Navigate to the training cache and process
-cd /content/cache/training
-python3 /content/AI/LLM_research_platform/scripts/setup_colab/download_training_samples.py
-for f in cc3m-train-0[0-9][0-9][0-9].tar; do
-    echo "Extracting $f"
-    tar -xf "$f" && rm "$f" || break
-done
-
 # 3. Navigate back out to the validation cache and run scripts
 # (Using absolute paths ensures you don't get lost in relative directories)
 cd /content/cache/validation
@@ -26,6 +18,13 @@ for f in cc3m-validation-0[0-9][0-9][0-9].tar; do
     tar -xf "$f" && rm "$f" || break
 done
 
+# 4. Navigate to the training cache and process
+cd /content/cache/training
+python3 /content/AI/LLM_research_platform/scripts/setup_colab/download_training_samples.py
+for f in cc3m-train-0[0-9][0-9][0-9].tar; do
+    echo "Extracting $f"
+    tar -xf "$f" && rm "$f" || break
+done
 
 # 5. Run the final processing script
 cd /content/AI/LLM_research_platform/scripts/setup_colab

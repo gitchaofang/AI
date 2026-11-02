@@ -467,7 +467,7 @@ for epoch in range(start_epoch, epochs):
         
 
         # eval 
-        if(i % 20000 == 0):
+        if(i % 10000 == 0):
             print(f"eval for epoch{epoch} | batch {i}: ")
             eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
             

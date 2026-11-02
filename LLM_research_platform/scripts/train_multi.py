@@ -466,9 +466,10 @@ for epoch in range(start_epoch, epochs):
             })
         
 
-        # eval
-     #   if(i % 5000 == 0):
-     #       eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
+        # eval 
+        if(i % 25000 == 0):
+            print(f"eval for epoch{epoch} | batch {i}: ")
+            eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
             
     avg_train_loss = loss_accu / cnt
     current_lr = optimizer.param_groups[0]["lr"]

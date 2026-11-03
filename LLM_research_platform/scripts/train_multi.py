@@ -69,12 +69,15 @@ def save_checkpoint(
     scheduler,
     epoch,
     global_step,
+    schedule_start_step,
     loader_generator,
+    extension_active,
     best_val_loss=float("inf"),
 ):
     checkpoint = {
         "epoch": epoch,
         "global_step": global_step,
+        "schedule_start_step": schedule_start_step,
         "best_val_loss": best_val_loss,
         "model_state_dict": get_model_to_save(model).state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
@@ -88,8 +91,8 @@ def save_checkpoint(
             else None
         ),
         "loader_generator_state": loader_generator.get_state(),
+        "extension_active": extension_active
     }
-
     path = Path(path)
     temp_path = Path(str(path) + ".tmp")
     torch.save(checkpoint, temp_path)
@@ -132,12 +135,19 @@ def load_checkpoint(
     start_epoch = checkpoint["epoch"] + 1
     global_step = checkpoint["global_step"]
     best_val_loss = checkpoint["best_val_loss"]
+    schedule_start_step = checkpoint.get(
+        "schedule_start_step", 0
+    )
+
+    extension_active = checkpoint.get(
+        "extension_active", False
+    )
 
     print(
         f"Resuming from epoch {start_epoch}, "
         f"global_step {global_step}"
     )
-    return start_epoch, global_step, best_val_loss
+    return start_epoch, global_step, best_val_loss, schedule_start_step, extension_active
 
 
 # for dataloader
@@ -315,6 +325,10 @@ warmup_ratio = 0.01
 warmup_steps = int(total_steps * warmup_ratio)
 
 min_lr_ratio = config_vit["training"]["min_lr_ratio"]
+
+# Used to define the beginning of the current schedule.
+schedule_start_step = 0
+extension_active = False
 def lr_lambda(step):
     # Linear warmup.
     if warmup_steps > 0 and step < warmup_steps:
@@ -322,7 +336,7 @@ def lr_lambda(step):
 
     # Cosine decay after warmup.
     decay_steps = max(1, total_steps - warmup_steps)
-    progress = min(1.0,max(0.0,(step - warmup_steps) / decay_steps,),)
+    progress = min(1.0,max(0.0,(step - schedule_start_step - warmup_steps) / decay_steps,),)
     cosine = 0.5 * (1.0 + math.cos(math.pi * progress))
     return min_lr_ratio + (
         1.0 - min_lr_ratio
@@ -337,7 +351,7 @@ global_step = 0
 best_val_loss = float("inf")
 
 if checkpoint_path.exists():
-    start_epoch, global_step, best_val_loss = load_checkpoint(
+    start_epoch, global_step, best_val_loss, schedule_start_step, extension_active = load_checkpoint(
         path=checkpoint_path,
         model=model,
         optimizer=optimizer,
@@ -347,6 +361,29 @@ if checkpoint_path.exists():
     )
 else:
     print("No checkpoint found. Starting training from scratch.")
+
+# update for extended training
+if config_vit["training"]["extended"]:
+    # Capture the current LR(s) only when extended training just started.
+    if not extension_active:
+        current_lrs = [
+            group["lr"]
+            for group in optimizer.param_groups
+        ]
+        # Use the current LR(s) as the new base LR(s).
+        scheduler.base_lrs = current_lrs
+        schedule_start_step = global_step
+    
+        extension_active = True
+        
+    # Remaining optimizer updates.
+    total_steps -= schedule_start_step
+
+    # No additional warmup for extended training.
+    warmup_steps = 0
+
+    #reduce min_lr_ratio
+    min_lr_ratio = min_lr_ratio * 0.1
 
 for epoch in range(start_epoch, epochs):
     model.train()
@@ -526,7 +563,9 @@ for epoch in range(start_epoch, epochs):
         scheduler=scheduler,
         epoch=epoch,
         global_step=global_step,
+        schedule_start_step=schedule_start_step,
         loader_generator=loader_generator,
+        extension_active = extension_active,
         best_val_loss=best_val_loss,
     )
 wandb.finish()

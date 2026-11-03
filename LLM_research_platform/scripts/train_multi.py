@@ -375,7 +375,7 @@ if config_vit["training"]["extended"]:
         schedule_start_step = global_step
     
         extension_active = True
-        
+
     # Remaining optimizer updates.
     total_steps -= schedule_start_step
 
@@ -470,7 +470,7 @@ for epoch in range(start_epoch, epochs):
                 "batch": i,
             })
 
-        if(i % 10000 == 0):
+        if(i % 5000 == 0):
             print(
                             f"epoch {epoch} | "
                             f"batch {i} | "
@@ -480,7 +480,7 @@ for epoch in range(start_epoch, epochs):
                             f"loss {raw_loss.item() :.4f}"
                         )
 
-        if(i % 10000 == 0):
+        if(i % 25000 == 0):
             # eval
             print(f"eval for epoch{epoch} | batch {i}: ")
             eval(trainer=trainer,loader_eval=loader_eval,epoch=epoch,model=model,device=device,)

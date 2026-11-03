@@ -442,9 +442,14 @@ for epoch in range(start_epoch, epochs):
                             f"tokens {num_tokens} | "
                             f"loss {raw_loss.item() :.4f}"
                         )
+
+        if(i % 10000 == 0):
             # eval
             print(f"eval for epoch{epoch} | batch {i}: ")
-            eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
+            eval(trainer=trainer,loader_eval=loader_eval,epoch=epoch,model=model,device=device,)
+            
+            
+            
 
         if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:
             #----add gradient clipping

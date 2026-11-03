@@ -384,7 +384,7 @@ if config_vit["training"]["extended"]:
     warmup_steps = 0
 
     #reduce min_lr_ratio
-    min_lr_ratio = min_lr_ratio * 0.1
+    #min_lr_ratio = min_lr_ratio * 0.1
 
 print(f"total {epochs} epochs")
 for epoch in range(start_epoch, epochs):

@@ -433,8 +433,8 @@ for epoch in range(start_epoch, epochs):
                 "batch": i,
             })
 
-        if(i % 5000 == 0):
-             print(
+        if(i % 10000 == 0):
+            print(
                             f"epoch {epoch} | "
                             f"batch {i} | "
                             f"batch_size {batch_size} | "
@@ -442,6 +442,9 @@ for epoch in range(start_epoch, epochs):
                             f"tokens {num_tokens} | "
                             f"loss {raw_loss.item() :.4f}"
                         )
+            # eval
+            print(f"eval for epoch{epoch} | batch {i}: ")
+            eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
 
         if (i + 1) % accumulation_steps == 0 or i == len(loader_train) - 1:
             #----add gradient clipping
@@ -466,11 +469,6 @@ for epoch in range(start_epoch, epochs):
             })
         
 
-        # eval 
-        if(i % 10000 == 0):
-            print(f"eval for epoch{epoch} | batch {i}: ")
-            eval(trainer=trainer,loader_eval = loader_eval,epoch = epoch)
-            
     avg_train_loss = loss_accu / cnt
     current_lr = optimizer.param_groups[0]["lr"]
     print(

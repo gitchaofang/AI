@@ -386,6 +386,7 @@ if config_vit["training"]["extended"]:
     #reduce min_lr_ratio
     min_lr_ratio = min_lr_ratio * 0.1
 
+print(f"total {epochs} epochs")
 for epoch in range(start_epoch, epochs):
     model.train()
     optimizer.zero_grad()

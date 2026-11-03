@@ -364,6 +364,7 @@ else:
 
 # update for extended training
 if config_vit["training"]["extended"]:
+    print(f"-----------------------extended training------------------------")
     # Capture the current LR(s) only when extended training just started.
     if not extension_active:
         current_lrs = [

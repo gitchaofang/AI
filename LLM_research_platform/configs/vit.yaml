@@ -24,7 +24,7 @@ model:
   rope: True
   rope_dims: [32,32]
   sdpa: True
-  dropout: 0.15
+  dropout: 0.1
   cross_attention: False
   causal: False
   num_class: null
@@ -34,7 +34,7 @@ training:
   epochs: 50
   extended: True
   learning_rate: 0.0003
-  weight_decay: 0.1
+  weight_decay: 0.01
   min_lr_ratio: 0.05
   accumulation_steps: 16
   max_grad_norm: 1.0

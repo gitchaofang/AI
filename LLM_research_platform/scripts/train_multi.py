@@ -482,6 +482,7 @@ for epoch in range(start_epoch, epochs):
                             f"seq_len {text_seq_len} | "
                             f"tokens {num_tokens} | "
                             f"loss {raw_loss.item() :.4f}"
+                            f"lr {optimizer.param_groups[0]["lr"]}"
                         )
 
         #if(i % 40000 == 0):

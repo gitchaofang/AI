@@ -323,6 +323,7 @@ total_steps = epochs * updates_per_epoch
 
 warmup_ratio = 0.01
 warmup_steps = int(total_steps * warmup_ratio)
+print(f"warmup_steps is {warmup_steps}")
 
 min_lr_ratio = config_vit["training"]["min_lr_ratio"]
 

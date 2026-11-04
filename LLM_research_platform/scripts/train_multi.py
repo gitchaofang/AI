@@ -482,10 +482,10 @@ for epoch in range(start_epoch, epochs):
                             f"loss {raw_loss.item() :.4f}"
                         )
 
-        if(i % 40000 == 0):
-            # eval
-            print(f"eval for epoch{epoch} | batch {i}: ")
-            eval(trainer=trainer,loader_eval=loader_eval,epoch=epoch,model=model,device=device,)
+        #if(i % 40000 == 0):
+        #    # eval
+        #    print(f"eval for epoch{epoch} | batch {i}: ")
+        #    eval(trainer=trainer,loader_eval=loader_eval,epoch=epoch,model=model,device=device,)
             
             
             

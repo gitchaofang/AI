@@ -552,7 +552,9 @@ for epoch in range(start_epoch, epochs):
             scheduler=scheduler,
             epoch=epoch,
             global_step=global_step,
+            schedule_start_step=schedule_start_step,
             loader_generator=loader_generator,
+            extension_active = extension_active,
             best_val_loss=best_val_loss,
         )
         print(f"New best validation loss: {best_val_loss:.4f}")

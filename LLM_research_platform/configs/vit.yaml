@@ -13,7 +13,7 @@ data:
   image_only: False
 
 tokenizer:
-  vocab_size: 9000
+  vocab_size: 16000
   pattern: gpt2
 
 model:
@@ -24,19 +24,19 @@ model:
   rope: True
   rope_dims: [32,32]
   sdpa: True
-  dropout: 0.1
+  dropout: 0.15
   cross_attention: False
   causal: False
   num_class: null
   cls: False
 
 training:
-  epochs: 50
+  epochs: 40
   extended: True
   learning_rate: 0.0003
   weight_decay: 0.1
   min_lr_ratio: 0.05
-  accumulation_steps: 8
+  accumulation_steps: 16
   max_grad_norm: 1.0
   bp16: False
   layers_to_checkpointed: 0

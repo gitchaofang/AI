@@ -430,7 +430,7 @@ for epoch in range(start_epoch, epochs):
             num_batches - window_start,
         )
 
-        if config_vit["training"]["bp16"]:
+        if config_vit["training"]["bf16"]:
             with torch.autocast(
                 device_type="cuda",
                 dtype=torch.bfloat16,

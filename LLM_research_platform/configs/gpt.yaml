@@ -38,7 +38,7 @@ training:
   min_lr_ratio: 0.05
   accumulation_steps: 16
   max_grad_norm: 1.0
-  bp16: False
+  bf16: False
   layers_to_checkpointed: 0
   training_file: "training.txt"
   validation_file: "validation.txt"

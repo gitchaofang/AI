@@ -346,7 +346,7 @@ def lr_lambda(step):
 
 scheduler = LambdaLR(optimizer, lr_lambda)
 
-print(f"lr= {optimizer.param_groups[0]["lr"]}")
+print(f"Base lr = {optimizer.param_groups[0]["lr"]}")
 
 # ---------- Resume from latest checkpoint, if available ----------
 checkpoint_path = CHECKPOINT_DIR / "latest.pt"
@@ -476,8 +476,7 @@ for epoch in range(start_epoch, epochs):
                 "batch": i,
             })
 
-       # if(i % 5000 == 0):
-        if(i % 128 == 0):
+        if(i % 5000 == 0):
             print(
                             f"epoch {epoch} | "
                             f"batch {i} | "
@@ -485,7 +484,6 @@ for epoch in range(start_epoch, epochs):
                             f"seq_len {text_seq_len} | "
                             f"tokens {num_tokens} | "
                             f"loss {raw_loss.item() :.4f}"
-                            f"lr {optimizer.param_groups[0]["lr"]}"
                         )
 
         #if(i % 40000 == 0):

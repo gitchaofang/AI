@@ -4,7 +4,8 @@ snapshot_download(
         repo_type="dataset",
         local_dir="/content/cache/training",
         allow_patterns=[
-            "cc3m-train-0[0-2][0-9][0-9].tar",
-            "cc3m-train-0[3-5][6-9][0-9].tar",
+            #"cc3m-train-0[0-2][0-9][0-9].tar",
+            #"cc3m-train-0[3-5][6-9][0-9].tar",
+            "cc3m-train-0[3-5]0[0-9].tar",
         ]
     )

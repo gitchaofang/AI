@@ -346,7 +346,6 @@ def lr_lambda(step):
 
 scheduler = LambdaLR(optimizer, lr_lambda)
 
-
 # ---------- Resume from latest checkpoint, if available ----------
 checkpoint_path = CHECKPOINT_DIR / "latest.pt"
 start_epoch = 0

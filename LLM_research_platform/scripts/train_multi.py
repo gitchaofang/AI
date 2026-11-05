@@ -526,18 +526,18 @@ for epoch in range(start_epoch, epochs):
     )
 
     # Validate at the end of the epoch.
-#    val_loss = eval(
-#        trainer=trainer,
-#        loader_eval=loader_eval,
-#        epoch=epoch,
-#        model=model,
-#        device=device,
-#    )
+    val_loss = eval(
+        trainer=trainer,
+        loader_eval=loader_eval,
+        epoch=epoch,
+        model=model,
+        device=device,
+    )
 
-#    wandb.log({
-#            "eval/loss": val_loss,
-#            "epoch": epoch,
-#        })
+    wandb.log({
+            "eval/loss": val_loss,
+            "epoch": epoch,
+        })
 
     wandb.log({
         "train/epoch_loss": avg_train_loss,
@@ -547,21 +547,21 @@ for epoch in range(start_epoch, epochs):
     })
 
     # Save the best checkpoint when validation loss improves.
-   # if val_loss < best_val_loss:
-   #     best_val_loss = val_loss
-   #     save_checkpoint(
-   #         path=CHECKPOINT_DIR / "best.pt",
-   #         model=model,
-   #         optimizer=optimizer,
-   #         scheduler=scheduler,
-   #         epoch=epoch,
-   #         global_step=global_step,
-   #         schedule_start_step=schedule_start_step,
-   #         loader_generator=loader_generator,
-   #         extension_active = extension_active,
-   #         best_val_loss=best_val_loss,
-   #     )
-   #     print(f"New best validation loss: {best_val_loss:.4f}")
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        save_checkpoint(
+            path=CHECKPOINT_DIR / "best.pt",
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            epoch=epoch,
+            global_step=global_step,
+            schedule_start_step=schedule_start_step,
+            loader_generator=loader_generator,
+            extension_active = extension_active,
+            best_val_loss=best_val_loss,
+        )
+        print(f"New best validation loss: {best_val_loss:.4f}")
 
     # Always save the most recently completed epoch for resuming.
     save_checkpoint(

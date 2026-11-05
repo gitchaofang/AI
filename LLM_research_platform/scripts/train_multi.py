@@ -306,6 +306,7 @@ optimizer = torch.optim.AdamW(
     betas=(0.9, 0.95),
 )
 
+print(f"Base lr = {optimizer.param_groups[0]["lr"]}")
 
 trainer = Trainer(
     model,
@@ -321,7 +322,7 @@ updates_per_epoch = math.ceil(
 )
 total_steps = epochs * updates_per_epoch
 
-warmup_ratio = 0
+warmup_ratio = 0.1
 warmup_steps = int(total_steps * warmup_ratio)
 print(f"warmup_steps is {warmup_steps}")
 
@@ -345,7 +346,6 @@ def lr_lambda(step):
 
 scheduler = LambdaLR(optimizer, lr_lambda)
 
-print(f"Base lr = {optimizer.param_groups[0]["lr"]}")
 
 # ---------- Resume from latest checkpoint, if available ----------
 checkpoint_path = CHECKPOINT_DIR / "latest.pt"

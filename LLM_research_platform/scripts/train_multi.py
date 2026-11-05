@@ -21,7 +21,7 @@ from scripts.helper import eval
 
 # Set this before importing torch or initializing CUDA.
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-
+torch.set_float32_matmul_precision("high")
 
 def set_seed(seed: int = 42, deterministic: bool = False):
     """Set random seeds for reproducible training."""

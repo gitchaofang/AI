@@ -32,7 +32,7 @@ model:
 
 training:
   epochs: 50
-  extended: True
+  extended: False
   learning_rate: 0.0003
   weight_decay: 0.01
   min_lr_ratio: 0.05

@@ -5,6 +5,7 @@ snapshot_download(
         local_dir="/content/cache/training",
         allow_patterns=[
             "cc3m-train-0[0-2][0-9][0-9].tar",
-            "cc3m-train-0[3-5][4-9][0-9].tar",
+            "cc3m-train-0[3-4][4-9][0-9].tar",
+            "cc3m-train-05[0-4][0-9].tar",
         ]
     )

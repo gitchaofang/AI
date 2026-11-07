@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 
 PATCH_SIZE = 16
-MAX_PATCHES = 2036
+MAX_PATCHES = 2048
 
 source_dir = Path("/content/cache/validation/")
 target_dir = source_dir / "large_images"

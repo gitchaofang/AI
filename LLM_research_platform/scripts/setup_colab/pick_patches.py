@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 
 PATCH_SIZE = 16  # Replace with your actual patch size
-MAX_PATCHES = 2036
+MAX_PATCHES = 2048
 
 source_dir = Path("/content/cache/training")
 target_dir = Path("/content/cache/training/large_images")

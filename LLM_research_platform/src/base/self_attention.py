@@ -239,5 +239,9 @@ class SelfAttention(nn.Module):
         # ---------------------------------
         pad_mask = pad_mask.unsqueeze(-1) & pad_mask.unsqueeze(-2)
         combined_mask = (self.causal_mask[:, :, :T_q, :T_q] & pad_mask.unsqueeze(1)).to(x.device)
+        
+
+        #causal_mask = self.causal_mask[:, :, :T_q, :T_q]
+        #combined_mask = (causal_mask & pad_mask[:, None, None, :])
 
         return self._attention(q, k, v, combined_mask)

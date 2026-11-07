@@ -329,7 +329,7 @@ gpt = GPT(
 ).to(device)
 
 #model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
-model =  MultimodalGPT(vit = vit, gpt = gpt)
+model =  MultimodalGPT(vit = vit, gpt = gpt).to(device)
 
 optimizer = torch.optim.AdamW(
     model.parameters(),

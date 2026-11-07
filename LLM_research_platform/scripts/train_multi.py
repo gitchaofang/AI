@@ -23,6 +23,37 @@ from scripts.helper import eval
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 torch.set_float32_matmul_precision("high")
 
+def validate_vit_batch(batch):
+    patched_input = batch["patched_input"]
+    patched_positions = batch["patched_positions"]
+    pad_mask = batch["patched_pad_mask"]
+
+    B, T, D = patched_input.shape
+
+    assert patched_positions.shape == (B, T, 2), (
+        f"Invalid patched_positions: {patched_positions.shape}"
+    )
+
+    assert pad_mask.shape == (B, T), (
+        f"Invalid patched_pad_mask: {pad_mask.shape}"
+    )
+
+    assert pad_mask.dtype == torch.bool, (
+        f"Invalid pad_mask dtype: {pad_mask.dtype}"
+    )
+
+    assert torch.isfinite(patched_input).all(), (
+        "patched_input contains NaN or Inf"
+    )
+
+    assert pad_mask.any(dim=1).all(), (
+        "At least one image has zero valid patches"
+    )
+
+    assert (pad_mask.sum(dim=1) > 0).all()
+
+    return True
+
 def set_seed(seed: int = 42, deterministic: bool = False):
     """Set random seeds for reproducible training."""
 
@@ -297,8 +328,7 @@ gpt = GPT(
     sdpa=config_gpt["model"]["sdpa"],
 ).to(device)
 
-#model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
-model = MultimodalGPT(vit = vit, gpt = gpt)
+model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
@@ -390,6 +420,7 @@ if config_vit["training"]["extended"]:
     #min_lr_ratio = min_lr_ratio * 0.1
 
 print(f"total {epochs} epochs")
+reseved_batch = {}
 for epoch in range(start_epoch, epochs):
     model.train()
     optimizer.zero_grad()
@@ -409,6 +440,13 @@ for epoch in range(start_epoch, epochs):
     #train
     print(f"{len(loader_train)}")
     for i, batch in enumerate(loader_train):
+        #validate batch:
+        if not validate_vit_batch(batch=batch):
+            print(f"malformed batch | epoch {epoch}| batch{i}")
+            batch = reseved_batch
+        else:
+            reseved_batch = batch
+
         patched_items = {
             "patched_input": batch["patched_input"].to(device,non_blocking=True),
             "patched_pad_mask": batch["patched_pad_mask"].to(device,non_blocking=True),

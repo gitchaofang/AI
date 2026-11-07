@@ -328,7 +328,8 @@ gpt = GPT(
     sdpa=config_gpt["model"]["sdpa"],
 ).to(device)
 
-model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
+#model = torch.compile( MultimodalGPT(vit = vit, gpt = gpt))
+model =  MultimodalGPT(vit = vit, gpt = gpt)
 
 optimizer = torch.optim.AdamW(
     model.parameters(),

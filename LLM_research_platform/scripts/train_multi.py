@@ -441,11 +441,13 @@ for epoch in range(start_epoch, epochs):
     print(f"{len(loader_train)}")
     for i, batch in enumerate(loader_train):
         #validate batch:
-        if not validate_vit_batch(batch=batch):
-            print(f"malformed batch | epoch {epoch}| batch{i}")
-            batch = reseved_batch
-        else:
+        if validate_vit_batch(batch=batch):
             reseved_batch = batch
+        else:
+            print(f"Malformed batch | epoch {epoch} | batch {i}")
+            if not reseved_batch:
+                raise RuntimeError("First batch is malformed. No valid replacement batch available.")
+            batch = reseved_batch
 
         patched_items = {
             "patched_input": batch["patched_input"].to(device,non_blocking=True),

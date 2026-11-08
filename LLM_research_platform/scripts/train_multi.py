@@ -47,8 +47,12 @@ def validate_vit_batch(batch):
     pad_mask = batch["patched_pad_mask"]
 
     B, T, D = patched_input.shape
+
     if T > config_vit["data"]["max_len"]:
-        print(f"length is longer than maximum")
+        print(
+            f"Input length {T} exceeds configured max_len "
+            f"{config_vit['data']['max_len']}"
+        )
         return False
 
     assert patched_positions.shape == (B, T, 2), (
@@ -70,8 +74,6 @@ def validate_vit_batch(batch):
     assert pad_mask.any(dim=1).all(), (
         "At least one image has zero valid patches"
     )
-
-    assert (pad_mask.sum(dim=1) > 0).all()
 
     return True
 

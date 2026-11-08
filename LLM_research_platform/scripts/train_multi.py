@@ -428,7 +428,7 @@ if config_vit["training"]["extended"]:
     #min_lr_ratio = min_lr_ratio * 0.1
 
 print(f"total {epochs} epochs")
-reseved_batch = {}
+last_valid_batch = None
 for epoch in range(start_epoch, epochs):
     model.train()
     optimizer.zero_grad()
@@ -450,12 +450,12 @@ for epoch in range(start_epoch, epochs):
     for i, batch in enumerate(loader_train):
         #validate batch:
         if validate_vit_batch(batch=batch):
-            reseved_batch = batch
+            last_valid_batch = batch
         else:
             print(f"Malformed batch | epoch {epoch} | batch {i}")
-            if not reseved_batch:
+            if last_valid_batch is None:
                 raise RuntimeError("First batch is malformed. No valid replacement batch available.")
-            batch = reseved_batch
+            batch = last_valid_batch
 
         patched_items = {
             "patched_input": batch["patched_input"].to(device,non_blocking=True),

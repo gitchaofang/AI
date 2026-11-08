@@ -446,7 +446,7 @@ for epoch in range(start_epoch, epochs):
     is_generate=False): #gpt
     '''
     #train
-    print(f"{len(loader_train)}")
+    print(f"{len(loader_train)} batches in one epoch")
     for i, batch in enumerate(loader_train):
         #validate batch:
         if validate_vit_batch(batch=batch):

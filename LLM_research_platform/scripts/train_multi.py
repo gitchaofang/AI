@@ -23,12 +23,33 @@ from scripts.helper import eval
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 torch.set_float32_matmul_precision("high")
 
+LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
+COLAB_YAML_PATH_GPT = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
+
+# load yaml config
+with open(COLAB_YAML_PATH_GPT,"r") as f:
+    config_gpt = yaml.safe_load(f)
+
+LOCAL_YAML_PATH_VIT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
+COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
+
+# load yaml config
+with open(COLAB_YAML_PATH_VIT,"r") as f:
+    config_vit = yaml.safe_load(f)
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+print("Device:", device)
+
 def validate_vit_batch(batch):
     patched_input = batch["patched_input"]
     patched_positions = batch["patched_positions"]
     pad_mask = batch["patched_pad_mask"]
 
     B, T, D = patched_input.shape
+    if T > config_vit["data"]["max_len"]:
+        print(f"length is longer than maximum")
+        return False
 
     assert patched_positions.shape == (B, T, 2), (
         f"Invalid patched_positions: {patched_positions.shape}"
@@ -194,23 +215,7 @@ loader_generator.manual_seed(SEED)
 
 
 
-LOCAL_YAML_PATH_GPT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/gpt.yaml")
-COLAB_YAML_PATH_GPT = Path("/content/AI/LLM_research_platform/configs/gpt.yaml")
 
-# load yaml config
-with open(COLAB_YAML_PATH_GPT,"r") as f:
-    config_gpt = yaml.safe_load(f)
-
-LOCAL_YAML_PATH_VIT = Path("/Users/chaofang/Documents/coding_playground/GitHub/AI/LLM_research_platform/configs/vit.yaml")
-COLAB_YAML_PATH_VIT = Path("/content/AI/LLM_research_platform/configs/vit.yaml")
-
-# load yaml config
-with open(COLAB_YAML_PATH_VIT,"r") as f:
-    config_vit = yaml.safe_load(f)
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-#device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-print("Device:", device)
 
 # Training scripts
 # weight and bias setup 

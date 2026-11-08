@@ -448,10 +448,10 @@ for epoch in range(start_epoch, epochs):
     print(f"{len(loader_train)}")
     i = -1
     for batch in loader_train:
-        i + 1
         #validate batch:
         if not validate_vit_batch(batch=batch):
             continue
+        i+=1
         patched_items = {
             "patched_input": batch["patched_input"].to(device,non_blocking=True),
             "patched_pad_mask": batch["patched_pad_mask"].to(device,non_blocking=True),

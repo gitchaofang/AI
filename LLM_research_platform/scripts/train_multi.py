@@ -428,6 +428,7 @@ if config_vit["training"]["extended"]:
     #min_lr_ratio = min_lr_ratio * 0.1
 
 print(f"total {epochs} epochs")
+reseved_batch = {}
 for epoch in range(start_epoch, epochs):
     model.train()
     optimizer.zero_grad()
@@ -445,13 +446,17 @@ for epoch in range(start_epoch, epochs):
     is_generate=False): #gpt
     '''
     #train
-    print(f"{len(loader_train)} batches")
-    i = -1
-    for batch in loader_train:
+    print(f"{len(loader_train)}")
+    for i, batch in enumerate(loader_train):
         #validate batch:
-        if not validate_vit_batch(batch=batch):
-            continue
-        i+=1
+        if validate_vit_batch(batch=batch):
+            reseved_batch = batch
+        else:
+            print(f"Malformed batch | epoch {epoch} | batch {i}")
+            if not reseved_batch:
+                raise RuntimeError("First batch is malformed. No valid replacement batch available.")
+            batch = reseved_batch
+
         patched_items = {
             "patched_input": batch["patched_input"].to(device,non_blocking=True),
             "patched_pad_mask": batch["patched_pad_mask"].to(device,non_blocking=True),

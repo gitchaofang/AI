@@ -7,7 +7,7 @@ data:
   patch_size: 16
   max_len: 2056
   in_channels: 3
-  batch_size: 20
+  batch_size: 32
   validation_batch_size: 128
   shuffle: True
   image_only: False

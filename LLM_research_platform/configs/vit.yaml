@@ -7,7 +7,7 @@ data:
   patch_size: 16
   max_len: 2056
   in_channels: 3
-  batch_size: 24
+  batch_size: 20
   validation_batch_size: 128
   shuffle: True
   image_only: False
@@ -36,7 +36,7 @@ training:
   learning_rate: 0.0003
   weight_decay: 0.05
   min_lr_ratio: 0.05
-  accumulation_steps: 8
+  accumulation_steps: 25
   max_grad_norm: 1.0
   bf16: False
   layers_to_checkpointed: 0

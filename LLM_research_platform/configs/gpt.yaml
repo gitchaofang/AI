@@ -8,7 +8,7 @@ data:
   colab_file_path: "/content/AI/LLM_research_platform/src/data/input_data/data/"
   colab_index_path: "/content/AI/LLM_research_platform/src/data/input_data/data/index_files/"
   max_len: 168
-  batch_size: 24
+  batch_size: 20
   validation_batch_size: 128
   shuffle: true
 
@@ -36,7 +36,7 @@ training:
   learning_rate: 0.0003
   weight_decay: 0.05
   min_lr_ratio: 0.05
-  accumulation_steps: 8
+  accumulation_steps: 25
   max_grad_norm: 1.0
   bf16: False
   layers_to_checkpointed: 0

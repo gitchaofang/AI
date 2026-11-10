@@ -361,7 +361,7 @@ updates_per_epoch = math.ceil(
 )
 total_steps = epochs * updates_per_epoch
 
-warmup_ratio = 0.01
+warmup_ratio = 0.005
 warmup_steps = int(total_steps * warmup_ratio)
 print(f"warmup_steps is {warmup_steps}")
 

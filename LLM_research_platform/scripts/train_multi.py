@@ -215,10 +215,6 @@ def seed_worker(worker_id):
 loader_generator = torch.Generator()
 loader_generator.manual_seed(SEED)
 
-
-
-
-
 # Training scripts
 # weight and bias setup 
 import wandb
@@ -226,8 +222,8 @@ wandb.login()
 wandb.init(
     project="my-image-text-multimodal",
     entity="fangchao118-personal",
-    #id="n2tubupp",
-    #resume="must",
+    id="33b4zjvh",
+    resume="must",
     config={
         "d_model": config_vit["model"]["d_model"],
         "n_layers": config_vit["model"]["n_layers"],

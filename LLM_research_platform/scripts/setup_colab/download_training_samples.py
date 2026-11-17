@@ -6,6 +6,6 @@ snapshot_download(
         allow_patterns=[
             "cc3m-train-0[0-2][0-6][0-9].tar",
             "cc3m-train-0[3-5][6-9][0-9].tar",
-            "cc3m-train-0[3-5]5[0-9].tar",
+            "cc3m-train-0[3-5][4-5][0-9].tar",
         ]
     )
